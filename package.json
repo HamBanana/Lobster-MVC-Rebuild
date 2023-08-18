@@ -1,0 +1,24 @@
+{
+  "name": "lobster",
+  "version": "1.0.0",
+  "description": "Lobster",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HamBanana/lobster.git"
+  },
+  "author": "HamBanana",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/HamBanana/lobster/issues"
+  },
+  "homepage": "https://github.com/HamBanana/lobster#readme",
+  "dependencies": {
+    "@replit/database": "^2.0.5",
+    "discord.js": "^13.12.0",
+    "npm": "^9.1.3"
+  }
+}

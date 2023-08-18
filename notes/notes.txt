@@ -1,0 +1,50 @@
+Channels:
+ game-codes: 883526058236854312
+ spam: 949274005511229520
+
+ Discord message object:
+ <ref *1> Message {
+  channelId: '883526058236854312',
+  guildId: '817607509984018442',
+  id: '954727316091715724',
+  createdTimestamp: 1647695130132,
+  type: 'DEFAULT',
+  system: false,
+  content: '!lob test',
+  author: User {
+    id: '330279218543984641',
+    bot: false,
+    system: false,
+    flags: UserFlags { bitfield: 0 },
+    username: 'Hambanana',
+    discriminator: '1929',
+    avatar: 'be78e85ed4d44194e2f30eef3ff6cb3f',
+    banner: undefined,
+    accentColor: undefined
+  },
+  pinned: false,
+  tts: false,
+  nonce: '954727315336593408',
+  embeds: [],
+  components: [],
+  attachments: Collection(0) [Map] {},
+  stickers: Collection(0) [Map] {},
+  editedTimestamp: null,
+  reactions: ReactionManager { message: [Circular *1] },
+  mentions: MessageMentions {
+    everyone: false,
+    users: Collection(0) [Map] {},
+    roles: Collection(0) [Map] {},
+    _members: null,
+    _channels: null,
+    crosspostedChannels: Collection(0) [Map] {},
+    repliedUser: null
+  },
+  webhookId: null,
+  groupActivityApplication: null,
+  applicationId: null,
+  activity: null,
+  flags: MessageFlags { bitfield: 0 },
+  reference: null,
+  interaction: null
+}

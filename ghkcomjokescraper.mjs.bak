@@ -1,0 +1,21 @@
+import {parse} from 'node-html-parser';
+import * as request from './webrequest.mjs';
+import * as fs from 'fs';
+
+request.get('https://www.goodhousekeeping.com/life/parenting/g28581033/best-jokes-for-kids/', request.ReturnFormat.HTML).then((result) => {
+  let html_jokelist = result.querySelector('.listicle-body-content');
+  let arr = [];
+  for (let [k, v] of Object.entries(html_jokelist.querySelectorAll('.listicle-slide'))){
+     let q = v.querySelector('.listicle-slide-hed-text').innerHTML;
+     let a = v.querySelector('.listicle-slide-dek p').innerHTML;
+     let source = 'goodhousekeeping.com';
+     arr.push(JSON.stringify({'q': q, 'a': a, 'source':source}, null, 2));
+     console.log(arr);
+  }
+  fs.writeFile('./jokes/goodhousekeeping.com.mjs', 'export bestjokesforkids = '+arr, (err) => {
+    console.log('Error while writing file..');
+  });
+  //console.log(node);
+}).catch((err) => {
+  console.log('Yea, that happened o,O');
+});

@@ -1,0 +1,11 @@
+Bugs:
+App crashes when creating a lobby through prompt_server.
+  Randomly get 'invalid form body', when attempting to delete the original user message.
+  Current solution: Original user message does not get deleted.
+
+
+
+Missing features:
+Join lobby by reacting to confirm_lobby, create, list messages.
+Implement RichEmbeds(Because, prettier).
+Confirm lobby by calling "!lob" or "!lob lobby"
