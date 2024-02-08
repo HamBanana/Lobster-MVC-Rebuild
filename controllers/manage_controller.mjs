@@ -15,12 +15,12 @@ perm = {'users': ['330279218543984641']}
 
   reboot(){
     this.message.reply('Rebooting..').then(() => {
-      sub.exec('/home/thawasta/codespace/Lobster-MVC-Rebuild/utils/reboot.sh');
+      sub.exec('/home/thawasta/codespace/lobster-utils/reboot.sh');
     });
   }
 
   restart(){
-    let ret = sub.exec('/home/thawasta/codespace/Lobster-MVC-Rebuild/utils/start.sh');
+    let ret = sub.exec('/home/thawasta/codespace/lobster-utils/start.sh');
     if (ret > 0){
       this.message.reply('Start script failed.');
       return;
