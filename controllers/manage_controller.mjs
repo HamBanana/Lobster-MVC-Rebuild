@@ -6,6 +6,8 @@ perm = {'users': ['330279218543984641']}
 
   constructor(msg){
   super(msg);
+  this.auth(this.perm);
+  msg.reply("Dangerous action in progress.");
   }
   
   index(){
