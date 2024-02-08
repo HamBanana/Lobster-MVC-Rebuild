@@ -156,7 +156,7 @@ export class Lobster extends Discord{
           console.log('Controller import failed: '+err.message);});
     })
       .catch((err) => {
-        client.channels.get('1200927450536890429').send('Error: '+err.message);
+        //client.channels.get('1200927450536890429').send('Error: '+err.message);
       });
   }
 
