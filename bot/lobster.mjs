@@ -77,7 +77,7 @@ export class Lobster extends Discord{
   if (!c){
     console.log("Could not send startup message, channel not found.");
   } else {
-    c.send("I'm up!");
+    console.log('Startup message: '+c.id);
   }
 });
 
