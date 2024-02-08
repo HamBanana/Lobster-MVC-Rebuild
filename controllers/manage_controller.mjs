@@ -12,6 +12,6 @@ perm = {'users': ['330279218543984641']}
   }
 
   reboot(){
-  sub.exec('../utils/reboot.sh');
+  sub.exec('/home/thawasta/codespace/Lobster-MVC-Rebuild/utils/reboot.sh');
   }
 }
