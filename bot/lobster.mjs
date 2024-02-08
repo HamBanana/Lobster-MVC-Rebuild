@@ -151,8 +151,8 @@ export class Lobster extends Discord{
         resolve(func(command.args));
         })
         .catch((err) => {
-          //msg.reply(gif.random('denied'));
-          msg.reply('Error: ' + err.message);
+          msg.reply(gif.random('denied'));
+          //msg.reply('Error: ' + err.message);
           console.log('Controller import failed: '+err.message);});
     })
       .catch((err) => {
