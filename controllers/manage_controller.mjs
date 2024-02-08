@@ -12,7 +12,6 @@ perm = {'users': ['330279218543984641']}
   }
 
   reboot(){
-  let ret = sub.exec('../utils/reboot.sh');
-  this.message.reply(ret);
+  sub.exec('../utils/reboot.sh');
   }
 }
