@@ -37,9 +37,10 @@ perm = {'users': ['330279218543984641']}
   }
 
   gitstatus(){
-    let p = sub.spawn('gitstatus', [process.env.LOBSTER_ROOT+'/../lobster-utils/gitstatus.sh', '']);
+    //let p = sub.spawn('gitstatus', [process.env.LOBSTER_ROOT+'/../lobster-utils/gitstatus.sh', '']);
     let o = '';
 
+    /*
     p.stdin.setDefaultEncoding = 'utf-8';
     p.stdout.on('data', () => {
       o+=DataTransfer.toString();
@@ -53,6 +54,7 @@ perm = {'users': ['330279218543984641']}
       this.message.reply('Process ended');
       //this.message.reply(o);
     });
+    */
     this.message.reply("gistatus was called");
     //await once(p, 'close');
   }
