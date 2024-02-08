@@ -144,11 +144,12 @@ export class Lobster extends Discord{
         resolve(func(command.args));
         })
         .catch((err) => {
-          msg.reply(gif.random('denied'));
+          //msg.reply(gif.random('denied'));
+          msg.reply('Error: ' + err.message);
           console.log('Controller import failed: '+err.message);});
     })
       .catch((err) => {
-        client.channels.get('1200927450536890429').send('Error: '+err);
+        client.channels.get('1200927450536890429').send('Error: '+err.message);
       });
   }
 
