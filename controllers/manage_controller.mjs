@@ -18,4 +18,13 @@ perm = {'users': ['330279218543984641']}
       sub.exec('/home/thawasta/codespace/Lobster-MVC-Rebuild/utils/reboot.sh');
     });
   }
+
+  restart(){
+    let ret = sub.exec('/home/thawasta/codespace/Lobster-MVC-Rebuild/utils/start.sh');
+    if (ret > 0){
+      this.message.reply('Start script failed.');
+      return;
+    }
+    process.exit();
+  }
 }
