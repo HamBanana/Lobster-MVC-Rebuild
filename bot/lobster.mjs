@@ -16,7 +16,8 @@ export class Lobster extends Discord{
     'list': 'lobby.list',
     'code': 'lobby.list',
     'kill': 'lobby.delete',
-    'create': 'lobby.create'
+    'create': 'lobby.create',
+    'reboot': 'manage.reboot'
   }
 
   static channels = {
