@@ -14,7 +14,7 @@ export class joke_controller extends Controller{
 
   constructor(msg){
     super(msg);
-    this.auth(this.perm);
+    //this.auth(this.perm);
   }
   
   index(args){

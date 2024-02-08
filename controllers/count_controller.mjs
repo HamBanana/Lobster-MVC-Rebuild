@@ -1,5 +1,5 @@
 import {Controller} from '../core/controller.mjs';
-import Database from "@replit/database";
+//import Database from "@replit/database";
 
 export class count_controller extends Controller{
 
@@ -11,7 +11,7 @@ export class count_controller extends Controller{
   constructor(msg){
     super(msg);
     
-    this.db = new Database();
+    //this.db = new Database();
 
     /*this.db.get("count_last_number").then( (value) => {
       console.log(value);
@@ -23,6 +23,7 @@ export class count_controller extends Controller{
 
   test_string(){
     count_controller.last_number = parseInt(count_controller.last_number);
+    /*
     this.db.list().then((val) => {
       console.log('list:');
       console.log(val);
@@ -31,6 +32,7 @@ export class count_controller extends Controller{
         console.log(val);
       });
     });
+    */
     
     if (this.message.channelId != 1135218372091588770){return;}
     
@@ -43,15 +45,19 @@ export class count_controller extends Controller{
       //count_controller.last_number = strtonum + 1;
       this.message.react('✅');
       
+      /*
       this.db.set("count_last_number", count_controller.last_number+1).then(() => {
         count_controller.last_number++;
       });
+      */
       
     } else {
+      /*
       this.db.set("count_last_number", 0).then(() => {
       count_controller.last_number = 0;
       this.message.react('❌');
       });
+      */
     }
       //});
   }
