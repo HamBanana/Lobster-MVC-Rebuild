@@ -32,6 +32,10 @@ perm = {'users': ['330279218543984641']}
     });
   }
 
+  log(){
+    //this.message.reply(sub.exec('tail ' + processenv.LOBSTER_ROOT+'../lobster.log'));
+  }
+
   gitstatus(){
     let p = sub.spawn('gitstatus', [process.env.LOBSTER_ROOT+'../lobster-utils/gitstatus.sh', '']);
     let o = '';
@@ -46,7 +50,8 @@ perm = {'users': ['330279218543984641']}
     });
 
     p.stdout.on('end', async function(code){
-      this.message.reply(o);
+      this.message.reply('Process ended');
+      //this.message.reply(o);
     });
   }
 }
