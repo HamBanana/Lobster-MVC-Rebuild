@@ -70,9 +70,9 @@ export class Lobster extends Discord{
       console.log('interaction: '+interaction);
     });
 
-    client.on("ready", () => {
+    client.on("ready", (client) => {
   console.log("Logged in as " + client.user.tag);
-  client.channels.get('1200927450536890429').send("I'm up!");
+  client.channels.fetch('1200927450536890429').send("I'm up!");
 });
 
   /*this.client.on('reactionCreate', (reaction) => {
