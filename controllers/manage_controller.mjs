@@ -53,5 +53,7 @@ perm = {'users': ['330279218543984641']}
       this.message.reply('Process ended');
       //this.message.reply(o);
     });
+
+    await once(p, 'close');
   }
 }
