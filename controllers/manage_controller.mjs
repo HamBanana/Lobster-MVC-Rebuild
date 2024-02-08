@@ -1,6 +1,8 @@
 import {Controller} from '../core/controller.mjs';
 import * as sub from 'child_process';
 
+import { once } from 'events';
+
 export class manage_controller extends Controller{
 perm = {'users': ['330279218543984641']}
 
@@ -31,6 +33,20 @@ perm = {'users': ['330279218543984641']}
   }
 
   gitstatus(){
-    this.message.reply(sub.exec(process.env.LOBSTER_ROOT+'../lobster-utils/gitstatus.sh'));
+    let p = sub.spawn('gitstatus', [process.env.LOBSTER_ROOT+'../lobster-utils/gitstatus.sh', '']);
+    let o = '';
+
+    p.stdin.setDefaultEncoding = 'utf-8';
+    p.stdout.on('data', () => {
+      o+=DataTransfer.toString();
+    })
+
+    p.stderr.on('data', (data) => {
+      this.message.reply(data);
+    });
+
+    p.stdout.on('end', async function(code){
+      this.message.reply(o);
+    });
   }
 }
