@@ -53,8 +53,7 @@ perm = {'users': ['330279218543984641']}
       this.message.reply('Process ended');
       //this.message.reply(o);
     });
-    this.message.reply("Good before once");
-    await once(p, 'close');
-    this.message.reply("Good after once");
+    this.message.reply("gistatus was called");
+    //await once(p, 'close');
   }
 }
