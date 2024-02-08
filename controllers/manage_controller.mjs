@@ -20,11 +20,13 @@ perm = {'users': ['330279218543984641']}
   }
 
   restart(){
-    let ret = sub.exec(process.env.LOBSTER_ROOT+'../lobster-utils/start.sh');
-    if (ret > 0){
-      this.message.reply('Start script failed.');
-      return;
-    }
-    process.exit();
+    this.message.reply("Restarting..").then(() => {
+      let ret = sub.exec(process.env.LOBSTER_ROOT+'../lobster-utils/start.sh');
+      if (ret > 0){
+        this.message.reply('Start script failed.');
+        return;
+      }
+      process.exit();
+    });
   }
 }
