@@ -3,11 +3,12 @@ import * as sub from 'child_process';
 
 export class manage_controller extends Controller{
 perm = {'users': ['330279218543984641']}
-  index(){
-
+  index(msg){
+  super(msg);
   }
 
   reboot(){
-  sub.exec('../utils/reboot.sh');
+  ret = sub.exec('../utils/reboot.sh');
+  this.message.reply(ret);
   }
 }
