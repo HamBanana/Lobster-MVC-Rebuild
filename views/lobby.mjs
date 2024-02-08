@@ -1,4 +1,4 @@
-simport {MessageEmbed} from 'discord.js';
+import {MessageEmbed} from 'discord.js';
 
 export const create =
   'Code: {{code}}\nServer: '

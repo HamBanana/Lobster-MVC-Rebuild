@@ -35,7 +35,7 @@ export class count_controller extends Controller{
     if (this.message.channelId != 1135218372091588770){return;}
     
     let strtonum = parseInt(this.message.content);
-     if (!strtonum){return false;}
+     if (!strtonum || strtonum < 0){return false;}
       //this.db.get("count_last_number").then( 
         //(value) => {
     console.log('strtonum: '+strtonum + ' = ' + count_controller.last_number + 1);
@@ -48,8 +48,8 @@ export class count_controller extends Controller{
       });
       
     } else {
-      count_controller.last_number = 0;
       this.db.set("count_last_number", 0).then(() => {
+      count_controller.last_number = 0;
       this.message.react('❌');
       });
     }

@@ -13,13 +13,14 @@ export class lobby_controller extends Controller {
   perm = {
     'channels': ['949274005511229520'
        , '883526058236854312'
+                 , '1200927450536890429'
     ]
   }
 
   constructor(msg) {
     super(msg);
 
-    this.auth(this.perm);
+    //this.auth(this.perm);
 
     this.model = new lobby_model();
   }
@@ -33,6 +34,9 @@ export class lobby_controller extends Controller {
     console.log(input);
     //console.log(input.default);
     //console.log(input['default']);
+    if (input.default[0] == 'join'){
+      input = input.default.join(' ');
+    }
     input = input.toUpperCase();
     let code = /([^\w]|^)(\w{5}[FQ])([^\w]|$)/.exec(input)?.[2];
     if (!code) {

@@ -2,7 +2,10 @@ import {Controller} from '../core/controller.mjs';
 import fetch from 'node-fetch';
 
 export class joke_controller extends Controller{
-  perm = {'channels': ['949274005511229520', '883526058236854312']};
+  perm = {'channels': ['949274005511229520', '883526058236854312', 
+                       '1200927450536890429',
+                       '1004881551777075210'
+                      ]};
   
   api_urls = ['https://official-joke-api.appspot.com/jokes/random', 
               //'https://v2.jokeapi.dev/joke/Any',
@@ -21,7 +24,7 @@ export class joke_controller extends Controller{
     }
     console.log('select: ' + select);
     console.log(this.api_urls[select]);
-    if (Math.floor(Math.random() < 0.01)){
+    if (Math.random() < 0.01){
       this.message.reply("THIS FAMILY");
       return;
     }

@@ -34,11 +34,12 @@ export class Lobster extends Discord{
     // Listen for Discord events.
 
     client.on('messageCreate', (msg) => {
-      if (msg.author.bot) {return;}
+      if (msg.author.bot 
+          || msg.channelId == 992089336109617283 
+          || msg.channelID == 1007147411552096376
+         || msg.content.length > 2000) {return;}
       //console.log(msg);
       console.log('Input: '+msg.content);
-      //console.log('Channel: '+JSON.stringify(msg.channel));
-    //if (msg.author.tag !== 'Hambanana#1929') {return;}
       if (msg.content.toLowerCase().startsWith('!lob')){
       return this.parseCommand(msg)
       .catch((err) => {
@@ -132,7 +133,11 @@ export class Lobster extends Discord{
       return import(ctrlpath).then((module) => {
         let cons = eval('module.'+command.controller+'_controller');
         let ins = new cons(msg);
-        if (!ins.allowed) {reject('Permission denied!');return;}
+        if (!ins.allowed) {
+          reject('Permission denied!');
+          msg.react('<:no:1047889973631782994>');
+          return;
+        }
         let func = eval("ins."+command.method+'.bind(ins)');
         if (typeof(func) !== 'function'){reject(String(func)+' is not a valid function of '+command.controller);}
       // Execute the parsed function.
