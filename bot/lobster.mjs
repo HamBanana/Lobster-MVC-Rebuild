@@ -148,7 +148,7 @@ export class Lobster extends Discord{
           console.log('Controller import failed: '+err.message);});
     })
       .catch((err) => {
-        console.log('ParseCommand promise rejected'+err);
+        client.channels.get('1200927450536890429').send('Error: '+err);
       });
   }
 
