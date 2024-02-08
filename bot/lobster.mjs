@@ -157,6 +157,7 @@ export class Lobster extends Discord{
     })
       .catch((err) => {
         //client.channels.get('1200927450536890429').send('Error: '+err.message);
+        this.message.reply("Error: "+err.message);
       });
   }
 
