@@ -29,4 +29,8 @@ perm = {'users': ['330279218543984641']}
       process.exit();
     });
   }
+
+  gitstatus(){
+    this.message.reply(sub.exec(process.env.LOBSTER_ROOT+'../lobster-utils/gitstatus.sh'));
+  }
 }
