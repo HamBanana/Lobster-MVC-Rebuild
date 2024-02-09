@@ -2,7 +2,7 @@
 //import * as AULM from '../AmongUs/LobbyManager.mjs';
 
 import {count_controller} from "../controllers/count_controller.mjs";
-import { Database } from 'database.mjs';
+import { Database } from './database.mjs';
 
 //import Database from "@replit/database";
 //import { createRxDatabase } from "rxdb";
