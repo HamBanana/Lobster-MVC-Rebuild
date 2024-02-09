@@ -34,14 +34,14 @@ perm = {'users': ['330279218543984641']}
 
   enable(){
     let ret = sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/*');
-    this.message.reply(ret);
+    //this.message.reply(ret);
   }
 
   disable(){
     let r = sub.exec('chmod -x ' + process.env.LOBSTER_ROOT + '/utils/*');
     // start.sh must always be enabled, otherwise Lobster cannot start
     let a = sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/start.sh');
-    this.message.reply('Removed permissions: '+r+'\nReadded start.sh exe permission');
+    //this.message.reply('Removed permissions: '+r+'\nReadded start.sh exe permission');
   }
 
   log(){
