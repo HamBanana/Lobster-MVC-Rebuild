@@ -2,6 +2,7 @@
 //import * as AULM from '../AmongUs/LobbyManager.mjs';
 
 import {count_controller} from "../controllers/count_controller.mjs";
+import { Database } from 'database.mjs';
 
 //import Database from "@replit/database";
 //import { createRxDatabase } from "rxdb";
@@ -11,21 +12,10 @@ import {count_controller} from "../controllers/count_controller.mjs";
 
 export class Bootstrap {
 
-  //db = null;
+  db = null;
 
   constructor(){
     console.log('Application started.');
-    
-/*this.db = createRxDatabase({
-  name: 'lobster',                   // <- name
-  storage: getRxStorageDexie(),       // <- RxStorage
-
-  // Optional parameters: 
-  //password: 'myPassword',             // <- password (optional)
-  multiInstance: true,                // <- multiInstance (optional, default: true)
-  eventReduce: true,                  // <- eventReduce (optional, default: false)
-  cleanupPolicy: {}                   // <- custom cleanup policy (optional) 
-});*/
     
   }
 
