@@ -43,7 +43,12 @@ perm = {'users': ['330279218543984641']}
 
   log(){
     //this.message.reply(sub.exec('tail ' + processenv.LOBSTER_ROOT+'../lobster.log'));
-    
+
+  }
+
+  pull(){
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/pull.sh');
+    this.message.reply('Pulled..');
   }
 
   gitstatus(){
