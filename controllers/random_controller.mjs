@@ -22,7 +22,6 @@ dice(args){
      result =  String(amountofsides+" is not a number :eyes:");
   }
   else if (String(amountofsides) === 'Infinity'){
-  //else if (amountofsides === Infinity){
     result = "That's a marble :eyes:";
   }
 
@@ -33,8 +32,6 @@ dice(args){
   else {result = (Math.floor(Math.random() * amountofsides))+1;}
 
   result = String(result);
-  console.log(String('Sides: '+amountofsides));
-  console.log(result);
   this.view.content = result;
   return this.post();
 }
