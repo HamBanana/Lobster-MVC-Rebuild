@@ -15,9 +15,10 @@ perm = {'users': ['330279218543984641']}
   }
 
   reboot(){
-    this.message.reply('Rebooting..').then(() => {
+    //this.message.reply('Rebooting..').then(() => {
       sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot.sh');
-    });
+      this.message.react('✅');
+    //});
   }
 
   restart(){
