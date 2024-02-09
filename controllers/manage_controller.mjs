@@ -32,6 +32,10 @@ perm = {'users': ['330279218543984641']}
     });
   }
 
+  enable(){
+    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/*');
+  }
+
   log(){
     //this.message.reply(sub.exec('tail ' + processenv.LOBSTER_ROOT+'../lobster.log'));
   }
