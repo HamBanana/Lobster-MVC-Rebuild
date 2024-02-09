@@ -10,11 +10,11 @@ export class test_controller extends Controller{
   
 constructor(msg){
   super(msg);
-  this.auth(this.perm);
+  //this.auth(this.perm);
 }
   
   index() {
-    this.view.content = Test;
+    this.view.content = 'Update test';
     this.post()
     .then((reply) => {
     console.log(reply);
