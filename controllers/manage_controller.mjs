@@ -55,7 +55,7 @@ perm = {'users': ['330279218543984641']}
     let kill = (args['kill']) ? args['kill'] : args['default'][0];
     sub.exec(process.env.LOBSTER_ROOT+'/utils/run_backup.sh');
     if (kill){
-      process.exit();
+      //process.exit();
     }
     this.message.react('✅');
   }
