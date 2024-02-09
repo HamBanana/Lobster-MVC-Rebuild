@@ -92,6 +92,7 @@ perm = {'users': ['330279218543984641']}
 
   update(){
     this.pull();
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/update_code.sh');
     this.run_main();
     process.exit();
   }
