@@ -51,6 +51,11 @@ perm = {'users': ['330279218543984641']}
     this.message.reply('Pulled..');
   }
 
+  backup(){
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/backup.sh');
+    this.message.reply('Creating a backup of Lobster.');
+  }
+
   gitstatus(){
     //let p = sub.spawn('gitstatus', [process.env.LOBSTER_ROOT+'/../lobster-utils/gitstatus.sh', '']);
     let o = '';
