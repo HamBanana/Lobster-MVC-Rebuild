@@ -4,28 +4,28 @@
 import {count_controller} from "../controllers/count_controller.mjs";
 
 //import Database from "@replit/database";
-import { createRxDatabase } from "rxdb";
-import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
+//import { createRxDatabase } from "rxdb";
+//import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 
 
 
 export class Bootstrap {
 
-  db = null;
+  //db = null;
 
   constructor(){
     console.log('Application started.');
     
-this.db = createRxDatabase({
+/*this.db = createRxDatabase({
   name: 'lobster',                   // <- name
   storage: getRxStorageDexie(),       // <- RxStorage
 
-  /* Optional parameters: */
+  // Optional parameters: 
   //password: 'myPassword',             // <- password (optional)
   multiInstance: true,                // <- multiInstance (optional, default: true)
   eventReduce: true,                  // <- eventReduce (optional, default: false)
   cleanupPolicy: {}                   // <- custom cleanup policy (optional) 
-}).then(console.log('DB configured'));
+});*/
     
   }
 
