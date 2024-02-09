@@ -1,3 +1,3 @@
 #!/usr/bin/bash
 
-node %LOBSTER_ROOT%/index.js
+node $LOBSTER_ROOT/index.js
