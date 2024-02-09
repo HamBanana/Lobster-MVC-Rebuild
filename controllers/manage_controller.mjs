@@ -34,6 +34,7 @@ perm = {'users': ['330279218543984641']}
 
   enable(){
     sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/*');
+    this.message.reply('Okay, I guess.');
   }
 
   log(){
