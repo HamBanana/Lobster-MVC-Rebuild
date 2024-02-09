@@ -48,22 +48,22 @@ perm = {'users': ['330279218543984641']}
 
   pull(){
     sub.exec(process.env.LOBSTER_ROOT+'/utils/pull.sh');
-    this.message.reply('Pulled..');
+    this.message.react(':white_check_mark:');
   }
 
   run_backup(){
     sub.exec(process.env.LOBSTER_ROOT+'/utils/run_backup.sh');
-    this.message.reply('Running backup..');
+    this.message.react(':white_check_mark:');
   }
 
   run_main(){
     sub.exec(process.env.LOBSTER_ROOT+'/utils/start.sh');
-    this.message.reply('Running main..');
+    this.message.react(':white_check_mark:');
   }
 
   backup(){
     sub.exec(process.env.LOBSTER_ROOT+'/utils/backup.sh');
-    this.message.reply('Creating a backup of Lobster.');
+    this.message.react(':white_check_mark:');
   }
 
   gitstatus(){
