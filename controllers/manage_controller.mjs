@@ -80,7 +80,13 @@ perm = {'users': ['330279218543984641']}
       //this.message.reply(o);
     });
     */
-    this.message.reply("gistatus was called");
+    this.message.reply("gitstatus was called");
     //await once(p, 'close');
+
   }
+
+  update(){
+
+  }
+
 }
