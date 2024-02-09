@@ -13,7 +13,7 @@ constructor(msg){
 }
   
   index() {
-    this.view.content = 'Auto-update works again';
+    this.view.content = 'Pull works';
     this.post()
     .then((reply) => {
     console.log(reply);
