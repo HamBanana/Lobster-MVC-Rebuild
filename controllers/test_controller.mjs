@@ -23,7 +23,7 @@ constructor(msg){
   }
 
   say(args){
-    let word = args['default'][0];
+    let word = (args['word']) ? args['word'] : args['default'][0];
     if (!word){
       return;
     }
