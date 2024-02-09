@@ -52,8 +52,13 @@ perm = {'users': ['330279218543984641']}
   }
 
   run_backup(){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/run-backup.sh');
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/run_backup.sh');
     this.message.reply('Running backup..');
+  }
+
+  run_main(){
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/start.sh');
+    this.message.reply('Running main..');
   }
 
   backup(){
@@ -86,7 +91,9 @@ perm = {'users': ['330279218543984641']}
   }
 
   update(){
-
+    this.pull();
+    this.run_main();
+    process.exit();
   }
 
 }
