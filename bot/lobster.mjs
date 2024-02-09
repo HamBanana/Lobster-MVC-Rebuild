@@ -73,7 +73,7 @@ export class Lobster extends Discord{
 
     client.on("ready", (client) => {
   console.log("Logged in as " + client.user.tag);
-  client.guilds.cache.get("1200927450536890429").channels.cache.get("1200927450536890429").send('Hello?');
+  //client.guilds.cache.get("1200927450536890429").channels.cache.get("1200927450536890429").send('Hello?');
   let c = client.channels.fetch('1200927450536890429');
   if (!c){
     console.log("Could not send startup message, channel not found.");
