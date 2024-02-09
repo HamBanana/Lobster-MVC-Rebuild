@@ -51,6 +51,11 @@ perm = {'users': ['330279218543984641']}
     this.message.reply('Pulled..');
   }
 
+  run_backup(){
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/run-backup.sh');
+    this.message.reply('Running backup..');
+  }
+
   backup(){
     sub.exec(process.env.LOBSTER_ROOT+'/utils/backup.sh');
     this.message.reply('Creating a backup of Lobster.');
