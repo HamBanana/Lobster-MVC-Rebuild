@@ -152,7 +152,9 @@ export class Lobster extends Discord{
         })
         .catch((err) => {
           msg.reply(gif.random('denied'));
-          //msg.reply('Error: ' + err.message);
+          if (msg.channelID == '1200927450536890429'){
+            msg.reply('Error: ' + err.message);
+          }
           console.log('Controller import failed: '+err.message);});
     })
       .catch((err) => {
