@@ -1,3 +1,5 @@
 #!/usr/bin/bash
-
-node %LOBSTER_ROOT%/index.js
+cd $LOBSTER_ROOT
+git pull
+npm install
+node ./index.js
