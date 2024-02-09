@@ -1,4 +1,5 @@
 import {Controller} from '../core/controller.mjs';
+import {Test} from '../core/database.js';
 
 
 export class test_controller extends Controller{
@@ -13,7 +14,7 @@ constructor(msg){
 }
   
   index() {
-    this.view.content = 'Guess pull works, too';
+    this.view.content = Test;
     this.post()
     .then((reply) => {
     console.log(reply);
