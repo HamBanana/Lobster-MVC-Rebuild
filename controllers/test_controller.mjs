@@ -13,7 +13,7 @@ constructor(msg){
 }
   
   index() {
-    this.view.content = 'Pull works';
+    this.view.content = 'Pull works, yay';
     this.post()
     .then((reply) => {
     console.log(reply);
