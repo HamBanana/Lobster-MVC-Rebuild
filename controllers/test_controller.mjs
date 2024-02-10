@@ -37,7 +37,7 @@ constructor(msg){
     let db = Database.getInstance();
     db.db.connect((err) => {
       if (err){
-        this.message.reply('Error in test controller');
+        this.message.reply(err.message);
       }
       db.db.query('select * from Lobster.counting');
     })
