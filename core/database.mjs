@@ -23,18 +23,26 @@ export class Database {
         return Database._instance;
     }
 
-    create(){
-
+    create_table(name, msg){
+        this.db.connect((err) => {
+            if (err) { msg.reply(err.message);}
+        });
     }
 
     get(select, from, where, msg){
-        this.db.query('SELECT ' + select + ' from Lobster.' + from + ' where ' + where, (err, result) => {
-            if (err) {
-                msg.reply('That failed, but at least I can reply about it, now I\'ll crash <:eyes:>');
-                throw err;
+        this.db.connect((err) => {
+            if (err) { 
+                msg.reply(err.message);
+                return;
             }
-            msg.reply('Result: ' + result);
-            console.log('Result: ' + result);
+            this.db.query('SELECT ' + select + ' from Lobster.' + from + ' where ' + where, (err, result) => {
+                if (err) {
+                    msg.reply('That failed, but at least I can reply about it. :eyes:');
+                    return;
+                }
+                msg.reply('Result: ' + result);
+                console.log('Result: ' + result);
+            });
         });
     }
 }

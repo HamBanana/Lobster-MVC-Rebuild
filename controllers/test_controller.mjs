@@ -35,7 +35,16 @@ constructor(msg){
 
   count(){
     let db = Database.getInstance();
-    db.get('count', 'counting', 'id=1', this.message);
-    this.message.reply('I tried..');
+    db.db.connect((err) => {
+      if (err){
+        this.message.reply('Error in test controller');
+      }
+    })
+    db.db.query('select * from Lobster.counting');
+  }
+  create(){
+    let db = Database.getInstance();
+
+    db.create_table('Test', this.message);
   }
 }
