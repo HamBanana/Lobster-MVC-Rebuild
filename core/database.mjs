@@ -23,4 +23,14 @@ export class Database {
         return Database._instance;
     }
 
+    create(){
+        
+    }
+
+    get(select, from, where){
+        this.db.query('SELECT ' + select + ' from ' + from + ' where ' + where, (err, result) => {
+            if (err) {throw err;}
+            console.log('Result: ' + result);
+        });
+    }
 }

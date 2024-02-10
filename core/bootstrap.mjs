@@ -23,9 +23,10 @@ export class Bootstrap {
     
     let db = Database.getInstance();
 
-   // return db.get("count_last_number").then((val) => {
-   //   count_controller.last_number = val;
-   //   console.log('last_number: '+val);
+    //return db.get("count", 'counting', 'ID = 1');
+    //.then((val) => {
+    //  count_controller.last_number = val;
+    //  console.log('last_number: '+val);
    //});
     
   }
