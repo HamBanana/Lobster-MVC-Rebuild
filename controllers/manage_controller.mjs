@@ -138,7 +138,11 @@ perm = {'users': ['330279218543984641']
 
   getvar(args){
     let k = (args['key']) ? args['key'] : args['default'][0];
-    eval ('this.message.reply(process.env.'+k+');');
+    let r = eval('process.env.'+k);
+    if (!r){
+      this.message.reply('Key: "'+k+'" was not found.');
+    }
+    eval ('this.message.reply();');
   }
 
 }
