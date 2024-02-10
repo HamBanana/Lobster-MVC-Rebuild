@@ -5,7 +5,7 @@ import { once } from 'events';
 
 export class manage_controller extends Controller{
 perm = {'users': ['330279218543984641']
-//, 'channels': {'1200927450536890429'}
+, 'channels': ['1200927450536890429']}
 }
 
   constructor(msg){
