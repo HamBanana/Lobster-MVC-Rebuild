@@ -10,7 +10,7 @@ export class Database {
         console.log('Nano loaded');
     }
     
-    getinstance(){
+    getInstance(){
         if (Database._instance == null){
             Database._instance = new Database();
         } else { return Database._instance;}
