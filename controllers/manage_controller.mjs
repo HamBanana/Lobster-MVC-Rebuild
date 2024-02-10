@@ -130,4 +130,15 @@ perm = {'users': ['330279218543984641']
     this.run_main();
   }
 
+  setvar(args){
+    let k = (args['key']) ? args['key'] : args['default'][0];
+    let v = (args['value']) ? args['value'] : args['default'][1];
+   sub.exec('export '+k+'='+v); 
+  }
+
+  getvar(args){
+    let k = (args['key']) ? args['key'] : args['default'][0];
+    eval ('this.message.reply(process.env.'+k+');');
+  }
+
 }

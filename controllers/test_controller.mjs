@@ -47,4 +47,5 @@ constructor(msg){
 
     db.create_table('Test', this.message);
   }
+
 }
