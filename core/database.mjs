@@ -1,4 +1,5 @@
-import Nano from "nano";
+import * as Mysql from 'mysql';
+import { LobsterConfig } from '../../secret.mjs'
 
 export class Database {
 
@@ -6,14 +7,20 @@ export class Database {
 
     db = null;
     constructor(){
-        this.db = Nano('localhost:5984');
-        console.log('Nano loaded');
+        this.db = Mysql.createConnection(LobsterConfig);
+
+        if (!this.db){
+            console.log('Error in creating database connection');
+        } else {
+            console.log('Database connection created.');
+        }
     }
     
     static getInstance(){
         if (Database._instance == null){
             Database._instance = new Database();
-        } else { return Database._instance;}
+        } 
+        return Database._instance;
     }
 
 }
