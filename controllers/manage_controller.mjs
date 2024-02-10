@@ -131,18 +131,21 @@ perm = {'users': ['330279218543984641']
   }
 
   setvar(args){
-    let k = (args['key']) ? args['key'] : args['default'][0];
-    let v = (args['value']) ? args['value'] : args['default'][1];
-   sub.exec('export '+k+'='+v); 
+   // let k = (args['key']) ? args['key'] : args['default'][0];
+   // let v = (args['value']) ? args['value'] : args['default'][1];
+   
+   //this.message.reply('Setting var: "key='+k+'", "value='+v+'"');
+   //process.env[k] = v;
   }
 
   getvar(args){
-    let k = (args['key']) ? args['key'] : args['default'][0];
-    let r = eval('process.env.'+k);
-    if (!r){
-      this.message.reply('Key: "'+k+'" was not found.');
-    }
-    eval ('this.message.reply();');
+    //let k = (args['key']) ? args['key'] : args['default'][0];
+    //let r = eval('process.env.'+k);
+    //if (!r){
+    //  this.message.reply('Key: "'+k+'" was not found.');
+    //  return;
+    //}
+    //this.message.reply(r);
   }
 
 }
