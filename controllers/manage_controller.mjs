@@ -45,8 +45,9 @@ perm = {'users': ['330279218543984641']}
   log(){
     let p = sub.exec('tail ' + process.env.LOBSTER_ROOT+'../lobster.log');
     //this.message.reply(sub.exec('tail ' + processenv.LOBSTER_ROOT+'../lobster.log'));
-/*
-    p.stdout.on('data', (data) => { o = o + data; });
+
+    p.stdout.on('data', (data) => { o = o + data; console.log(data);});
+    /*
     p.on('close', (code) => {
       if (!o){*/
         this.message.reply('No output received');
