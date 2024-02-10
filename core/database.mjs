@@ -24,12 +24,13 @@ export class Database {
     }
 
     create(){
-        
+
     }
 
-    get(select, from, where){
+    get(select, from, where, msg){
         this.db.query('SELECT ' + select + ' from ' + from + ' where ' + where, (err, result) => {
             if (err) {throw err;}
+            msg.reply('Result: ' + result);
             console.log('Result: ' + result);
         });
     }

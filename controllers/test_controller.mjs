@@ -1,6 +1,7 @@
 import {Controller} from '../core/controller.mjs';
 import { Discord } from '../core/discord.mjs';
 //import {Test} from '../core/database.js';
+import { Database } from '../core/database.mjs';
 
 
 export class test_controller extends Controller{
@@ -30,5 +31,10 @@ constructor(msg){
     let client = Discord.client;
     let channel = client.channels.cache.get('1200927450536890429');
     channel.send(word);
+  }
+
+  count(){
+    let db = Database.getInstance();
+    db.get('count', 'counting', 'id=1', this.message);
   }
 }
