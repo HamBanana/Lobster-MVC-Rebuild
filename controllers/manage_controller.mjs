@@ -4,7 +4,9 @@ import * as sub from 'child_process';
 import { once } from 'events';
 
 export class manage_controller extends Controller{
-perm = {'users': ['330279218543984641'], 'channels': {'1200927450536890429'}}
+perm = {'users': ['330279218543984641']
+//, 'channels': {'1200927450536890429'}
+}
 
   constructor(msg){
   super(msg);
