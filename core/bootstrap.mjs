@@ -23,12 +23,12 @@ export class Bootstrap {
 
   static load(){
     
-    //let db = new Database();
+    let db = new Database();
 
-    //return db.get("count_last_number").then((val) => {
-    //  count_controller.last_number = val;
-    //  console.log('last_number: '+val);
-    //});
+    return db.get("count_last_number").then((val) => {
+      count_controller.last_number = val;
+      console.log('last_number: '+val);
+   });
     
   }
 /*
