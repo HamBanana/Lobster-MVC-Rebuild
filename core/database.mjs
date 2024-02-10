@@ -29,7 +29,10 @@ export class Database {
 
     get(select, from, where, msg){
         this.db.query('SELECT ' + select + ' from ' + from + ' where ' + where, (err, result) => {
-            if (err) {throw err;}
+            if (err) {
+                msg.reply('That failed, but at least I can reply about it, now I\'ll crash <:eyes:>');
+                throw err;
+            }
             msg.reply('Result: ' + result);
             console.log('Result: ' + result);
         });
