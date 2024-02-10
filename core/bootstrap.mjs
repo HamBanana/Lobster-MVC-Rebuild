@@ -23,7 +23,7 @@ export class Bootstrap {
 
   static load(){
     
-    let db = new Database();
+    let db = Database.getInstance();
 
     return db.get("count_last_number").then((val) => {
       count_controller.last_number = val;
