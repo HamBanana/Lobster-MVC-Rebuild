@@ -36,5 +36,6 @@ constructor(msg){
   count(){
     let db = Database.getInstance();
     db.get('count', 'counting', 'id=1', this.message);
+    this.message.reply('I tried..');
   }
 }
