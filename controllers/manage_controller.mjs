@@ -130,6 +130,11 @@ perm = {'users': ['330279218543984641']
     this.run_main();
   }
 
+  kill(){
+    this.message.reply('Shutting down..');
+    process.exit();
+  }
+
   setvar(args){
    // let k = (args['key']) ? args['key'] : args['default'][0];
    // let v = (args['value']) ? args['value'] : args['default'][1];
