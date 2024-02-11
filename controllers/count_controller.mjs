@@ -1,9 +1,10 @@
 import {Controller} from '../core/controller.mjs';
 import { Database } from "../core/database.mjs";
+import {channels} from '../core/statics.mjs';
 
 export class count_controller extends Controller{
 
-  perm = {'channels': ['1135218372091588770']};
+  perm = {'channels': [channels.counting]};
 
   static last_number;
 

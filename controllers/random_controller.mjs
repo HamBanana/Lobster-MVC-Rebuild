@@ -1,9 +1,10 @@
 import * as rand from '../tools/random.mjs';
 import {Controller} from '../core/controller.mjs';
+import { channels } from '../core/statics.mjs';
 
 export class random_controller extends Controller{
 
-  perm = {'channels': ['949274005511229520']};
+  perm = {'channels': [channels.spam]};
 
   static dice_always = 0;
 
