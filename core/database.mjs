@@ -29,20 +29,11 @@ export class Database {
         });
     }
 
-    get(select, from, where, msg){
-        this.connection.connect((err) => {
-            if (err) { 
-                msg.reply(err.message);
-                return;
-            }
-            this.connection.query('SELECT ' + select + ' from Lobster.' + from + ' where ' + where, (err, result) => {
-                if (err) {
-                    msg.reply('That failed, but at least I can reply about it. :eyes:');
-                    return;
-                }
-                msg.reply('Result: ' + result);
-                console.log('Result: ' + result);
-            });
-        });
+    get(select, from, where, callback){
+            this.connection.query('SELECT ' + select + ' from ' + from + ' where ' + where, callback);
+    }
+
+    update(table, set, where, callback){
+        this.connection.query("UPDATE " + table + " SET " + set + " WHERE " + where, callback);
     }
 }

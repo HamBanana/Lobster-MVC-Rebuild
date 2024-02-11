@@ -1,5 +1,5 @@
 import {Controller} from '../core/controller.mjs';
-//import Database from "@replit/database";
+import { Database } from "../core/database.mjs";
 
 export class count_controller extends Controller{
 
@@ -11,7 +11,7 @@ export class count_controller extends Controller{
   constructor(msg){
     super(msg);
     
-    //this.db = new Database();
+    this.db = Database.getInstance();
 
     /*this.db.get("count_last_number").then( (value) => {
       console.log(value);

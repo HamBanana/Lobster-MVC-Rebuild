@@ -39,9 +39,16 @@ constructor(msg){
     //  if (err){
     //    return this.message.reply('Connect failed because: '+err.message);
     //  }
-      db.connection.query('select count from Lobster.counting WHERE id=1', (error, results, fields) => {
-        this.message.reply('Result:'+ results[0].count);
-      });
+
+    db.get('count', 'Lobster.counting', 'id=1', (error, results, fields) => {
+      if (error){
+        this.message.reply('Error in db.get:' + error.message);
+        return;
+      }
+      this.message.reply('Result:'+ results[0].count);
+    });
+
+      //db.connection.query('select count from Lobster.counting WHERE id=1', );
     //})
   }
   create(){
