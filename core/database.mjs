@@ -5,11 +5,11 @@ export class Database {
 
     static _instance = null
 
-    db = null;
+    connection = null;
     constructor(){
-        this.db = Mysql.createConnection(LobsterConfig);
+        this.connection = Mysql.createConnection(LobsterConfig);
 
-        if (!this.db){
+        if (!this.connection){
             console.log('Error in creating database connection');
         } else {
             console.log('Database connection created.');
@@ -24,18 +24,18 @@ export class Database {
     }
 
     create_table(name, msg){
-        this.db.connect((err) => {
+        this.connection.connect((err) => {
             if (err) { msg.reply(err.message);}
         });
     }
 
     get(select, from, where, msg){
-        this.db.connect((err) => {
+        this.connection.connect((err) => {
             if (err) { 
                 msg.reply(err.message);
                 return;
             }
-            this.db.query('SELECT ' + select + ' from Lobster.' + from + ' where ' + where, (err, result) => {
+            this.connection.query('SELECT ' + select + ' from Lobster.' + from + ' where ' + where, (err, result) => {
                 if (err) {
                     msg.reply('That failed, but at least I can reply about it. :eyes:');
                     return;

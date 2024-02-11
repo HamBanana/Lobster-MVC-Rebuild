@@ -131,8 +131,9 @@ perm = {'users': ['330279218543984641']
   }
 
   kill(){
-    this.message.reply('Shutting down..');
+    this.message.reply('Shutting down..').then(() => {
     process.exit();
+    });
   }
 
   setvar(args){
