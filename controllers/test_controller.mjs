@@ -35,12 +35,12 @@ constructor(msg){
 
   count(){
     let db = Database.getInstance();
-    db.db.connect((err) => {
+    db.connection.connect((err) => {
       if (err){
         return this.message.reply(err.message);
       }
       this.message.reply('Error did not happen, yay :eyes:');
-      db.db.query('select * from Lobster.counting');
+      db.connection.query('select * from Lobster.counting');
     })
   }
   create(){
