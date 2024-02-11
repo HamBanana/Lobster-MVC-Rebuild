@@ -29,6 +29,9 @@ export class Bootstrap {
       if (err){
         console.log('Failed to get database connection\n');
       }
+      
+      Bootstrap.loadInitialValues();
+
       let lob = new Lobster();
     });
 
@@ -39,6 +42,18 @@ export class Bootstrap {
    //});
     
   }
+  
+  static loadInitialValues(){
+    let db = Database.getInstance();
+    // count.last_number
+
+    db.get('count', 'Lobster.counting', 'id = 1', (err, result) => {
+      count_controller.last_number = result[0].count;
+    });
+
+  }
+
+
 /*
   static handleRequest(msg){
     Console.log('handleRequest triggered')
