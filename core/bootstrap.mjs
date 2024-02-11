@@ -4,6 +4,8 @@
 import {count_controller} from "../controllers/count_controller.mjs";
 import { Database } from './database.mjs';
 
+import {Lobster} from "./bot/lobster.mjs";
+
 //import Database from "@replit/database";
 //import { createRxDatabase } from "rxdb";
 //import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
@@ -22,6 +24,13 @@ export class Bootstrap {
   static load(){
     
     let db = Database.getInstance();
+
+    db.connection.connect((err) => {
+      if (err){
+        console.log('Failed to get database connection\n');
+      }
+      let lob = new Lobster();
+    });
 
     //return db.get("count", 'counting', 'ID = 1');
     //.then((val) => {
