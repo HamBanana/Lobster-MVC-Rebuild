@@ -37,7 +37,7 @@ constructor(msg){
     let db = Database.getInstance();
     db.connection.connect((err) => {
       if (err){
-        return this.message.reply(err.message);
+        return this.message.reply('Connect failed because: '+err.message);
       }
       db.connection.query('select count from Lobster.counting WHERE id=1', (error, results, fields) => {
         this.message.reply('Result:'+JSON.stringify(results[0]));
