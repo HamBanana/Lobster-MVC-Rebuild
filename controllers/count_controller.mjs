@@ -14,12 +14,7 @@ export class count_controller extends Controller{
     
     this.db = Database.getInstance();
 
-    /*this.db.get("count_last_number").then( (value) => {
-      console.log(value);
-      count_controller.last_number = (value) ? value : 0;
-    } );*/
     this.auth(this.perm);
-    //this.post('It\'s the count controller');
   }
 
   test_string(){
@@ -38,10 +33,6 @@ export class count_controller extends Controller{
       }
       // Got the value, compare it to the input.
       let count = parseInt(res[0].count);
-      //this.message.reply('Count before: ' + count);
-      //this.db.get("count_last_number").then( 
-        //(value) => {
-    //console.log('strtonum: '+strtonum + ' = ' + count_controller.last_number + 1);
     if ( strtonum === count + 1){
       count_controller.last_number = strtonum;
       this.message.react('✅');
