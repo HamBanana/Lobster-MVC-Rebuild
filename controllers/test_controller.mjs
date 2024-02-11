@@ -39,14 +39,17 @@ constructor(msg){
       if (err){
         return this.message.reply(err.message);
       }
-      this.message.reply('Error did not happen, yay :eyes:');
-      db.connection.query('select * from Lobster.counting');
+      db.connection.query('select count from Lobster.counting WHERE id=1', (error, results, fields) => {
+        this.message.reply(results);
+      });
     })
   }
   create(){
     let db = Database.getInstance();
 
-    db.create_table('Test', this.message);
+    db.connection.connect(() => {
+      
+    });
   }
 
 }
