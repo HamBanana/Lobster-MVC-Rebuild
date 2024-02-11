@@ -40,7 +40,7 @@ constructor(msg){
         return this.message.reply(err.message);
       }
       db.connection.query('select count from Lobster.counting WHERE id=1', (error, results, fields) => {
-        this.message.reply(results);
+        this.message.reply('Result:'+results[0]);
       });
     })
   }
