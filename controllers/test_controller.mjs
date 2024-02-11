@@ -39,6 +39,7 @@ constructor(msg){
       if (err){
         this.message.reply(err.message);
       }
+      this.message.reply('Error did not happen, yay :eyes:');
       db.db.query('select * from Lobster.counting');
     })
   }
