@@ -15,7 +15,7 @@ perm = {'users': ['330279218543984641']
   index(){}
 
   reboot(){
-      sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot.sh', () => {
+      sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot', () => {
         if (err){
           this.message.reply('Error rebooting: ' + err.message);
           return;
@@ -42,13 +42,13 @@ perm = {'users': ['330279218543984641']
       }
       this.message.reply('Execute permission for shell scripts are removed');
     });
-    // start.sh must always be enabled, otherwise Lobster cannot start
-    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/start.sh', (err, stdout, stderr) => {
+    // start must always be enabled, otherwise Lobster cannot start
+    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/start', (err, stdout, stderr) => {
       if (err){
-        this.message.reply('Failed reenabling execute permission on start.sh: ' + err.message);
+        this.message.reply('Failed reenabling execute permission on start: ' + err.message);
         return;
       }
-      this.message.reply('Reenabled execute permission on start.sh (Required for Lobster to work)');
+      this.message.reply('Reenabled execute permission on start (Required for Lobster to work)');
     });
   }
 
@@ -79,7 +79,7 @@ perm = {'users': ['330279218543984641']
   }
 
   run_backup(args){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/run_backup.sh', (err, stdout, stderr) => {
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/run_backup', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in run_backup: ' + err.message);
       }
@@ -88,7 +88,7 @@ perm = {'users': ['330279218543984641']
   }
 
   run_main(){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/start.sh', (err, stdout, stderr) => {
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/start', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in run_main: ' + err.message);
       }
@@ -97,7 +97,7 @@ perm = {'users': ['330279218543984641']
   }
 
   backup(){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/backup.sh', (err, stdout, stderr) => {
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/backup', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in backup: ' + err.message);
       }
@@ -106,7 +106,7 @@ perm = {'users': ['330279218543984641']
   }
 
   gitstatus(){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/gitstatus.sh', (err, stdout, stderr) => {
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/gitstatus', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in run_backup: ' + err.message);
       }
