@@ -136,6 +136,13 @@ perm = {'users': ['330279218543984641']
     });
   }
 
+  sql(args){
+    let q = (args['query']) ? args['query'] : args['default'][0];
+    this.database.connection.query(q, (msg) => {
+      this.message.reply(JSON.stringify(msg));
+    });
+  }
+
   setvar(args){
    // let k = (args['key']) ? args['key'] : args['default'][0];
    // let v = (args['value']) ? args['value'] : args['default'][1];
