@@ -115,28 +115,6 @@ perm = {'users': ['330279218543984641']
 
   }
 
-  /*update(){
-    this.message.reply('Pulling..');
-    this.pull();
-    let c = sub.exec(process.env.LOBSTER_ROOT+'/utils/update_code.sh');
-    let o = '';
-
-    c.stdout.on('data', (data) => {
-      o = o + data;
-    });
-
-    c.stderr.on('data', (data) => {
-      console.log('stderr: ' + data);
-    });
-
-    c.on('close', (code) => {
-      this.message.reply(code.toString());
-      process.exit();
-    });
-
-    this.run_main();
-  }*/
-
   kill(){
     this.message.reply('Shutting down..').then(() => {
     process.exit();
