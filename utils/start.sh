@@ -3,4 +3,5 @@
 cd $LOBSTER_ROOT
 git config --global --add safe.directory $LOBSTER_ROOT
 git pull
+npm install
 node ./index.js
