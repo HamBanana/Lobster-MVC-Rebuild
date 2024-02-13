@@ -55,7 +55,7 @@ perm = {'users': ['330279218543984641']
     }
     let pr = spawn(p);
     try {
-      this.message.reply("Didn't crash yet");
+      this.message.reply(pr.stdout.pipe(pr));
     } catch (error) {
       this.message.reply('Error in: calling pipe' + error.message);
       return;
