@@ -47,19 +47,27 @@ perm = {'users': ['330279218543984641']
     let os = process.env.OS;
     let p;
     let spawn = sub.spawn;
-    if (!os){os = 'Linux';}
-    if (os == 'Windows'){
+    sub.exec('git log | head -5', (error, stdout, stderr) => {
+      if (error){
+        this.message.reply('Error in exec:' + error.message);
+        return;
+      }
+      this.message.reply('Output:' + stdout);
+    });
+    //if (!os){os = 'Linux';}
+    //if (os == 'Windows'){
       //p = process.env.LOBSTER_ROOT + '/utils/tail.bat ' + process.env.LOBSTER_ROOT + '/../log_lobster';
-    } else {
-      p = process.env.LOBSTER_ROOT+'/../log_lobster';
-    }
-    let pr = spawn(p);
-    try {
-      this.message.reply(pr.stdout.pipe(pr));
-    } catch (error) {
-      this.message.reply('Error in: calling pipe' + error.message);
-      return;
-    }
+    //} else {
+    //  p = process.env.LOBSTER_ROOT+'/../log_lobster';
+    //}
+    //let pr = spawn(p);
+    //try {
+      //let o = pr.stdout.pipe(pr);
+    //  this.message.reply(o);
+    //} catch (error) {
+    //  this.message.reply('Error in: calling pipe' + error.message);
+    //  return;
+    //}
     return;
     
   }
