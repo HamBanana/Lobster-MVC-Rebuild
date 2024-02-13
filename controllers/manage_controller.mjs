@@ -53,9 +53,9 @@ perm = {'users': ['330279218543984641']
     } else {
       p = process.env.LOBSTER_ROOT+'/../log_lobster';
     }
-    let pr = spawn(p);
+    //let pr = spawn(p);
     try {
-      this.message.reply('Output: ' + pr.stdout.pipe(process.stdout));
+      //this.message.reply('Output: ' + pr.stdout.pipe(process.stdout));
     } catch (error) {
       this.message.reply('Error in: calling pipe' + error.message);
       return;
