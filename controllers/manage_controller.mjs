@@ -54,21 +54,13 @@ perm = {'users': ['330279218543984641']
       p = process.env.LOBSTER_ROOT+'/../log_lobster';
     }
     let pr = spawn(p);
-    pr.stdout.pipe(process.stdout);
+    try {
+      this.message.reply('Output: ' + pr.stdout.pipe(process.stdout));
+    } catch (error) {
+      this.message.reply('Error in: calling pipe' + error.message);
+      return;
+    }
     return;
-    //this.message.reply(sub.exec('tail ' + processenv.LOBSTER_ROOT+'../lobster.log'));
-    let o;
-    p.stdout.on('data', (data) => { o = o + data; console.log(data);});
-    
-    p.on('close', (code) => {
-      this.message.reply('Code: ' + code);
-      if (!o){
-        this.message.reply('No output received');
-        
-      } else {
-        this.message.reply(o);
-      }
-    });
     
   }
 
