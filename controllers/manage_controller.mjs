@@ -46,14 +46,14 @@ perm = {'users': ['330279218543984641']
   log(){
     let os = process.env.OS;
     let p;
-    //let spawn = sub.spawn;
+    let spawn = sub.spawn;
     if (!os){os = 'Linux';}
     if (os == 'Windows'){
       //p = process.env.LOBSTER_ROOT + '/utils/tail.bat ' + process.env.LOBSTER_ROOT + '/../log_lobster';
     } else {
       p = process.env.LOBSTER_ROOT+'/../log_lobster';
     }
-    //let pr = spawn(p);
+    let pr = spawn(p);
     try {
       this.message.reply("Didn't crash yet");
     } catch (error) {
