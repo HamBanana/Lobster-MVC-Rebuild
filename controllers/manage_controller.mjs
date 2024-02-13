@@ -50,9 +50,8 @@ perm = {'users': ['330279218543984641']
     if (!os){os = 'Linux';}
     if (os == 'Windows'){
       //p = process.env.LOBSTER_ROOT + '/utils/tail.bat ' + process.env.LOBSTER_ROOT + '/../log_lobster';
-      p = 'echo';
     } else {
-      p = 'tail ' + process.env.LOBSTER_ROOT+'/../log_lobster';
+      p = process.env.LOBSTER_ROOT+'/../log_lobster';
     }
     let pr = spawn(p);
     pr.stdout.pipe(process.stdout);
