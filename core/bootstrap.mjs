@@ -47,9 +47,9 @@ export class Bootstrap {
     let db = Database.getInstance();
     // count.last_number
 
-    db.get('count', 'Lobster.counting', 'id = 1', (err, result) => {
-      count_controller.last_number = result[0].count;
-    });
+    //db.get('count', 'Lobster.counting', 'id = 1', (err, result) => {
+    //  count_controller.last_number = result[0].count;
+    //});
 
   }
 

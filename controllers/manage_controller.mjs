@@ -44,24 +44,37 @@ perm = {'users': ['330279218543984641']
   }
 
   log(){
-    let p = sub.exec('tail ' + process.env.LOBSTER_ROOT+'../lobster.log');
+    let os = process.env.OS;
+    let p;
+    let spawn = sub.spawn;
+    if (!os){os = 'Linux';}
+    if (os == 'Windows'){
+      //p = process.env.LOBSTER_ROOT + '/utils/tail.bat ' + process.env.LOBSTER_ROOT + '/../log_lobster';
+      p = 'echo';
+    } else {
+      p = 'tail ' + process.env.LOBSTER_ROOT+'/../log_lobster';
+    }
+    let pr = spawn(p);
+    pr.stdout.pipe(process.stdout);
+    return;
     //this.message.reply(sub.exec('tail ' + processenv.LOBSTER_ROOT+'../lobster.log'));
-
+    let o;
     p.stdout.on('data', (data) => { o = o + data; console.log(data);});
-    /*
+    
     p.on('close', (code) => {
-      if (!o){*/
+      this.message.reply('Code: ' + code);
+      if (!o){
         this.message.reply('No output received');
-        /*
+        
       } else {
         this.message.reply(o);
       }
     });
-    */
+    
   }
 
   pull(){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/pull.sh');
+    sub.exec('sudo ' + process.env.LOBSTER_ROOT + '/utils/pull.sh');
     this.message.react('✅');
   }
 
@@ -152,13 +165,14 @@ perm = {'users': ['330279218543984641']
   }
 
   getvar(args){
-    //let k = (args['key']) ? args['key'] : args['default'][0];
+    let k = (args['key']) ? args['key'] : args['default'][0];
     //let r = eval('process.env.'+k);
-    //if (!r){
-    //  this.message.reply('Key: "'+k+'" was not found.');
-    //  return;
-    //}
-    //this.message.reply(r);
+    this.message.reply('No way this works right?: ' + r);
+    if (!r){
+      this.message.reply('Key: "'+k+'" was not found.');
+      return;
+    }
+    return;
   }
 
 }
