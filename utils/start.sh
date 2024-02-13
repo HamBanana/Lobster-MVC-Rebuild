@@ -1,5 +1,6 @@
 #!/usr/bin/bash
-cd /home/thawasta/codespace/Lobster-MVC-Rebuild
-git config --global --add safe.directory /home/thawasta/codespace/Lobster-MVC-Rebuild
+#LOBSTER_ROOT=/home/thawasta/codespace/Lobster-MVC-Rebuild
+cd $LOBSTER_ROOT
+git config --global --add safe.directory $LOBSTER_ROOT
 git pull
 node ./index.js
