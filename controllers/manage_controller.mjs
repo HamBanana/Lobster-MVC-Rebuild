@@ -12,35 +12,44 @@ perm = {'users': ['330279218543984641']
   this.auth(this.perm);
   }
   
-  index(){
-  }
+  index(){}
 
   reboot(){
-    //this.message.reply('Rebooting..').then(() => {
-      sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot.sh');
+      sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot.sh', () => {
+        if (err){
+          this.message.reply('Error rebooting: ' + err.message);
+          return;
+        }
       this.message.react('✅');
-    //});
-  }
-
-  restart(){
-    this.message.reply("Restarting..").then(() => {
-      let ret = sub.exec(process.env.LOBSTER_ROOT+'/utils/start.sh');
-      if (ret > 0){
-        this.message.reply('Start script failed.');
-        return;
-      }
-      process.exit();
-    });
+      });
   }
 
   enable(){
-    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/*');
+    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/*', (err, stdout, stderr) => {
+      if (err){
+        this.reply('Error enabling execute permissions to shell scripts: ' + err.message);
+        return;
+      }
+      this.reply('Shell scripts can now be executed');
+    });
   }
 
   disable(){
-    let r = sub.exec('chmod -x ' + process.env.LOBSTER_ROOT + '/utils/*');
+    let r = sub.exec('chmod -x ' + process.env.LOBSTER_ROOT + '/utils/*', (err, stdout, stderr) => {
+      if (err){
+        this.message.reply('Failed removing permissions on shell scripts: ' + err.message);
+        return;
+      }
+      this.message.reply('Execute permission for shell scripts are removed');
+    });
     // start.sh must always be enabled, otherwise Lobster cannot start
-    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/start.sh');
+    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/start.sh', (err, stdout, stderr) => {
+      if (err){
+        this.message.reply('Failed reenabling execute permission on start.sh: ' + err.message);
+        return;
+      }
+      this.message.reply('Reenabled execute permission on start.sh (Required for Lobster to work)');
+    });
   }
 
   log(){
@@ -52,71 +61,61 @@ perm = {'users': ['330279218543984641']
         this.message.reply('Error in exec:' + error.message);
         return;
       }
-      this.message.reply('Output:' + stdout);
+      let o = stdout || 'Nothing here.'
+      this.message.reply(stdout);
     });
-    //if (!os){os = 'Linux';}
-    //if (os == 'Windows'){
-      //p = process.env.LOBSTER_ROOT + '/utils/tail.bat ' + process.env.LOBSTER_ROOT + '/../log_lobster';
-    //} else {
-    //  p = process.env.LOBSTER_ROOT+'/../log_lobster';
-    //}
-    //let pr = spawn(p);
-    //try {
-      //let o = pr.stdout.pipe(pr);
-    //  this.message.reply(o);
-    //} catch (error) {
-    //  this.message.reply('Error in: calling pipe' + error.message);
-    //  return;
-    //}
     return;
     
   }
 
   pull(){
-    sub.exec('sudo ' + process.env.LOBSTER_ROOT + '/utils/pull.sh');
+    sub.exec('sudo ' + process.env.LOBSTER_ROOT + '/utils/pull.sh', (err, stdout, stderr) => {
+      if (err){
+        this.message.reply('Error in pull: ' + err.message);
+        return;
+      }
     this.message.react('✅');
+    });
   }
 
   run_backup(args){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/run_backup.sh');
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/run_backup.sh', (err, stdout, stderr) => {
+      if (err){
+        this.message.reply('Error in run_backup: ' + err.message);
+      }
     this.message.react('✅');
+    });
   }
 
   run_main(){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/start.sh');
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/start.sh', (err, stdout, stderr) => {
+      if (err){
+        this.message.reply('Error in run_main: ' + err.message);
+      }
     this.message.react('✅');
+    });
   }
 
   backup(){
-    sub.exec(process.env.LOBSTER_ROOT+'/utils/backup.sh');
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/backup.sh', (err, stdout, stderr) => {
+      if (err){
+        this.message.reply('Error in backup: ' + err.message);
+      }
     this.message.react('✅');
+    });
   }
 
   gitstatus(){
-    //let p = sub.spawn('gitstatus', [process.env.LOBSTER_ROOT+'/../lobster-utils/gitstatus.sh', '']);
-    let o = '';
-
-    /*
-    p.stdin.setDefaultEncoding = 'utf-8';
-    p.stdout.on('data', () => {
-      o+=DataTransfer.toString();
-    })
-
-    p.stderr.on('data', (data) => {
-      this.message.reply(data);
+    sub.exec(process.env.LOBSTER_ROOT+'/utils/gitstatus.sh', (err, stdout, stderr) => {
+      if (err){
+        this.message.reply('Error in run_backup: ' + err.message);
+      }
+    this.message.react('Output: '+stdout);
     });
-
-    p.stdout.on('end', async function(code){
-      this.message.reply('Process ended');
-      //this.message.reply(o);
-    });
-    */
-    this.message.reply("gitstatus was called");
-    //await once(p, 'close');
 
   }
 
-  update(){
+  /*update(){
     this.message.reply('Pulling..');
     this.pull();
     let c = sub.exec(process.env.LOBSTER_ROOT+'/utils/update_code.sh');
@@ -136,7 +135,7 @@ perm = {'users': ['330279218543984641']
     });
 
     this.run_main();
-  }
+  }*/
 
   kill(){
     this.message.reply('Shutting down..').then(() => {
@@ -144,12 +143,12 @@ perm = {'users': ['330279218543984641']
     });
   }
 
-  sql(args){
+  /*sql(args){
     let q = (args['query']) ? args['query'] : args['default'][0];
     this.database.connection.query(q, (msg) => {
       this.message.reply(JSON.stringify(msg));
     });
-  }
+  }*/
 
   setvar(args){
    // let k = (args['key']) ? args['key'] : args['default'][0];
