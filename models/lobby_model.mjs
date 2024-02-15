@@ -49,6 +49,7 @@ export class lobby_model extends Model {
     if (lobby_model.active_lobbies[code]?.queue.push(usertag)) {
       return true;
     };
+    
     return false;
   }
 

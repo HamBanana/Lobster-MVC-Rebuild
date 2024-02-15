@@ -3,8 +3,13 @@ import { Discord } from '../core/discord.mjs';
 //import {Test} from '../core/database.js';
 import { Database } from '../core/database.mjs';
 
+const guild = await Discord.client.guilds.fetch('817607509984018442');
+
+const member = await guild.members.fetch
+({user:'330279218543984641', withPresences: true, force: true});
 
 export class test_controller extends Controller{
+
 
   perm = {
     'users': ['330279218543984641']
@@ -31,6 +36,14 @@ constructor(msg){
     let client = Discord.client;
     let channel = client.channels.cache.get('1200927450536890429');
     channel.send(word);
+  }
+
+  getpresence(){
+    
+    this.message.reply(member.presence.activities[0].state);
+    //console.log(JSON.stringify(this.message.guild));
+    //this.message.reply(JSON.stringify(this.message.author));
+    //this.message.reply('Hi, I work :eyes:');
   }
 
   count(){
