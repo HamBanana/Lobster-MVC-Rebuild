@@ -71,10 +71,9 @@ export class Lobster extends Discord{
       console.log('interaction: '+interaction);
     });
 
+    // When client has logged in
     client.on("ready", (client) => {
   console.log("Logged in as " + client.user.tag);
-  //client.guilds.cache.get("1200927450536890429").channels.cache.get("1200927450536890429").send('Hello?');
-  //let c = client.channels.fetch('1200927450536890429');
   let c = client.channels.cache.get('1200927450536890429');
   if (!c){
     console.log("Could not send startup message, channel not found.");
@@ -82,9 +81,14 @@ export class Lobster extends Discord{
     console.log('Can\'t get channel for startup message');
   } else {
     c.send('Hello?');
-    console.log('Startup message: '+c.id);
   }
 });
+
+client.on('presenceUpdate', (oldPresence, newPresence) => {
+  //let c = client.channels.cache.get('1200927450536890429');
+  //console.log('oldPresence:'+ JSON.stringify(oldPresence));
+  //console.log('newPresence:'+ JSON.stringify(newPresence));
+})
 
   /*this.client.on('reactionCreate', (reaction) => {
   console.log('Reaction: '+reaction);
