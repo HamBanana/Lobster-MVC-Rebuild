@@ -2,6 +2,7 @@ import { Database } from '../core/database.mjs';
 import {
   Model
 } from '../core/model.mjs';
+import { Time } from '../tools/time.mjs';
 
 export class lobby_model extends Model {
 
@@ -12,6 +13,7 @@ export class lobby_model extends Model {
   code CHAR(6) UNIQUE NOT NULL, \
   server VARCHAR(6), \
   creationtime BIGINT, \
+  pingtime BIGINT, \
   host VARCHAR(20), \
   PRIMARY KEY (id)\
   ";
@@ -39,7 +41,18 @@ export class lobby_model extends Model {
     if (lobby_model.active_lobbies[code]) {
       return false;
     }
-    this.db.insert();
+    this.db.create_table('lobby_active_lobbies', this.table_active_lobbies, true, (error) => {
+      if (error){console.log('Error when trying to create lobby_Active_lobbies: ' + error.message)}
+      this.db.insert('lobby_active_lobbies', {
+        code: code,
+        server: server,
+        host: host,
+        creationtime: Time.now,
+        pingtime: Time.now
+      }, (err, res) => {
+        if (err){console.log('Error while inserting new active lobby: ' + err.message);}
+      });
+    });
 
     lobby_model.active_lobbies[code] = new LobbyConfig(code, server, host, pingtime);
     return true;

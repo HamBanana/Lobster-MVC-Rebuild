@@ -136,11 +136,6 @@ export class lobby_controller extends Controller {
     }
 
     this.view.reactions = {};
-    /*try {
-      this.message.delete();
-    } catch(err){
-      console.error(err);
-    }*/
     this.view.template_path = 'lobby/create';
     return this.post();
   }

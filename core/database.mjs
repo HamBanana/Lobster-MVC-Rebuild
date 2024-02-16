@@ -23,6 +23,19 @@ export class Database {
         return Database._instance;
     }
 
+    insert(table, values, callback = () => {}){
+
+        let keystring = ''
+        let valuestring = '';
+        for (const [key, value] of Object.entries(values)){
+            keystring += (keystring == '') ? key : ', ' + key;
+            valuestring += (valuestring == '') ? '"'+value+'"' : ', "' + value + '"';
+        }
+
+        //console.log('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')');
+        this.connection.query('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')', callback);
+    }
+
     create_table(name, values, if_not_exists = true, callback = null){
         console.log('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')');
         this.connection.query('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')', callback);

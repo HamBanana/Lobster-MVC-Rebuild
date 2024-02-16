@@ -91,6 +91,7 @@ perm = {'users': ['330279218543984641']
     sub.exec(process.env.LOBSTER_ROOT+'/utils/start', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in run_main: ' + err.message);
+        return;
       }
     this.message.react('✅');
     });
@@ -100,6 +101,7 @@ perm = {'users': ['330279218543984641']
     sub.exec(process.env.LOBSTER_ROOT+'/utils/backup', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in backup: ' + err.message);
+        return;
       }
     this.message.react('✅');
     });
@@ -109,6 +111,7 @@ perm = {'users': ['330279218543984641']
     sub.exec(process.env.LOBSTER_ROOT+'/utils/gitstatus', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in run_backup: ' + err.message);
+        return;
       }
     this.message.react('Output: '+stdout);
     });
@@ -127,6 +130,12 @@ perm = {'users': ['330279218543984641']
       this.message.reply(JSON.stringify(msg));
     });
   }*/
+
+  drop_table({args}){
+    let table = (args.table || args.default?.[0]);
+    if (!table) {return;}
+    
+  }
 
   setvar(args){
    // let k = (args['key']) ? args['key'] : args['default'][0];
