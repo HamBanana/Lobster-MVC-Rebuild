@@ -66,10 +66,7 @@ constructor(msg){
   }
   create(){
     let db = Database.getInstance();
-
-    db.connection.connect(() => {
-      
-    });
+    db.create_table('test', 'id int', true);
   }
 
 }

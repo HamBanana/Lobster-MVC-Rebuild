@@ -23,10 +23,9 @@ export class Database {
         return Database._instance;
     }
 
-    create_table(name, msg){
-        this.connection.connect((err) => {
-            if (err) { msg.reply(err.message);}
-        });
+    create_table(name, values, if_not_exists = true, callback = null){
+        console.log('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')');
+        this.connection.query('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')', callback);
     }
 
     get(select, from, where, callback){

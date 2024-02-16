@@ -3,6 +3,8 @@ import {Discord} from '../core/discord.mjs';
 import * as fs from 'fs';
 import * as count from '../controllers/count_controller.mjs';
 import * as gif from '../tools/gif.mjs';
+import { members } from '../core/statics.mjs';
+import { lobby_model } from '../models/lobby_model.mjs';
 
 export class Lobster extends Discord{
 
@@ -63,7 +65,7 @@ export class Lobster extends Discord{
         })
         .then(() => {
       // input random eyes reaction..
-      if (Math.random() < 0.05){msg.react('👀').catch((err) => {console.log('Failed reacting to a message.')});}
+      //if (Math.random() < 0.05){msg.react('👀').catch((err) => {console.log('Failed reacting to a message.')});}
           });
     });
 
@@ -86,8 +88,16 @@ export class Lobster extends Discord{
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
   //let c = client.channels.cache.get('1200927450536890429');
-  //console.log('oldPresence:'+ JSON.stringify(oldPresence));
-  //console.log('newPresence:'+ JSON.stringify(newPresence));
+  if (oldPresence == null && newPresence == null){
+    console.log('presenceUpdate, but no presence is present');
+    return;
+  }
+  //console.log('oldPresence:'+ JSON.stringify(oldPresence || 'oldPresence is null'));
+  //console.log('newPresence:'+ JSON.stringify(newPresence || 'newPresence is null'));
+
+  let lm = new lobby_model();
+  lm.testPresence(oldPresence, newPresence);
+
 })
 
   /*this.client.on('reactionCreate', (reaction) => {
@@ -173,11 +183,11 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
   }
 
   interval(){
-    import('../controllers/lobby_controller.mjs')
+    /*import('../controllers/lobby_controller.mjs')
     .then((mod) => {
       let ins = new mod.lobby_controller();
       ins.clearOld();
-    });
+    });*/
   }
 
 }

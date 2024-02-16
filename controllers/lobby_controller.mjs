@@ -5,22 +5,23 @@ import {
   lobby_model
 } from '../models/lobby_model.mjs';
 import {Time} from '../tools/time.mjs';
+import { channels } from '../core/statics.mjs';
 
 import {Discord} from '../core/discord.mjs';
 
 export class lobby_controller extends Controller {
 
   perm = {
-    'channels': ['949274005511229520'
-       , '883526058236854312'
-                 , '1200927450536890429'
+    'channels': [channels['vanilla-game-chat'],
+                channels['lob-test'],
+                channels['vanilla-codes']
     ]
   }
 
   constructor(msg) {
     super(msg);
 
-    //this.auth(this.perm);
+    this.auth(this.perm);
 
     this.model = new lobby_model();
   }
@@ -40,6 +41,7 @@ export class lobby_controller extends Controller {
     input = input.toUpperCase();
     let code = /([^\w]|^)(\w{5}[FQ])([^\w]|$)/.exec(input)?.[2];
     if (!code) {
+      console.log('Not a code');
       return;
     }
     let match_server = /([^\w]|^)((EU|EUR|EUROPE)|(NA|AMERICA|NORTH\sAMERICA|USA|US)|(ASIA))([^\w]|$)/.exec(input);
@@ -121,7 +123,8 @@ export class lobby_controller extends Controller {
   }
 
   create(args) {
-  if ((!args.code && !args.default?.[0]) || (!args.server && !args.default?.[1])){return;}
+  if ((!args.code && !args.default?.[0]) || 
+  (!args.server && !args.default?.[1])){return;}
     console.log('args in create: '+args);
     this.view.data['server'] = (args.server || args.default[1]).toUpperCase();
     this.view.data['code'] = (args.code || args.default[0]).toUpperCase();
