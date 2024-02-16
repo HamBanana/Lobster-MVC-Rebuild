@@ -27,7 +27,7 @@ export class lobby_model extends Model {
   ping TINYINT(1), \
   is_infohost TINYINT(1), \
   PRIMARY KEY (id), \
-  FOREIGN KEY (lobbyID) references active_lobbies(id)\
+  FOREIGN KEY (lobbyID) references lobby_active_lobbies(id)\
   "
 
   constructor(){
