@@ -123,20 +123,26 @@ export class lobby_controller extends Controller {
   }
 
   create(args) {
+  let host = args['host'] || this.message.author.id;
+  //let host = args['host'] || this.message.author.username;
   if ((!args.code && !args.default?.[0]) || 
   (!args.server && !args.default?.[1])){return;}
     console.log('args in create: '+JSON.stringify(args));
     this.view.data['server'] = (args.server || args.default[1]).toUpperCase();
     this.view.data['code'] = (args.code || args.default[0]).toUpperCase();
-    this.view.data['host'] = args['host'] || this.message.author.username;
+    this.view.data['host'] = this.message.author.username;
     this.view.data['pingtime'] = Time.now;
-    let {code, server} = this.view.data;
-    let host = this.message.author.id;
+    this.view.data['is_vc_lobby'] = args['is_vc_lobby'] || '0';
+    this.view.data['is_vanilla'] = args['is_vanilla'] || '1';
+    let {code, server, pingtime, is_vc_lobby, is_vanilla} = this.view.data;
 
     this.model.create({code, server, host}, (err, res = null) => {
       if (err){
-        if (err.code == "ER_DUP_ENTRY"){this.message.reply('Lobby "' + code + '" already exists.'); return;}
-        if (err.code == "ER_DATA_TOO_LONG"){this.message.reply('"' + code + '" is too long to be a lobby code');}
+        switch(err.code){
+          case "ER_DUP_ENTRY": this.message.reply('Lobby "' + code + '" already exists.'); break;
+          case "ER_DATA_TOO_LONG": this.message.reply('"' + code + '" is too long to be a lobby code'); break;
+          default: this.message.reply("Could not create lobby because: " + err.message);
+        }
         return;
       }
       this.view.reactions = {};
@@ -170,17 +176,23 @@ export class lobby_controller extends Controller {
   queue(args){
     let code = (args.code || args.default?.[0]);
     if (!code){
-    const al = lobby_model.active_lobbies;
-    const ok = Object.keys(al);
-    code = al[ok[ok.length - 1]]?.code;
+      code = lobby_model.active_lobbies[0].code;
     }
 
+    let q_args = {
+      member_id: this.message.author.id,
+      usertag: this.message.author.username,
+      code: code?.toUpperCase()
+    };
+
+    console.log('args in queue_controller: ' + JSON.stringify(q_args));
     
-    if (this.model.queue(this.message.author.id, code?.toUpperCase())) {
-      return this.message.react('👍');
-    } else {
-      return this.message.reply('Lobby does not exist.');
-    }
+    this.model.queue(q_args, (err, res) => {
+      if (err){this.message.reply("Couldn't join because: " + err.message); 
+      if (err.sql){this.message.reply('sql: ' + err.sql);}
+      return;}
+      this.message.react('👍');
+    });
     return false;
   }
 
@@ -194,7 +206,10 @@ export class lobby_controller extends Controller {
       console.log('code: '+code);
     }
     code = code.toUpperCase();
-    if (this.model.unqueue(this.message.author.id, code)) {return this.message.react('👍');}
+    this.model.unqueue({code, usertag: this.message.author.id}, (err, res) => {
+      if (err){this.message.reply("Couldn't unjoin because: " + err.message);}
+      return this.message.react('👍');
+    });
     return false;
   }
 

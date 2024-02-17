@@ -1,10 +1,15 @@
 import {MessageEmbed} from 'discord.js';
 
 export const create =
-  'Code: {{code}}\nServer: '
+  '\`\`\`'
+    +'Code: {{code}}\nServer: '
     +'{{server}}'
     +'\nHosted by: {{host}}'
-    +'\nLast active: <t:{{pingtime}}:R>';
+    +'\nVanilla:  {{is_vanilla}}'
+    +'\nVoice chat: {{is_vc_lobby}}'
+    +'\nNotes: {{notes}}'
+    +'\`\`\`'
+    //+'\nLast active: <t:{{pingtime}}:R>';
 
 export const prompt_server =
   'Code: {{code}}\n'
@@ -28,9 +33,11 @@ export const prompt_server =
   export const confirm_lobby =
  "{{mentions}}\n"
  +"{{code}} - {{server}}\n"
-    +"In lobby: {{pingtime_tag}}.\n"
-    //+"React with ☝️ to get pinged next game."
- +'Write !lob join {{code}}, to get pinged next game.\n';
+    +"In lobby: {{pingtime_tag}}.\n";
+
+    export const game_started =
+    "Lobby {{code}} has started the game\n"
+    +"React with :point_up: or write \"!lob join {{code}}\" to get pinged for next game.";
 
   export const embed_example =
   new MessageEmbed()

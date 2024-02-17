@@ -40,8 +40,9 @@ export class Database {
         return this.connection.query('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')', callback);
     }
 
-    get(select, from, where, callback){
-        return this.connection.query('SELECT ' + select + ' from ' + from + ' where ' + where, callback);
+    get(select, from, where = undefined, callback = () => {}){
+        console.log('REALLY?');
+        return this.connection.query('SELECT ' + select + ' from ' + from + ((where) ? ' where ' + where : ''), callback);
     }
 
     update(table, set, where, callback){
