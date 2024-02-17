@@ -3,7 +3,7 @@ import {Discord} from '../core/discord.mjs';
 import * as fs from 'fs';
 import * as count from '../controllers/count_controller.mjs';
 import * as gif from '../tools/gif.mjs';
-import { members } from '../core/statics.mjs';
+import { channels, members } from '../core/statics.mjs';
 import { lobby_model } from '../models/lobby_model.mjs';
 
 export class Lobster extends Discord{
@@ -38,8 +38,8 @@ export class Lobster extends Discord{
 
     client.on('messageCreate', (msg) => {
       if (msg.author.bot 
-          || msg.channelId == 992089336109617283 
-          || msg.channelID == 1007147411552096376
+          || msg.channelId == channels['serious-topics']
+          || msg.channelID == channels['venting'] 
          || msg.content.length > 2000) {return;}
       //console.log(msg);
       console.log('Input: '+msg.content);
@@ -170,9 +170,11 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         resolve(func(command.args));
         })
         .catch((err) => {
-          msg.reply(gif.random('denied'));
-          if (msg.channelID == '1200927450536890429'){
+          //msg.reply(gif.random('denied'));
+          if (msg.channelId == channels['lob-test']){
             msg.reply('Error: ' + err.message);
+          } else {
+            msg.reply(gif.random('denied'));
           }
           console.log('Controller import failed: '+err.message);});
     })

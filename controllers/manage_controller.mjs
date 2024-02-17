@@ -52,7 +52,7 @@ perm = {'users': ['330279218543984641']
     });
   }
 
-  log(){
+  gitlog(){
     let os = process.env.OS;
     let p;
     let spawn = sub.spawn;

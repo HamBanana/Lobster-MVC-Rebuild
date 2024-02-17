@@ -33,19 +33,22 @@ export class Database {
         }
 
         //console.log('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')');
-        this.connection.query('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')', callback);
+        return this.connection.query('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')', callback);
     }
 
     create_table(name, values, if_not_exists = true, callback = null){
-        console.log('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')');
-        this.connection.query('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')', callback);
+        return this.connection.query('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')', callback);
     }
 
     get(select, from, where, callback){
-            this.connection.query('SELECT ' + select + ' from ' + from + ' where ' + where, callback);
+        return this.connection.query('SELECT ' + select + ' from ' + from + ' where ' + where, callback);
     }
 
     update(table, set, where, callback){
-        this.connection.query("UPDATE " + table + " SET " + set + " WHERE " + where, callback);
+        return this.connection.query("UPDATE " + table + " SET " + set + " WHERE " + where, callback);
+    }
+
+    delete(table, where, callback){
+       return this.connection.query('DELETE FROM ' + table + ' WHERE ' + where, callback);
     }
 }

@@ -1,7 +1,5 @@
 import { Database } from '../core/database.mjs';
-import {
-  Model
-} from '../core/model.mjs';
+import { Model } from '../core/model.mjs';
 import { Time } from '../tools/time.mjs';
 
 export class lobby_model extends Model {
@@ -14,7 +12,9 @@ export class lobby_model extends Model {
   server VARCHAR(6), \
   creationtime BIGINT, \
   pingtime BIGINT, \
+  is_vc_lobby TINYINT(1), \
   host VARCHAR(20), \
+  notes TEXT, \
   PRIMARY KEY (id)\
   ";
 
@@ -24,9 +24,11 @@ export class lobby_model extends Model {
 
   table_active_players = "\
   id INT AUTO_INCREMENT, \
+  member_id VARCHAR(20), \
+  usertag VARCHAR(20), \
   join_request_time BIGINT, \
   lobbyID int, \
-  ping TINYINT(1), \
+  is_in_queue TINYINT(1), \
   is_infohost TINYINT(1), \
   PRIMARY KEY (id), \
   FOREIGN KEY (lobbyID) references lobby_active_lobbies(id)\
@@ -36,33 +38,57 @@ export class lobby_model extends Model {
     super();
     console.log('lobby_model constructor');
   }
-
-  create(code, server, host, pingtime) {
-    if (lobby_model.active_lobbies[code]) {
-      return false;
-    }
-    this.db.create_table('lobby_active_lobbies', this.table_active_lobbies, true, (error) => {
+  
+  create(args, callback) {
+    //if (lobby_model.active_lobbies[code]) {
+    //  return false;
+    //}
+    return this.db.create_table('lobby_active_lobbies', this.table_active_lobbies, true, (error) => {
       if (error){console.log('Error when trying to create lobby_Active_lobbies: ' + error.message)}
-      this.db.insert('lobby_active_lobbies', {
-        code: code,
-        server: server,
-        host: host,
+      let values = {
+        code: args.code,
+        server: args.server,
+        host: args.host,
         creationtime: Time.now,
-        pingtime: Time.now
-      }, (err, res) => {
-        if (err){console.log('Error while inserting new active lobby: ' + err.message);}
+        pingtime: Time.now,
+        is_vc_lobby: args.is_vc_lobby || 0,
+        notes: args.notes || ''
+      };
+      this.db.insert('lobby_active_lobbies', values, (err, res) => {
+        if (err){
+          console.log('Error while inserting new active lobby: ' + err.message);
+          callback(err);
+          return;
+        }
+        console.log('res = ' + JSON.stringify(res));
+        // No error happened
+        lobby_model.active_lobbies[args.code] = values;
+        callback(err, res);
       });
     });
-
-    lobby_model.active_lobbies[code] = new LobbyConfig(code, server, host, pingtime);
-    return true;
   }
 
   getLobby(code) {
     return lobby_model.active_lobbies[code] || false;
   }
 
-  deleteLobby(code){
+  delete(args, callback)
+  {
+    let code = args.code;
+    let user = args.user;
+    this.db.get('*', 'lobby_active_lobbies', 'host = "' + user + '" AND code = "' + code + '"', (err, res) => {
+        if (err){
+          callback(err); return;
+        }
+        //console.log("Result of testing for host and code: " + JSON.stringify(res));
+        //callback({ message: JSON.stringify(res)});
+        if (res.length == 0){
+          callback({message: "The lobby doesn't exist, or you are not host."}); return;
+        }
+        this.db.delete('lobby_active_lobbies', 'code = "' + code + '"', (err) => {
+          callback(err); return;
+        });
+    });
     let lobs = lobby_model.active_lobbies;
     if (!lobs[code]){return false;}
     delete lobs[code];

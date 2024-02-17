@@ -125,27 +125,40 @@ export class lobby_controller extends Controller {
   create(args) {
   if ((!args.code && !args.default?.[0]) || 
   (!args.server && !args.default?.[1])){return;}
-    console.log('args in create: '+args);
+    console.log('args in create: '+JSON.stringify(args));
     this.view.data['server'] = (args.server || args.default[1]).toUpperCase();
     this.view.data['code'] = (args.code || args.default[0]).toUpperCase();
-    this.view.data['pingtime'] = Time.now;
     this.view.data['host'] = args['host'] || this.message.author.username;
-    let {code, server, host, pingtime} = this.view.data;
-    if (!this.model.create(code, server, host, pingtime)){
-      return this.message.reply('This lobby exists already :eyes:');
-    }
+    this.view.data['pingtime'] = Time.now;
+    let {code, server} = this.view.data;
+    let host = this.message.author.id;
 
-    this.view.reactions = {};
-    this.view.template_path = 'lobby/create';
-    return this.post();
+    this.model.create({code, server, host}, (err, res = null) => {
+      if (err){
+        if (err.code == "ER_DUP_ENTRY"){this.message.reply('Lobby "' + code + '" already exists.'); return;}
+        if (err.code == "ER_DATA_TOO_LONG"){this.message.reply('"' + code + '" is too long to be a lobby code');}
+        return;
+      }
+      this.view.reactions = {};
+      this.view.template_path = 'lobby/create';
+      return this.post();
+    });
+
   }
 
   delete(args){
     const code = (args.code || args.default?.[0]).toUpperCase();
-    let host = this.model.getLobby(code).host;
-    if (host !== this.message.author.username){return false;}
-    this.model.deleteLobby(code);
+    //let host = this.model.getLobby(code).host;
+    /*if (host !== this.message.author.username){
+      this.message.reply('Only host can delete the lobby.');
+      return false;
+    }*/
+    this.model.delete({code: code, user: this.message.author.id}, (err) => {
+      if (err){
+        return this.message.reply('Error while deleting lobby "' + code + '": ' + err.message);
+      }
     return this.message.reply('Deleted: '+code);
+    });
   }
 
   /*queue(args){
