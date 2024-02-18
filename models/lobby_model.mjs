@@ -30,7 +30,6 @@ export class lobby_model extends Model {
   usertag VARCHAR(40), \
   join_request_time BIGINT, \
   lobby_code VARCHAR(6), \
-  is_in_queue TINYINT(1), \
   is_infohost TINYINT(1), \
   PRIMARY KEY (id) \
   "
@@ -92,12 +91,14 @@ export class lobby_model extends Model {
           callback({message: "Can't delete \" " + code + " \": The lobby doesn't exist, or you are not host."}); return;
         }
         this.db.delete('lobby_active_lobbies', 'code = "' + code + '"', (err) => {
-          callback(err); return;
+          if (err){
+            return callback(err);
+          }
+          this.db.delete('lobby_active_players', 'lobby_code = "' + code + '"', (err, res) => {
+            delete lobby_model.table_active_lobbies[code];
+          });
         });
     });
-    let lobs = lobby_model.active_lobbies;
-    if (!lobs[code]){return false;}
-    delete lobs[code];
   }
 
   updateLobby(code, values){
@@ -134,7 +135,6 @@ export class lobby_model extends Model {
         usertag: args.usertag,
         join_request_time: Time.now,
         lobby_code: args.code,
-        is_in_queue: 1,
         is_infohost: 0
       }, (err, res) => {
         if (err){callback(err, res); return;}
