@@ -124,17 +124,21 @@ export class lobby_controller extends Controller {
 
   create(args) {
   let host = args['host'] || this.message.author.id;
+  let code = (args.code || args.default[0]).toUpperCase();
+  let server = (args.server || args.default[1]).toUpperCase();
+  if (!code || !server){this.message.reply('create function must follow the format: !lob lobby create {code} {server}'); return;}
   //let host = args['host'] || this.message.author.username;
-  if ((!args.code && !args.default?.[0]) || 
-  (!args.server && !args.default?.[1])){return;}
+  /*if ((!args.code && !args.default?.[0]) || 
+  (!args.server && !args.default?.[1])){return;}*/
     console.log('args in create: '+JSON.stringify(args));
-    this.view.data['server'] = (args.server || args.default[1]).toUpperCase();
-    this.view.data['code'] = (args.code || args.default[0]).toUpperCase();
+    this.view.data['server'] = server;
+    this.view.data['code'] = code;
     this.view.data['host'] = this.message.author.username;
     this.view.data['pingtime'] = Time.now;
     this.view.data['is_vc_lobby'] = args['is_vc_lobby'] || '0';
     this.view.data['is_vanilla'] = args['is_vanilla'] || '1';
-    let {code, server, pingtime, is_vc_lobby, is_vanilla} = this.view.data;
+    let {pingtime, is_vc_lobby, is_vanilla} = this.view.data;
+
 
     this.model.create({code, server, host}, (err, res = null) => {
       if (err){
@@ -147,7 +151,9 @@ export class lobby_controller extends Controller {
       }
       this.view.reactions = {};
       this.view.template_path = 'lobby/create';
-      return this.post();
+      this.post().then(() => {
+        this.queue({code, is_in_queue: 0});
+      });
     });
 
   }
@@ -175,8 +181,11 @@ export class lobby_controller extends Controller {
 
   queue(args){
     let code = (args.code || args.default?.[0]);
-    if (!code){
+    console.log('code: ' + code);
+    if (!code ||code == '' || code == 'undefined' || code == undefined || typeof(code) == undefined){
       code = lobby_model.active_lobbies[0].code;
+      this.message.reply('You forgot the code :eyes:')
+      return;
     }
 
     let q_args = {
@@ -185,29 +194,34 @@ export class lobby_controller extends Controller {
       code: code?.toUpperCase()
     };
 
-    console.log('args in queue_controller: ' + JSON.stringify(q_args));
+    console.log('args in lobby_controller.queue: ' + JSON.stringify(q_args));
     
     this.model.queue(q_args, (err, res) => {
-      if (err){this.message.reply("Couldn't join because: " + err.message); 
+      if (err){
+        switch (err.code){
+          case "ER_DUP_ENTRY": this.message.reply("You are already in the queue."); return;
+          default: this.message.reply("Couldn't join because: " + err.message); break;
+        }
+        
       if (err.sql){this.message.reply('sql: ' + err.sql);}
-      return;}
+      return;
+      }
       this.message.react('👍');
+      return;
     });
-    return false;
   }
 
   unqueue(args){
-    console.log('args: '+JSON.stringify(args));
     let code = (args.code || args.default?.[0]);
-    if (!code){
+    /*if (!code){
     const al = lobby_model.active_lobbies;
     const ok = Object.keys(al);
     code = al[ok[ok.length - 1]].code;
       console.log('code: '+code);
-    }
+    }*/
     code = code.toUpperCase();
-    this.model.unqueue({code, usertag: this.message.author.id}, (err, res) => {
-      if (err){this.message.reply("Couldn't unjoin because: " + err.message);}
+    this.model.unqueue({lobby_code: code, member_id: this.message.author.id}, (err, res) => {
+      if (err){return this.message.reply("Couldn't unjoin because: " + err.message);}
       return this.message.react('👍');
     });
     return false;

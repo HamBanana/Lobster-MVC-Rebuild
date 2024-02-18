@@ -41,7 +41,6 @@ export class Database {
     }
 
     get(select, from, where = undefined, callback = () => {}){
-        console.log('REALLY?');
         return this.connection.query('SELECT ' + select + ' from ' + from + ((where) ? ' where ' + where : ''), callback);
     }
 
@@ -50,6 +49,7 @@ export class Database {
     }
 
     delete(table, where, callback){
+        //console.log('DELETE FROM ' + table + ' WHERE ' + where);
        return this.connection.query('DELETE FROM ' + table + ' WHERE ' + where, callback);
     }
 }

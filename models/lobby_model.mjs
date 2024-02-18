@@ -123,9 +123,11 @@ export class lobby_model extends Model {
       return callback({message: 'The lobby "' + args.code + '" does not exist.'});
     }
     if (!lobby_model.active_lobbies[args.code].queue) { lobby_model.active_lobbies[args.code].queue = []; }
-    if (lobby_model.active_lobbies[args.code].queue?.indexOf(args.member_id) < 0){
+    //for (let [k, v] of Object.entries(lobby_model.active_players)){
+    //}
+    /*if (lobby_model.active_lobbies[args.code].queue?.indexOf(args.member_id) < 0){
       return callback({message: 'You are already in the queue.'});
-    }
+    }*/
     console.log('args in queue: ' + JSON.stringify(args));
       this.db.insert('lobby_active_players', {
         member_id: args.member_id,
@@ -137,7 +139,8 @@ export class lobby_model extends Model {
       }, (err, res) => {
         if (err){callback(err, res); return;}
   
-        lobby_model.active_lobbies[args.code]?.queue.push(args.member_id)
+        lobby_model.active_lobbies[args.code]?.queue.push(args.member_id);
+        console.log('Result of inserting active_player: ' + JSON.stringify(res));
   
         callback(err, res);
         return;
@@ -146,16 +149,30 @@ export class lobby_model extends Model {
   }
 
   unqueue(args, callback) {
+    if (!args.lobby_code ||args.lobby_code == undefined){
+      args.lobby_code = lobby_model.active_players[args.member_id].lobby_code;
+    }
+    console.log('args in unqueue: ' + JSON.stringify(args));
     this.db.delete('lobby_active_players', 
     'lobby_code = "' + args.lobby_code + '" AND member_id = "' + args.member_id + '"', (err, res) => {
       if (err){callback(err, res); return;}
 
-      let arr = lobby_model.active_lobbies[args.code].queue;
-      if (!arr || arr == undefined){callback({message: 'A queue does not exist for the lobby. (This should never happen)'}); return;}
-      if (arr.splice(arr.indexOf(args.usertag), 1)) {
-        return callback(err, res);
+      console.log('Active lobbies: ' + JSON.stringify(lobby_model.active_lobbies));
+
+      let arr = lobby_model.active_lobbies[args.lobby_code]?.queue;
+      if (!arr){
+       return callback({message: "The lobby \"" + args.lobby_code + "\" doesn't exist."});
       }
-      return false;
+      console.log(args.code + ' queue before splice: ' + arr[0]);
+      if (!arr || arr == undefined){callback({message: 'A queue does not exist for the lobby. (This should never happen)'}); return;}
+      if (arr.splice(arr.indexOf(args.member_id), 1)) {
+        console.log(args.code + ' queue after splice: ' + arr[0]);
+        //return callback(err, res);
+      }
+      
+      // Remove from active_players
+      delete lobby_model.active_players[args.member_id];
+
     });
   }
 
@@ -232,8 +249,12 @@ newPresence:{"userId":"330279218543984641","guild":"817607509984018442","status"
         }
         lm.db.get('*', 'lobby_active_players', undefined, (err, res) => {
           if (err){return callback(err, res);}
+          console.log('Active players:\n' + JSON.stringify(res));
           for (let i = 0; i < res.length; i++){
             lobby_model.active_players[res[i]] = res[i];
+          }
+          for (let [k, v] of Object.entries(lobby_model.active_players)){
+            if (v.is_in_queue){lobby_model.active_lobbies[v.lobby_code].queue.push(v.member_id)}
           }
         });
         console.log('Active lobbies:\n' + JSON.stringify(res));
