@@ -8,6 +8,7 @@ import {Time} from '../tools/time.mjs';
 import { channels } from '../core/statics.mjs';
 
 import {Discord} from '../core/discord.mjs';
+import { Database } from '../core/database.mjs';
 
 export class lobby_controller extends Controller {
 
@@ -123,7 +124,7 @@ export class lobby_controller extends Controller {
   }
 
   create(args) {
-    if ((args.code || args.default[0]) || (args.server || args.default[1])){
+    if (!(args.code || args.default[0]) || !(args.server || args.default[1])){
       this.message.reply('create function must follow the format: !lob lobby create {code} {server}'); return;
     }
   let host = args['host'] || this.message.author.id;
@@ -308,6 +309,51 @@ export class lobby_controller extends Controller {
     });
     }
   }
+
+  
+
+  testPresence(oldPresence, newPresence){
+    if (!lobby_model.infohosts.includes(oldPresence?.userId)){return;}
+    let oldActivity = oldPresence?.activities[0];
+    let newActivity = newPresence?.activities[0];
+    let client = Discord.client;
+        let c = client.channels.cache.get('1200927450536890429');
+    if (oldActivity && newActivity){
+      if (oldActivity.name !== "Among Us" || newActivity.name !== "Among Us"){return;}
+    }
+    /*if (oldActivity){
+      console.log('oldGame: ' + JSON.stringify(oldActivity));
+    }
+    if (newActivity){
+      console.log('newGame: ' + JSON.stringify(newActivity));
+    }*/
+
+    if (newPresence){
+      console.log('newPresence: ' + JSON.stringify(newPresence));
+    }
+    //if (newActivity !== 'Among Us')
+      if (oldActivity?.state == 'In Menus' && newActivity?.state == 'In Lobby'){
+
+        return c.send('Just started a lobby: ' + newActivity.party.id);
+
+      }
+      if (oldActivity?.state == "In Lobby" && newActivity?.state == "In Game"){
+        return c.send('Game "' + oldActivity.party.id + '" started..');
+      }
+      if (oldActivity?.state == "In Game" && newActivity?.state == "In Lobby"){
+        return c.send('Game "' + newActivity.party.id + '" back in lobby.');
+      }
+    
+
+/*
+oldGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,"details":null,"state":"In Menus",
+"applicationId":"477175586805252107","timestamps":{"start":null,"end":null},"syncId":null,"platform":null,"party":{},"assets":{"largeText":null,"smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":0,"emoji":null,"sessionId":null,"buttons":[],"createdTimestamp":1708285670179}
+newGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,"details":"Hosting a game","state":"In Lobby",
+"applicationId":"477175586805252107","timestamps":{"start":null,"end":null},"syncId":null,"platform":null,"party":{"size":[1,15],"id":"ETSJBF"},"assets":{"largeText":"Ask to play!","smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":2,"emoji":null,"sessionId":"7a3226be744ff891e6d60ca190becd3d","buttons":[],"createdTimestamp":1708285687339}
+
+*/
+  }
+
 
   clearOld(){
     for (let [k, v] of Object.entries(lobby_model.active_lobbies)){

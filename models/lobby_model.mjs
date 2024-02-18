@@ -4,8 +4,9 @@ import { Time } from '../tools/time.mjs';
 
 export class lobby_model extends Model {
 
-  static active_lobbies = {}
-  static active_players = {}
+  static active_lobbies = {};
+  static active_players = {};
+  static infohosts = [];
 
   table_active_lobbies = "\
   id INT AUTO_INCREMENT NOT NULL, \
@@ -18,6 +19,7 @@ export class lobby_model extends Model {
   is_vanilla TINYINT(1), \
   notes TEXT, \
   infohost VARCHAR(25), \
+  state varchar(8), \
   PRIMARY KEY (id)\
   ";
 
@@ -181,65 +183,22 @@ export class lobby_model extends Model {
   }
 
   register_infohost(args, callback){
+    if (lobby_model.infohosts.includes(args.member_id)){
+      return callback({message: 'You are already infohost.'});
+    }
     this.db.insert('lobby_infohosts', args, (err, res) => {
+      console.log(JSON.stringify(lobby_model.infohosts));
+      lobby_model.infohosts.push(args.member_id);
       return callback(err, res);
     });
   }
 
   unregister_infohost(args, callback){
+    if (lobby_model.infohosts.includes(args.member_id)){return callback({message: 'You are not infohost.'});}
     this.db.delete('lobby_infohosts', 'member_id = "'+args.member_id+'"', (err, res) => {
+      lobby_model.infohosts = lobby_model.infohosts.filter((e) =>{e !== args.member_id;});
       return callback(err, res);
     });
-  }
-
-  testPresence(oldPresence, newPresence){
-    let oldActivity = oldPresence?.activities[0];
-    let newActivity = newPresence?.activities[0];
-    if (oldActivity && newActivity){
-      if (oldActivity.name !== "Among Us" && newActivity.name !== "Among Us"){return;}
-    }
-    if (oldActivity){
-      console.log('oldGame: ' + JSON.stringify(oldActivity.name));
-    }
-    if (newActivity){
-      console.log('newGame: ' + JSON.stringify(newActivity.name));
-    }
-    //if (newActivity !== 'Among Us')
-    let db = Database.getInstance();
-
-        db.get('*', 'lobby_queue', 'is_infohost = 1', (err, res, fields) => {
-          if (err){console.log('Error in getting infohosts: ' + err.message); return;}
-          console.log('Result of getting infohosts: ' + JSON.stringify(res));
-        });
-    
-
-
-    /*oldPresence:{
-      "userId":"330279218543984641",
-      "guild":"817607509984018442",
-      "status":"online",
-      "activities":[{"id":"d7995e21d2fc74f2",
-      "name":"Among Us",
-      "type":"PLAYING",
-      "url":null,
-      "details":null,
-      "state":"In Lobby",
-      "applicationId":"477175586805252107",
-      "timestamps":{"start":1708028961000,"end":null},
-      "syncId":null,
-      "platform":null,
-      "party":{"size":[13,15],"id":"LWWTJF"},
-      "assets":{"largeText":null,
-      "smallText":null,"largeImage":"481347538054545418",
-      "smallImage":null},
-      "flags":0,
-      "emoji":null,
-      "sessionId":null,
-      "buttons":[],
-      "createdTimestamp":1708033343678}],
-      "clientStatus":{"desktop":"online"}}
-newPresence:{"userId":"330279218543984641","guild":"817607509984018442","status":"online","activities":[{"id":"d7995e21d2fc74f2","name":"Among Us","type":"PLAYING","url":null,"details":"Playing","state":"In Game","applicationId":"477175586805252107","timestamps":{"start":1708028961000,"end":null},"syncId":null,"platform":null,"party":{},"assets":{"largeText":null,"smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":0,"emoji":null,"sessionId":null,"buttons":[],"createdTimestamp":1708033387219}],"clientStatus":{"desktop":"online"}}
-    */
   }
   
 
@@ -248,36 +207,44 @@ newPresence:{"userId":"330279218543984641","guild":"817607509984018442","status"
       lm.db.create_table('lobby_infohosts', lm.table_infohosts, (err, res) => {
         if (err){return console.log('Error while creating lobby_infohosts table: ' + err.message);}
         console.log('lobby_infohosts table is up.');
+        lm.db.get('*', 'lobby_infohosts', undefined, (gerr, gres) => {
+          if (err){console.log('Error while getting infohosts: ' + gerr.message);}
+          for (let i in gres)
+          lobby_model.infohosts.push(gres[i].member_id);
+        });
       });
+
+
       lm.db.create_table('lobby_active_lobbies', lm.table_active_lobbies, (err, res) => {
         if (err){return console.log('Error while creating lobby_active_lobbies table: ' + err.message);}
         console.log('lobby_active_lobbies table is up.');
-      });
-      lm.db.create_table('lobby_queue', lm.table_queue, (err, res) => {
-        if (err){return console.log('Error while creating lobby_queue table: ' + err.message);}
-        console.log('lobby_queue table is up.');
-      });
 
-      lm.db.get('*', 'lobby_active_lobbies', undefined, (err, res) => {
-        if (err){
-          console.log('Error getting active lobbies: ' + err.message);
-          if (err.sql){console.log('sql: ' + err.sql);}
+      lm.db.get('*', 'lobby_active_lobbies', undefined, (gerr, gres) => {
+        if (gerr){
+          console.log('Error getting active lobbies: ' + gerr.message);
+          if (gerr.sql){console.log('sql: ' + gerr.sql);}
           return;
         }
-        for (let i = 0; i<res.length;i++){
-          lobby_model.active_lobbies[res[i].code] = res[i]
-          lobby_model.active_lobbies[res[i].code].queue = [];
+        for (let i = 0; i<gres.length;i++){
+          lobby_model.active_lobbies[gres[i].code] = gres[i]
+          lobby_model.active_lobbies[gres[i].code].queue = [];
         }
-        lm.db.get('*', 'lobby_queue', undefined, (err, res) => {
-          if (err){return callback(err, res);}
-          console.log('Active players:\n' + JSON.stringify(res));
-          for (let i = 0; i < res.length; i++){
-            lobby_model.active_players[res[i]] = res[i];
-          }
-          for (let [k, v] of Object.entries(lobby_model.active_players)){
-            if (v.is_in_queue){lobby_model.active_lobbies[v.lobby_code].queue.push(v.member_id)}
-          }
+
+        lm.db.create_table('lobby_queue', lm.table_queue, (qerr, qres) => {
+          if (qerr){return console.log('Error while creating lobby_queue table: ' + qerr.message);}
+          console.log('lobby_queue table is up.');
+  
+          lm.db.get('*', 'lobby_queue', undefined, (gqerr, gqres) => {
+            if (gqerr){return callback(gqerr, gqres);}
+            for (let i = 0; i < gres.length; i++){
+              lobby_model.active_players[gqres[i]] = gqres[i];
+            }
+          });
+  
         });
+
+      });
+
         console.log('Active lobbies:\n' + JSON.stringify(res));
       });
   }

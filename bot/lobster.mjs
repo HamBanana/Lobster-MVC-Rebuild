@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as count from '../controllers/count_controller.mjs';
 import * as gif from '../tools/gif.mjs';
 import { channels, members } from '../core/statics.mjs';
-import { lobby_model } from '../models/lobby_model.mjs';
+import { lobby_controller } from '../controllers/lobby_controller.mjs';
 
 export class Lobster extends Discord{
 
@@ -95,7 +95,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
   //console.log('oldPresence:'+ JSON.stringify(oldPresence || 'oldPresence is null'));
   //console.log('newPresence:'+ JSON.stringify(newPresence || 'newPresence is null'));
 
-  let lm = new lobby_model();
+  let lm = new lobby_controller();
   lm.testPresence(oldPresence, newPresence);
 
 })
