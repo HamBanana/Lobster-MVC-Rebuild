@@ -123,10 +123,12 @@ export class lobby_controller extends Controller {
   }
 
   create(args) {
+    if ((args.code || args.default[0]) || (args.server || args.default[1])){
+      this.message.reply('create function must follow the format: !lob lobby create {code} {server}'); return;
+    }
   let host = args['host'] || this.message.author.id;
-  let code = (args.code || args.default[0]).toUpperCase();
-  let server = (args.server || args.default[1]).toUpperCase();
-  if (!code || !server){this.message.reply('create function must follow the format: !lob lobby create {code} {server}'); return;}
+  let code = (args.code || args.default[0]).toUpperCase() || null;
+  let server = (args.server || args.default[1]).toUpperCase() || null;
   //let host = args['host'] || this.message.author.username;
   /*if ((!args.code && !args.default?.[0]) || 
   (!args.server && !args.default?.[1])){return;}*/
@@ -156,6 +158,20 @@ export class lobby_controller extends Controller {
       });
     });
 
+  }
+
+  register_infohost(){
+    this.model.register_infohost({member_id: this.message.author.id}, (err, res) => {
+      if (err){return this.message.reply("Couldn't register you as infohost, because: " + err.message);}
+      return this.message.reply('Lobster will now use your activity info to ping when lobbies\nYou can use "!lob lobby announce" to automatically ping archetype when lobby starts.');
+    });
+  }
+
+  unregister_infohost(){
+    this.model.unregister_infohost({member_id: this.message.author.id}, (err, res) => {
+      if (err){return this.message.reply("Couldn't unregister you as infohost, because: " + err.message);}
+      return this.message.reply('You are no longer registered as infohost.');
+    });
   }
 
   delete(args){
@@ -213,12 +229,6 @@ export class lobby_controller extends Controller {
 
   unqueue(args){
     let code = (args.code || args.default?.[0]);
-    /*if (!code){
-    const al = lobby_model.active_lobbies;
-    const ok = Object.keys(al);
-    code = al[ok[ok.length - 1]].code;
-      console.log('code: '+code);
-    }*/
     code = code.toUpperCase();
     this.model.unqueue({lobby_code: code, member_id: this.message.author.id}, (err, res) => {
       if (err){return this.message.reply("Couldn't unjoin because: " + err.message);}
@@ -226,13 +236,6 @@ export class lobby_controller extends Controller {
     });
     return false;
   }
-
-  /*create(args){
-    this.view.data['server'] = (args.server || args.default?.[1]).toUpperCase();
-    this.view.data['code'] = (args.code || args.default?.[0]).toUpperCase();
-    this.view.template_path = 'lobby/create';
-    this.post();
-  }*/
 
   test(){
     this.post(':eyes:');

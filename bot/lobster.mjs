@@ -170,12 +170,21 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
         resolve(func(command.args));
         })
         .catch((err) => {
-          //msg.reply(gif.random('denied'));
-          if (msg.channelId == channels['lob-test']){
-            msg.reply('Error: ' + err.message);
-          } else {
-            msg.reply(gif.random('denied'));
+          if (err){
+            switch (err.code){
+              case "ERR_MODULE_NOT_FOUND":
+                return msg.reply("That's not a thing.");
+              default: 
+              if (msg.channelId == channels['lob-test']){
+                msg.reply('Error: ' + err.message);
+                console.log('Error: ' + JSON.stringify(err));
+              } else {
+                msg.reply(gif.random('denied'));
+              }
+              return;
+            }
           }
+          //msg.reply(gif.random('denied'));
           console.log('Controller import failed: '+err.message);});
     })
       .catch((err) => {
