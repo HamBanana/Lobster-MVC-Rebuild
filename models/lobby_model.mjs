@@ -95,7 +95,7 @@ export class lobby_model extends Model {
             return callback(err);
           }
           this.db.delete('lobby_active_players', 'lobby_code = "' + code + '"', (err, res) => {
-            delete lobby_model.table_active_lobbies[code];
+            delete lobby_model.active_lobbies[code];
           });
         });
     });
