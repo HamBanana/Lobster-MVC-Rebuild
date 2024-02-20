@@ -164,18 +164,23 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
           msg.react('<:no:1047889973631782994>');
           return;
         }
+        if (!command.method){reject({message: "That's not a function."});}
         let func = eval("ins."+command.method+'.bind(ins)');
         if (typeof(func) !== 'function'){reject(String(func)+' is not a valid function of '+command.controller);}
       // Execute the parsed function.
         resolve(func(command.args));
         })
         .catch((err) => {
+          if (err.message == "Cannot read properties of undefined (reading 'bind')"){
+            return msg.reply("That's not a function.");
+          }
           if (err){
             switch (err.code){
               case "ERR_MODULE_NOT_FOUND":
                 return msg.reply("That's not a thing.");
-              default: 
+              default:
               if (msg.channelId == channels['lob-test']){
+                msg.reply('Error: ' + err.code);
                 msg.reply('Error: ' + err.message);
                 console.log('Error: ' + JSON.stringify(err));
               } else {
@@ -185,7 +190,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
             }
           }
           //msg.reply(gif.random('denied'));
-          console.log('Controller import failed: '+err.message);});
+          //console.log('Controller import failed: '+err.message);
+        });
     })
       .catch((err) => {
         //client.channels.get('1200927450536890429').send('Error: '+err.message);

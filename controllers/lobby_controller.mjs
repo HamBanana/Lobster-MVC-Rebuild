@@ -177,6 +177,7 @@ export class lobby_controller extends Controller {
 
   delete(args){
     const code = (args.code || args.default?.[0]).toUpperCase();
+    if (!code){return this.message.reply('Delete what?');}
     //let host = this.model.getLobby(code).host;
     /*if (host !== this.message.author.username){
       this.message.reply('Only host can delete the lobby.');
