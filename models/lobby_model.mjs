@@ -11,7 +11,7 @@ export class lobby_model extends Model {
   table_active_lobbies = "\
   id INT AUTO_INCREMENT NOT NULL, \
   code CHAR(6) UNIQUE NOT NULL, \
-  server VARCHAR(6), \
+  server VARCHAR(20), \
   creationtime BIGINT, \
   pingtime BIGINT, \
   is_vc_lobby TINYINT(1), \
@@ -20,6 +20,7 @@ export class lobby_model extends Model {
   notes TEXT, \
   infohost VARCHAR(25), \
   state varchar(8), \
+  post_id varchar(25), \
   PRIMARY KEY (id)\
   ";
 
@@ -35,12 +36,18 @@ export class lobby_model extends Model {
   table_queue = "\
   id INT AUTO_INCREMENT, \
   member_id VARCHAR(20) UNIQUE, \
-  usertag VARCHAR(40), \
   join_request_time BIGINT, \
   lobby_code VARCHAR(6), \
   is_infohost TINYINT(1), \
   PRIMARY KEY (id) \
   "
+
+  table_announced = 
+  'id INT AUTO_INCREMENT, '
+  +'member_id VARCHAR(25) UNIQUE, '
+  +'is_vanilla TINYINT(1), '
+  +'is_vc_lobby TINYINT(1), '
+  +'PRIMARY KEY(id)';
 
   constructor(){
     super();
@@ -57,27 +64,49 @@ export class lobby_model extends Model {
         callback(err, res);
         return;
       }
+      let letter = args.code.slice(-1);
+      let server = '';
+      if (letter == 'F' || letter == 'Q'){server = "Europe, probably";}
+      else if (letter == 'G'){server = 'North America';}
+      else if (letter == '') {server = 'Asia';}
+      else {server = "Idk, Asia maybe."}
       let values = {
         code: args.code,
-        server: args.server,
+        server: args.server || server,
         host: args.host,
         creationtime: Time.now,
         pingtime: Time.now,
         is_vc_lobby: args.is_vc_lobby || 0,
+        is_vanilla: args.is_vanilla || 1,
         notes: args.notes || ''
       };
       this.db.insert('lobby_active_lobbies', values, (err, res) => {
         if (err){
           console.log('Error while inserting new active lobby: ' + err.message);
-          callback(err);
-          console.log('Error when inserting new player: ' + err.message);
-          return;
+          return callback(err, res);
         }
-        console.log('res = ' + JSON.stringify(res));
+        //console.log('res = ' + JSON.stringify(res));
         // No error happened
         lobby_model.active_lobbies[args.code] = values;
-        callback(err, res);
+        return callback(err, values);
       });
+    });
+  }
+
+  setLobbyState(args, callback){
+    if (!args.code){
+      return callback({message: "Tried to update lobby, without a code"});
+    }
+    this.db.update('lobby_active_lobbies', args, "code = " + args.code, (err, res) => {
+      if (err){return callback(err)}
+      return callback(err, res);
+    });
+  }
+
+  getInfohosts(args, callback){
+    this.db.get('*', 'lobby_infohosts', 'member_id = ' + args.member_id, (err, res) => {
+      if (err){return callback(err);}
+      return callback(err, res);
     });
   }
 
@@ -133,7 +162,6 @@ export class lobby_model extends Model {
     console.log('args in queue: ' + JSON.stringify(args));
       this.db.insert('lobby_queue', {
         member_id: args.member_id,
-        usertag: args.usertag,
         join_request_time: Time.now,
         lobby_code: args.code,
         is_infohost: 0
@@ -161,8 +189,6 @@ export class lobby_model extends Model {
         return callback({message: "You're not in the lobby \"" + args.lobby_code + "\""});
       }
       console.log('Result of deleting player from lobby_queue:\n' + JSON.stringify(res));
-
-      console.log('Active lobbies: ' + JSON.stringify(lobby_model.active_lobbies));
 
       let arr = lobby_model.active_lobbies[args.lobby_code]?.queue;
       if (!arr){
@@ -194,28 +220,80 @@ export class lobby_model extends Model {
   }
 
   unregister_infohost(args, callback){
-    if (lobby_model.infohosts.includes(args.member_id)){return callback({message: 'You are not infohost.'});}
+    if (!lobby_model.infohosts.includes(args.member_id)){return callback({message: 'You are not infohost.'});}
     this.db.delete('lobby_infohosts', 'member_id = "'+args.member_id+'"', (err, res) => {
       lobby_model.infohosts = lobby_model.infohosts.filter((e) =>{e !== args.member_id;});
       return callback(err, res);
+    });
+  }
+
+  announce(args, callback){
+    this.db.insert('lobby_announced', args, (err, res) => {
+      return callback(err, res);
+    });
+  }
+
+  unannounce(args, callback){
+    this.db.delete('lobby_announced', "member_id = " + args.member_id, (err, res) => {
+      return callback(err, res);
+    });
+  }
+
+  getAnnounced(args, callback){
+    if (!args.member_id){return console.log('lobby_model.getAnnounced was called without a member_id');}
+    this.db.get('*', 'lobby_announced', "member_id = " + args.member_id, (err, res) => {
+      return callback(err, res);
+    });
+  }
+
+  confirm_lobby(args, callback){
+    if (!args.code){return callback({message: "You need to include the lobby code, for now at least."});}
+
+    lobby_model.active_lobbies[args.code].state = args.state;
+    // Gather ids from the queue.
+    let mentions = "";
+    for (let i in lobby_model.active_lobbies[args.code].queue){
+      let mention = lobby_model.active_lobbies[args.code].queue[i];
+      mentions += "<@" + mention + "> "
+      console.log('Mentioning: ' + mention);
+      // Clear the queue from db.
+      this.db.delete('lobby_queue', 'member_id = "' + mention + '" AND lobby_code = "' + args.code + '"');
+    }
+    return callback(null, {mentions});
+  }
+
+  assign_infohost(args, callback){
+    if (!args.code){return callback({message: 'assign_infohost was called with no lobby code'});}
+    this.db.get('*', 'lobby_infohosts', 'lobby_code = "' + args.code + '"', (err, res) => {
+      if (err){return callback(err, res);}
+      if (res.length < 1){
+        return callback({message: 'No infohosts are available'});
+      }
+      lobby_model.active_lobbies[args.code].infohost = res[0].member.id;
     });
   }
   
 
   static createtables(){
       let lm = new lobby_model();
-      lm.db.create_table('lobby_infohosts', lm.table_infohosts, (err, res) => {
+      lm.db.create_table('lobby_infohosts', lm.table_infohosts, true, (err, res) => {
         if (err){return console.log('Error while creating lobby_infohosts table: ' + err.message);}
         console.log('lobby_infohosts table is up.');
         lm.db.get('*', 'lobby_infohosts', undefined, (gerr, gres) => {
           if (err){console.log('Error while getting infohosts: ' + gerr.message);}
-          for (let i in gres)
-          lobby_model.infohosts.push(gres[i].member_id);
+          for (let i in gres){
+            lobby_model.infohosts.push(gres[i].member_id);
+          }
         });
       });
 
+      lm.db.create_table('lobby_announced', lm.table_announced, true, (err, res) => {
+        if (err){return console.log('Error while creating lobby_announced: ' + err.message)}
+        console.log('lobby_announced table was created');
+      })
 
-      lm.db.create_table('lobby_active_lobbies', lm.table_active_lobbies, (err, res) => {
+
+      lm.db.create_table('lobby_active_lobbies', lm.table_active_lobbies, true, (err, res) => {
         if (err){return console.log('Error while creating lobby_active_lobbies table: ' + err.message);}
         console.log('lobby_active_lobbies table is up.');
 
@@ -230,17 +308,18 @@ export class lobby_model extends Model {
           lobby_model.active_lobbies[gres[i].code].queue = [];
         }
 
-        lm.db.create_table('lobby_queue', lm.table_queue, (qerr, qres) => {
-          if (qerr){return console.log('Error while creating lobby_queue table: ' + qerr.message);}
-          console.log('lobby_queue table is up.');
-  
-          lm.db.get('*', 'lobby_queue', undefined, (gqerr, gqres) => {
-            if (gqerr){return callback(gqerr, gqres);}
-            for (let i = 0; i < gres.length; i++){
-              lobby_model.active_players[gqres[i]] = gqres[i];
-            }
-          });
-  
+      });
+      
+
+      lm.db.create_table('lobby_queue', lm.table_queue, true, (qerr, qres) => {
+        if (qerr){return console.log('Error while creating lobby_queue table: ' + qerr.message);}
+        console.log('lobby_queue table is up.');
+
+        lm.db.get('*', 'lobby_queue', undefined, (gqerr, gqres) => {
+          if (gqerr){return callback(gqerr, gqres);}
+          for (let i = 0; i < gqres.length; i++){
+            lobby_model.active_lobbies[gqres[i].lobby_code].queue.push(gqres[i].member_id);
+          }
         });
 
       });
@@ -249,21 +328,18 @@ export class lobby_model extends Model {
       });
   }
 
+  /*static interval(){
+    let db = Database.getInstance();
+    db.get('*', 'lobby_active_lobbies', null, (err, res) => {
+      if (err){return console.log('Error in lobby_model.interval: ' + err.message);}
+      for (let i in res){
+        if (res[i].pingtime){
+
+        }
+      }
+    });
+  }*/
+
 }
 
 await lobby_model.createtables();
-
-class LobbyConfig {
-  host = '';
-  code = '';
-  server = '';
-  pingtime = '';
-  queue = [];
-
-  constructor(code, server, host, pingtime) {
-    this.code = code;
-    this.server = server;
-    this.host = host;
-    this.pingtime = pingtime;
-  }
-}

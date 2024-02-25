@@ -1,3 +1,5 @@
+import { Discord } from './discord.mjs';
+
 export const channels = {
     'lob-test': '1200927450536890429',
     'spam': '949274005511229520',
@@ -6,7 +8,13 @@ export const channels = {
     'vanilla-game-chat': '883526058236854312',
     'serious-topics': '992089336109617283',
     'brainstuff': '1094311608815190038',
-    'venting': '1007147411552096376'
+    'venting': '1007147411552096376',
+    get: (id) => { return Discord.client.channels.cache.get(id); }
+}
+
+export const roles = {
+    'archetype': '969663541911101440',
+    'avant-garde': '904440695195070534'
 }
 
 export const members = {

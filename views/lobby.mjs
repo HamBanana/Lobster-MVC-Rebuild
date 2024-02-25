@@ -9,8 +9,19 @@ export const create =
     +'\nVoice chat: {{is_vc_lobby}}'
     +'\nNotes: {{notes}}'
     +'\`\`\`'
-    //+'\nLast active: <t:{{pingtime}}:R>';
+    +'\nLast ping: <t:{{pingtime}}:R>';
 
+  export const autocreate =
+  '\`\`\`'
+    +'\nCode: {{code}}'
+    +'\nHosted by: {{host}}'
+    +'\nVanilla:  {{is_vanilla}}'
+    +'\nVoice chat: {{is_vc_lobby}}'
+    +'\nNotes: {{notes}}'
+    +'\`\`\`'
+    +'<@&{{pingrole}}>'
+    +'\nGame entered lobby: <t:{{pingtime}}:R>';
+  
 export const prompt_server =
   'Code: {{code}}\n'
   +'Hosted by: {{host}}\n'
@@ -31,9 +42,16 @@ export const prompt_server =
   +"Code: {{code}}, Server: {{server}}";
 
   export const confirm_lobby =
- "{{mentions}}\n"
- +"{{code}} - {{server}}\n"
-    +"In lobby: {{pingtime_tag}}.\n";
+  '\`\`\`'
+    +'Code: {{code}}\nServer: '
+    +'{{server}}'
+    +'\nHosted by: {{host}}'
+    +'\nVanilla:  {{is_vanilla}}'
+    +'\nVoice chat: {{is_vc_lobby}}'
+    +'\nNotes: {{notes}}'
+    +'\`\`\`'
+    +'\nLast ping: <t:{{pingtime}}:R>'
+    +'\n{{mentions}}';
 
     export const game_started =
     "Lobby {{code}} has started the game\n"

@@ -5,7 +5,7 @@ import {
   lobby_model
 } from '../models/lobby_model.mjs';
 import {Time} from '../tools/time.mjs';
-import { channels } from '../core/statics.mjs';
+import { channels, roles } from '../core/statics.mjs';
 
 import {Discord} from '../core/discord.mjs';
 import { Database } from '../core/database.mjs';
@@ -29,7 +29,6 @@ export class lobby_controller extends Controller {
 
   index(args){
     console.log('lobby/index hit');
-    return this.confirm_lobby(args);
   }
 
   test_input(input) {
@@ -95,32 +94,30 @@ export class lobby_controller extends Controller {
   }
 
   confirm_lobby(args){
-    let code = (args.code || args.default[0]).toUpperCase();
-    const conf = this.model.getLobby(code);
+    let code = (args.code || args.default[0])?.toUpperCase();
+    console.log('code: ' + code);
+    const conf = lobby_model.active_lobbies[code];
     const server    = (conf.server || conf.default?.[1]);
+    const state     = "In Lobby";
     const host      = (conf.host || conf.default?.[2]);
     const pingtime  = (Time.now);
 
-    this.model.updateLobby(code, {pingtime});
-    this.view.data = this.model.getLobby(code);
-    if (this.view.data === false){
-      return this.message.reply('No! :eyes:');
-    }
-
-    this.view.data.pingtime_tag = Time.getTag(this.view.data.pingtime);
-    this.view.template_path = 'lobby/confirm_lobby';
-
-    let mentions = '';
-    for (let i of lobby_model.active_lobbies[code].queue){
-      mentions += '<@'+i+'> ';
-    }
-    lobby_model.active_lobbies[code].queue = [];
-
-    this.view.data.mentions = mentions;
-
-    this.view.reactions = {};
-
-    this.post();
+    this.model.confirm_lobby({code, pingtime, state}, (err, res) => {
+      if (err){
+        if (this.message){ this.message.reply("Couldn't update lobby, because: " + err.message);}
+        else {console.log("Couldn't update lobby, because: " + err.message);}
+      }
+      console.log('res.mentions: ' + res.mentions);
+      // If all went well, post the confirm_lobby.
+      this.view.template_path = 'lobby/confirm_lobby';
+      let is_vanilla = (conf.is_vanilla) ? 'Yes' : 'No';
+      let is_vc_lobby = (conf.is_vc_lobby) ? 'Yes' : 'No';
+      this.view.data = {server, state, pingtime, host:this.client.users.cache.get(host).username, mentions: res.mentions, code, is_vanilla, is_vc_lobby};
+      this.view.type = "channel";
+      this.view.channelid = channels['vanilla-game-chat'];
+      lobby_model.active_lobbies[code].queue = [];
+      this.post();
+    });
   }
 
   create(args) {
@@ -154,9 +151,7 @@ export class lobby_controller extends Controller {
       }
       this.view.reactions = {};
       this.view.template_path = 'lobby/create';
-      this.post().then(() => {
-        this.queue({code, is_in_queue: 0});
-      });
+      this.post();
     });
 
   }
@@ -196,6 +191,8 @@ export class lobby_controller extends Controller {
     if (this.model.queue(this.message.author.id, code)) {return this.message.react('👍');}
     return false;
   }*/
+
+
 
   queue(args){
     let code = (args.code || args.default?.[0]);
@@ -311,14 +308,51 @@ export class lobby_controller extends Controller {
     }
   }
 
+  getAnnounced(args, callback){
+    if (!args.member_id){return callback({message: "getAnnounced only works with a member_id"});}
+    this.db.get('*', 'lobby_announced', "member_id = " + args.member_id, (err, res) => {
+      return callback(err, res);
+    });
+  }
+
+  announce(args){
+    if (lobby_model.infohosts.indexOf(this.message.author.id) < 0){
+      return this.message.reply('Please run "!lob lobby register_infohost" register as infohost, before using "announce"');
+    }
+    let is_vc_lobby = args.vc || 0;
+    let is_vanilla = args.vanilla || 1;
+
+    this.model.announce({member_id: this.message.author.id, is_vc_lobby, is_vanilla}, (err, res) => {
+      if (err){
+        switch (err.code){
+          case "ER_DUP_ENTRY": return this.message.reply('You have already announced a lobby.\nTo change lobby settings, run "!lob lobby unannounce" first.');
+          default: return this.message.reply("Can't announce lobby, because: " + err.message)
+        }
+      }
+      this.message.react('👍');
+    });
+  }
+
+  unannounce(){
+    this.model.unannounce({member_id: this.message.author.id}, (err, res) => {
+      if (err){
+        switch (err.code){
+          default: return this.message.reply("Can't unannounce lobby, because: " + err.message);
+        }
+      }
+      if (res.affectedRows < 1){return this.message.reply('You have no announced lobbies.');}
+      this.message.react('👍');
+    });
+  }
+
   
 
   testPresence(oldPresence, newPresence){
+    console.log('Infohosts: ' + JSON.stringify(lobby_model.infohosts));
     if (!lobby_model.infohosts.includes(oldPresence?.userId)){return;}
     let oldActivity = oldPresence?.activities[0];
     let newActivity = newPresence?.activities[0];
-    let client = Discord.client;
-        let c = client.channels.cache.get('1200927450536890429');
+        //let c = this.client.channels.cache.get('1200927450536890429');
     if (oldActivity && newActivity){
       if (oldActivity.name !== "Among Us" || newActivity.name !== "Among Us"){return;}
     }
@@ -334,16 +368,77 @@ export class lobby_controller extends Controller {
     }
     //if (newActivity !== 'Among Us')
       if (oldActivity?.state == 'In Menus' && newActivity?.state == 'In Lobby'){
+        let member_id = newPresence.userId;
+        this.model.getAnnounced({member_id: newPresence.userId}, (err, res) => {
+          if (err){return console.log('Error while getting announced lobbies in lobby_controller.testPresence');}
+          if (res.length < 1){
+            //channels.get(channels['lob-test']).send('Lobby started, but the host is not infohost');
+            return;
+          }
 
-        return c.send('Just started a lobby: ' + newActivity.party.id);
+          let create_vals = {
+            code: newActivity.party.id, 
+            host: member_id,
+            state: newActivity.state,
+            infohost: member_id
+          }
+
+          this.model.create(create_vals
+          , (cerr, cres) => {
+            // Unannounce the upcoming lobby, as it has started.
+            this.model.unannounce({member_id}, (err, res) => {
+              if (err){return console.log('Unannounce failed because: ' + err.message);}
+            });
+            
+            console.log('Cres: ' + JSON.stringify(cres));
+            if (cerr){console.log('Error creating lobby from testPresence: ' + cerr.message);}
+            else if (!res){console.log('There are somehow no announced lobbies (we have just determined that there is, so this is a coding error.)');}
+            else {console.log('Created lobby from testPresence: ' + newActivity.party.id);}
+
+            // Create the view
+            this.view.template_path = 'lobby/autocreate';
+            this.view.data['host'] = this.client.users.cache.get(newPresence.userId).username;
+            this.view.data['code'] = newActivity.party.id;
+            this.view.data['server'] = cres.server;
+            this.view.data['is_vc_lobby'] = cres.is_vc_lobby;
+            this.view.data['is_vanilla'] = cres.is_vanilla;
+            this.view.data['notes'] = cres.notes;
+            this.view.data['pingtime'] = cres.pingtime;
+            this.view.data['pingrole'] = (cres.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
+
+            this.view.type = "channel";
+            //this.view.channelid = channels['lob-test'];
+            this.view.channelid = channels['vanilla-codes'];
+            this.post();
+          });
+
+        });
 
       }
-      if (oldActivity?.state == "In Lobby" && newActivity?.state == "In Game"){
+
+      if (oldActivity.state == "In Lobby" && newActivity.state == "In Game"){
+        // Code for when a game is started.
+      }
+
+      if (oldActivity.state == "In Game" && newActivity.state == "In Lobby"){
+        let code = newActivity.party.id;
+        if (!lobby_model.active_lobbies[code].infohost == newActivity.userId){return;}
+        this.confirm_lobby({code: newActivity.party.id});
+      }
+
+      if ((oldActivity.state == "In Lobby" || oldActivity.state == "In Game") && newActivity.state == "In Menus"){
+        // Infohost left a game
+        let code = oldActivity.party.id;
+        this.model.assign_infohost(code, (err, res) => {
+          
+        });
+      }
+      /*if (oldActivity?.state == "In Lobby" && newActivity?.state == "In Game"){
         return c.send('Game "' + oldActivity.party.id + '" started..');
       }
       if (oldActivity?.state == "In Game" && newActivity?.state == "In Lobby"){
         return c.send('Game "' + newActivity.party.id + '" back in lobby.');
-      }
+      }*/
     
 
 /*

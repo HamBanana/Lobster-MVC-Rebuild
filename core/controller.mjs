@@ -1,5 +1,6 @@
 //import {View} from './view.mjs';
 import {Time} from '../tools/time.mjs';
+import { Discord } from '../core/discord.mjs';
 
 export class Controller {
 
@@ -8,10 +9,12 @@ export class Controller {
   allowed = true;
 
   constructor(msg) {
+    this.client = Discord.client;
 
     this.view = {
       content: '',
       type: 'reply',
+      channelid: '',
       data: {},
       reactions: {},
       reaction_options: {
@@ -73,7 +76,7 @@ export class Controller {
             output_message = this.message.reply(content);
             break;
           case 'channel':
-            output_message = this.message.channel.send(content);
+            output_message = this.client.channels.cache.get(this.view.channelid).send(content);
             break;
         }
         return output_message
