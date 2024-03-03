@@ -38,15 +38,32 @@ export class count_controller extends Controller{
       if (err){
         this.message.reply('Error getting latest record: ' + err.message);
       }
-      if (res){this.session = {res};
+      if (res){
+        let rec = res[0];
+        this.session.id = rec.id;
+        this.session.last_correct = rec.last_correct;
+        this.session.last_incorrect = rec.last_incorrect;
+        this.session.score = rec.score;
+        this.session.most_active = rec.most_active;
       //TODO:Phase out last_number in favor of res.score.
-      count_controller.last_number = res.score;
+      //count_controller.last_number = res.score;
     }
       if (!res) {
         this.makeNewSession();
       }
+      //this.message.reply('Session: ' + JSON.stringify(this.session));
     });
 
+  }
+
+  test(){
+    let client = Discord.client;
+    /*this.message.reply(
+      'Score: ' + this.session.score
+      + '\nLast correct: ' + client.users.cache.get(this.session.last_correct)
+      + '\nLast incorrect: ' + client.users.cache.get(this.session.last_incorrect)
+      );*/
+      this.message.reply(JSON.stringify(this.session));
   }
 
   test_string(){

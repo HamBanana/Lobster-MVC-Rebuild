@@ -161,6 +161,9 @@ export class Controller {
           }
         }
       }
+      /*if (!this.allowed){
+        throw new Error('Permission denied.');
+      }*/
     }
   }
 

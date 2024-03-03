@@ -5,6 +5,7 @@ import * as count from '../controllers/count_controller.mjs';
 import * as gif from '../tools/gif.mjs';
 import { channels, members } from '../core/statics.mjs';
 import { lobby_controller } from '../controllers/lobby_controller.mjs';
+import {Parser} from './parser.mjs';
 
 export class Lobster extends Discord{
 
@@ -43,11 +44,34 @@ export class Lobster extends Discord{
          || msg.content.length > 2000) {return;}
       //console.log(msg);
       console.log('Input: '+msg.content);
+
       if (msg.content.toLowerCase().startsWith('!lob')){
-      return this.parseCommand(msg)
+        let parser = new Parser(msg);
+      //return this.parseCommand(msg)
+      return parser.parseCommand(msg).then((command) => { parser.executeCommand(command); })
       .catch((err) => {
-        console.log('command failed to parse: ' + err);
+        if (err.message == "Cannot read properties of undefined (reading 'bind')"){
+          return msg.reply("That's not a function.");
+        }
+        if (err){
+          switch (err.code){
+            case "ERR_MODULE_NOT_FOUND":
+              return msg.reply("That's not a thing.");
+            default:
+            if (msg.channelId == channels['lob-test']){
+              msg.reply('Error: ' + err.code);
+              msg.reply('Error: ' + err.message);
+              console.log('Error: ' + JSON.stringify(err));
+            } else {
+              msg.reply(gif.random('denied'));
+            }
+            return;
+          }
+        }
+        //msg.reply(gif.random('denied'));
+        //console.log('Controller import failed: '+err.message);
       });
+
       }
         // Test the string for other triggers.
         import('../controllers/end_controller.mjs')
@@ -82,7 +106,7 @@ export class Lobster extends Discord{
   } else if (c == undefined) {
     console.log('Can\'t get channel for startup message');
   } else {
-    c.send('Hello?');
+    //c.send('Hello?');
   }
 });
 
@@ -115,88 +139,6 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
     /*this.client.setInterval(() => {
       console.log('setInterval hit..');
     })*/;
-  }
-
-  parseCommand(msg){
-    return new Promise((resolve, reject)=> {
-      let c = (typeof(msg) === 'string') ? msg : msg.content.toLowerCase();
-      if (!c.startsWith('!lob') && c.startsWith('!lobster')){return;}
-      let parms = c.split(" ");
-
-      let command = {
-        'controller': parms[1] || 'index',
-        'method'    : parms[2] || 'index',
-        'args'      : parms.splice(3)
-      };
-
-      //Test if command is an alias
-      for (let [k, v] of Object.entries(this.#method_alias)){
-        if (k !== parms[1]){continue;}
-        let spl = v.split('.');
-        command = {
-          'controller': spl[0],
-          'method'    : spl[1],
-          'args'      :parms.splice(2)
-        };
-      }
-        {
-          let args = {'default': []};
-          for (let i of command.args){
-            if (i.includes(":")){
-              let spl = i.split(":")
-              args[spl[0]] = spl[1];
-            } else {
-              args['default'].push(i);
-            }
-          }
-          command['args'] = args;
-        }
-        let ctrlpath = "../controllers/"+command.controller+"_controller.mjs";
-        if (fs.existsSync(ctrlpath)){
-          console.log(command.controller+' is not a valid controller.');
-          return;
-        }
-      return import(ctrlpath).then((module) => {
-        let cons = eval('module.'+command.controller+'_controller');
-        let ins = new cons(msg);
-        if (!ins.allowed) {
-          reject('Permission denied!');
-          msg.react('<:no:1047889973631782994>');
-          return;
-        }
-        if (!command.method){reject({message: "That's not a function."});}
-        let func = eval("ins."+command.method+'.bind(ins)');
-        if (typeof(func) !== 'function'){reject(String(func)+' is not a valid function of '+command.controller);}
-      // Execute the parsed function.
-        resolve(func(command.args));
-        })
-        .catch((err) => {
-          if (err.message == "Cannot read properties of undefined (reading 'bind')"){
-            return msg.reply("That's not a function.");
-          }
-          if (err){
-            switch (err.code){
-              case "ERR_MODULE_NOT_FOUND":
-                return msg.reply("That's not a thing.");
-              default:
-              if (msg.channelId == channels['lob-test']){
-                msg.reply('Error: ' + err.code);
-                msg.reply('Error: ' + err.message);
-                console.log('Error: ' + JSON.stringify(err));
-              } else {
-                msg.reply(gif.random('denied'));
-              }
-              return;
-            }
-          }
-          //msg.reply(gif.random('denied'));
-          //console.log('Controller import failed: '+err.message);
-        });
-    })
-      .catch((err) => {
-        //client.channels.get('1200927450536890429').send('Error: '+err.message);
-        this.message.reply("Error: "+err.message);
-      });
   }
 
   interval(){
