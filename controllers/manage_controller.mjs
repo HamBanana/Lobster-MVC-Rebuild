@@ -15,7 +15,7 @@ perm = {'users': ['330279218543984641']
   index(){}
 
   reboot(){
-      sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot', () => {
+      sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot', (err, stdout, stderr) => {
         if (err){
           this.message.reply('Error rebooting: ' + err.message);
           return;
