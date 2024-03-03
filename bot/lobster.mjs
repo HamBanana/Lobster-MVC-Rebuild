@@ -48,8 +48,12 @@ export class Lobster extends Discord{
       if (msg.content.toLowerCase().startsWith('!lob')){
         let parser = new Parser(msg);
       //return this.parseCommand(msg)
-      return parser.parseCommand(msg).then((command) => { parser.executeCommand(command); })
-      .catch((err) => {
+      return parser.parseCommand(msg).then((command) => { 
+        parser.executeCommand(command).catch((err) => {
+          console.log('Error in messageCreate event handler: ' + err.message);
+        }); 
+      });
+      /*.catch((err) => {
         if (err.message == "Cannot read properties of undefined (reading 'bind')"){
           return msg.reply("That's not a function.");
         }
@@ -70,7 +74,7 @@ export class Lobster extends Discord{
         }
         //msg.reply(gif.random('denied'));
         //console.log('Controller import failed: '+err.message);
-      });
+      });*/
 
       }
         // Test the string for other triggers.
