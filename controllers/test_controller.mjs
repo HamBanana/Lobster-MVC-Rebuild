@@ -17,7 +17,9 @@ export class test_controller extends Controller{
   
 constructor(msg){
   super(msg);
-  this.auth(this.perm);
+  this.auth(this.perm).catch((err) => {
+    console.log('Auth Error: ' + err.message);
+  });
 }
   
   index() {

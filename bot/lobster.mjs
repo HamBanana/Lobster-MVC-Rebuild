@@ -90,6 +90,9 @@ export class Lobster extends Discord{
         .then(() => {
       // input random eyes reaction..
       //if (Math.random() < 0.05){msg.react('👀').catch((err) => {console.log('Failed reacting to a message.')});}
+          })
+          .catch((err) => {
+            return console.log('Error in other triggers: ' + err.message);
           });
     });
 

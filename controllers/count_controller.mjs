@@ -31,7 +31,7 @@ export class count_controller extends Controller{
     super(msg);
     
     this.db = Database.getInstance();
-    this.auth(this.perm);
+    this.auth(this.perm).catch((err) => {return console.log('Error in count: ' + err.message);});
 
     this.db.connection.query('CREATE TABLE IF NOT EXISTS counting_session ('+this.table_session+')');
     this.db.connection.query('select * from counting_session ORDER BY id DESC limit 1', (err, res) => {

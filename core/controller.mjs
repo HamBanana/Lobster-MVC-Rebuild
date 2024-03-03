@@ -143,8 +143,9 @@ export class Controller {
   }
 
   auth(permissions) {
+    return new Promise((resolve, reject) => {
     if (!this.message) {
-      return false;
+      reject('Controller doesn\'t know about the message object.');
     }
     for (let [k, v] of Object.entries(permissions)) {
       for (let i of v) {
@@ -161,10 +162,13 @@ export class Controller {
           }
         }
       }
-      /*if (!this.allowed){
-        throw new Error('Permission denied.');
-      }*/
+      if (!this.allowed){
+        reject({message: 'Permission denied.'});
+      }
+      resolve();
     }
+
+    });
   }
 
   help(args){

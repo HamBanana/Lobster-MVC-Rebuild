@@ -12,7 +12,7 @@ export class end_controller extends Controller {
   constructor(msg) {
     super(msg);
 
-    this.auth(this.perm);
+    this.auth(this.perm).catch(() => {return;});
   }
 
   index(args){

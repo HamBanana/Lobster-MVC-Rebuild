@@ -97,7 +97,9 @@ export class Parser{
     if (typeof(func) !== 'function'){reject(String(func)+' is not a valid function of '+command.controller);}
   // Execute the parsed function.
     resolve(
-      func(command.args)
+      func(command.args).catch((err) => {
+        console.log('ERROR: ' + err.message);
+      })
       );
     })
     .catch((err) => {

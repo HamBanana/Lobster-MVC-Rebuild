@@ -22,7 +22,9 @@ export class lobby_controller extends Controller {
   constructor(msg) {
     super(msg);
 
-    this.auth(this.perm);
+    this.auth(this.perm).catch((err) => {
+      console.log('Error in lobby_controller auth: ' + err.message);
+    });
 
     this.model = new lobby_model();
   }
