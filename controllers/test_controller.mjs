@@ -69,4 +69,8 @@ constructor(msg){
     db.create_table('test', 'id int', true);
   }
 
+  fail(){
+    throw Error;
+  }
+
 }

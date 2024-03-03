@@ -106,7 +106,7 @@ export class Lobster extends Discord{
   } else if (c == undefined) {
     console.log('Can\'t get channel for startup message');
   } else {
-    //c.send('Hello?');
+    c.send('Hello?');
   }
 });
 
