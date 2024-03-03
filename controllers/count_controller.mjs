@@ -123,15 +123,27 @@ export class count_controller extends Controller{
     
   }
 
-  set(number){
+  set(args){
+    return new Promise((resolve, reject) => {
+    let number = (args['number']) ? args['number'] : args['default'][0];
       console.log(number);
     //this.auth({'users': 'hambanana#0000'});
     if (this.message.author.id !== "330279218543984641"){return;}
-    number = parseInt(number['default'][0]);
-    console.log('Number: '+number);
-    this.db.set("count_last_number", number).then((value) => {
-    count_controller.last_number = number;
-    this.message.react('✅');
+    
+    this.db.connection.query('select * from counting_session ORDER BY id DESC limit 1', (err, res) => {
+      if (err){
+        this.message.reply('No, because: ' + err.message);
+        reject('No, because: ' + err.message);
+      }
+      console.log('Number: '+number);
+      this.db.update("counting_session", "score = " + number, "id = " + res[0].id, (err, res) => {
+        if (err){this.message.reply("Can't update session, because: " + err.message); reject(err.message);}
+        count_controller.last_number = number;
+        this.message.react('✅');
+        resolve();
+      });
+    });
+
     });
   }
 
