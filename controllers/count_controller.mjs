@@ -135,7 +135,7 @@ export class count_controller extends Controller{
         this.message.reply('No, because: ' + err.message);
         reject('No, because: ' + err.message);
       }
-      console.log('Number: '+number);
+      
       this.db.update("counting_session", "score = " + number, "id = " + res[0].id, (err, res) => {
         if (err){this.message.reply("Can't update session, because: " + err.message); reject(err.message);}
         count_controller.last_number = number;

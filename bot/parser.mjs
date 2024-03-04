@@ -69,11 +69,7 @@ export class Parser{
           resolve(command);
           
         
-    })
-      .catch((err) => {
-        //client.channels.get('1200927450536890429').send('Error: '+err.message);
-        msg.reply("Error: "+err.message);
-      });
+    });
   }
 
   executeCommand(command){
@@ -89,7 +85,7 @@ export class Parser{
     let ins = new cons(this.msg);
     if (!ins.allowed) {
       reject('Permission denied!');
-      msg.react('<:no:1047889973631782994>');
+      this.msg.react('<:no:1047889973631782994>');
       return;
     }
     if (!command.method){reject({message: "That's not a function."});}
@@ -105,8 +101,14 @@ export class Parser{
     .catch((err) => {
       switch(err.code){
         case 'ERR_MODULE_NOT_FOUND': return this.msg.reply('The controller "' + command.controller + '" doesn\'t exist.');
-        default: return this.msg.reply('Error because: ' + err.message);
+        default: this.msg.reply('Error because: ' + err.message); 
+        console.log('Execute command failed:\n' 
+        + 'Message: ' + err.message
+        + '\nCode: ' + err.code
+        + '\nStack: ' + (err.stack) ? err.stack : 'No stack.'
+        );
       }
+      //throw err;
     });
     });
 

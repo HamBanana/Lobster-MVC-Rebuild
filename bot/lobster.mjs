@@ -50,7 +50,7 @@ export class Lobster extends Discord{
       //return this.parseCommand(msg)
       return parser.parseCommand(msg).then((command) => { 
         parser.executeCommand(command).catch((err) => {
-          console.log('Error in messageCreate event handler: ' + err.message);
+          return console.log('Error in messageCreate event handler: ' + err.message);
         }); 
       });
       /*.catch((err) => {
