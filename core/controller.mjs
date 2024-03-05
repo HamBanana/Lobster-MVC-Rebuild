@@ -177,6 +177,33 @@ export class Controller {
 
   }
 
+  extractArgs(args, defaults = null){
+    console.log('Extracting args: ' + JSON.stringify(args));
+    let res = {};
+    if (defaults !== null){
+      console.log('Type of defaults is: ' + typeof(defaults));
+      if (typeof(defaults) === 'string'){
+        defaults = [defaults];
+      }
+
+      for (let i in defaults){
+        res[defaults[i]] = args.default[i];
+      }
+    }
+
+    delete args.default;
+    console.log('Extracting args after deleting default: ' + JSON.stringify(args));
+
+    for (let [k, v] of Object.entries(args)){
+      res[k] = v;
+    }
+    console.log('Res before returning: ' + JSON.stringify(res));
+    console.log('returning');
+
+    return res;
+
+  }
+
   getAllFuncs(toCheck) {
     const props = [];
     let obj = toCheck;
