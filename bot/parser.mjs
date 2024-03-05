@@ -99,6 +99,10 @@ export class Parser{
       );
     })
     .catch((err) => {
+      // Test for nonexistant function.
+      if (err.message == "Cannot read properties of undefined (reading 'bind')"){
+        return this.msg.reply('That\'s not a function of ' + command.controller);
+      }
       switch(err.code){
         case 'ERR_MODULE_NOT_FOUND': return this.msg.reply('The controller "' + command.controller + '" doesn\'t exist.');
         default: this.msg.reply('Error because: ' + err.message); 
