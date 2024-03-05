@@ -111,6 +111,7 @@ export class Parser{
         + '\nCode: ' + err.code
         + '\nStack: ' + (err.stack) ? err.stack : 'No stack.'
         );
+        return;
       }
       //throw err;
     });
