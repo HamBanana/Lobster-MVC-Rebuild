@@ -83,40 +83,24 @@ export class Parser{
   return import(ctrlpath).then((module) => {
     let cons = eval('module.'+command.controller+'_controller');
     let ins = new cons(this.msg);
-    if (!ins.allowed) {
-      reject('Permission denied!');
-      this.msg.react('<:no:1047889973631782994>');
-      return;
-    }
-    if (!command.method){reject({message: "That's not a function."});}
-    let func = eval("ins."+command.method+'.bind(ins)');
-    if (typeof(func) !== 'function'){reject(String(func)+' is not a valid function of '+command.controller);}
-  // Execute the parsed function.
-    resolve(
-      func(command.args)
-      /*.catch((err) => {
-        console.log('ERROR: ' + err.message);
-      })*/
-      );
-    })
-    .catch((err) => {
-      // Test for nonexistant function.
-      if (err.message == "Cannot read properties of undefined (reading 'bind')"){
-        return this.msg.reply('That\'s not a function of ' + command.controller);
-      }
-      switch(err.code){
-        case 'ERR_MODULE_NOT_FOUND': return this.msg.reply('The controller "' + command.controller + '" doesn\'t exist.');
-        default: this.msg.reply('Error because: ' + err.message); 
-        console.log('Execute command failed:\n' 
-        + 'Message: ' + err.message
-        + '\nCode: ' + err.code
-        + '\nStack: ' + (err.stack) ? err.stack : 'No stack.'
-        );
+    ins.auth(ins.perm).then((allowed) => {
+      if (!allowed) {
+        reject({message: 'Permission denied', code:'PERMISSION_DENIED'});
         return;
       }
-      //throw err;
+      console.log('Ins perm: ' + ins.perm);
+      
+      if (!command.method){reject({message: "That's not a function."});}
+      
+        let func = eval("ins."+command.method+'.bind(ins)');
+      if (typeof(func) !== 'function'){
+        reject(command.method + ' is not a valid function of '+command.controller);}
+    // Execute the parsed function.
+        func(command.args);
     });
     });
+    })
+    //.catch( (err) => {console.log('Error in executeCommand: ' + err.message);});
 
   }
 

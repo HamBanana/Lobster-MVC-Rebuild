@@ -4,7 +4,7 @@ import { channels } from '../core/statics.mjs';
 
 export class random_controller extends Controller{
 
-  perm = {'channels': [channels.spam]};
+  //perm = {'channels': [channels.spam]};
 
   static dice_always = 0;
 

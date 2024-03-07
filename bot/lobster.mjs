@@ -49,9 +49,20 @@ export class Lobster extends Discord{
         let parser = new Parser(msg);
       //return this.parseCommand(msg)
       return parser.parseCommand(msg).then((command) => { 
-        parser.executeCommand(command).catch((err) => {
-          return console.log('Error in messageCreate event handler: ' + err.message);
-        }); 
+        parser.executeCommand(command)
+        .catch((err) => {
+          switch(err.code){
+            case 'ERR_MODULE_NOT_FOUND': return msg.reply('The controller "' + command.controller + '" doesn\'t exist.');
+            case 'PERMISSION_DENIED': return msg.react('<:no:1047889973631782994>');
+            default: msg.reply('Error because: ' + err.message); 
+            console.log('Execute command failed:\n' 
+            + 'Message: ' + err.message
+            + '\nCode: ' + err.code
+            + '\nStack: ' + (err.stack) ? err.stack : 'No stack.'
+            );
+            return;
+          }
+        });
       });
       /*.catch((err) => {
         if (err.message == "Cannot read properties of undefined (reading 'bind')"){

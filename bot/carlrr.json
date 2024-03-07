@@ -1,0 +1,60 @@
+{
+    "type":"rich",
+    "fields":[
+        {
+            "inline":false,
+            "name":":smiling_imp: Archetype",
+            "value":"Vanilla Among Us\nhttps://discord.com/channels/817607509984018442/883526058236854312"
+        },
+        {
+            "inline":false,
+            "name":":imp: Avant-garde",
+            "value":"Modded Among Us\n#https://discord.com/channels/817607509984018442/901554467042906132"
+        },
+        {
+            "inline":false,
+            "name":":cowboy: StumbleGuys",
+            "value":"Stumble guys\nhttps://discord.com/channels/817607509984018442/1013493565126619176"
+        },
+        {
+            "inline":false,
+            "name":":card_box: Cards-against-humanity",
+            "value":"Cards against humanity\nhttps://discord.com/channels/817607509984018442/996099378102153236"
+        },
+        {
+            "inline":false,
+            "name":":pick: Minecraft",
+            "value":"Minecraft\nhttps://discord.com/channels/817607509984018442/971079957239447632"
+        },
+        {
+            "inline":false,
+            "name":":chess_pawn: Chess",
+            "value":"Chess\nhttps://discord.com/channels/817607509984018442/1054697464004882442"
+        },
+        {
+            "inline":false,
+            "name":":map: Diplomacy",
+            "value":"Diplomacy\nhttps://discord.com/channels/817607509984018442/1059202206051606629"
+        },
+        {
+            "inline":false,
+            "name":":cat: pico-park",
+            "value":"Pico Park\nhttps://discord.com/channels/817607509984018442/1060213993966415942"
+        },
+        {
+            "inline":false,
+            "name":":dividers: uno",
+            "value":"Uno\nhttps://discord.com/channels/817607509984018442/1060214091936976897"
+        },
+        {
+            "inline":false,
+            "name":":closed_book: Wordsmith",
+            "value":"Codenames\nhttps://discord.com/channels/817607509984018442/1215266634831495188"
+        },
+        {
+            "inline":false,
+            "name":":aarh: Elusive",
+            "value":"Uno\nhttps://discord.com/channels/817607509984018442/967232458854629408"
+        }
+    ]
+        ,"title":"Game ping roles","description":"To get notified about games.","color":2105893}

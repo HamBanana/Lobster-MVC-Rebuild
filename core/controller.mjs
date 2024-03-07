@@ -144,6 +144,7 @@ export class Controller {
 
   auth(permissions) {
     return new Promise((resolve, reject) => {
+      if (typeof(permissions) == 'undefined'){resolve(true);}
     if (!this.message) {
       reject('Controller doesn\'t know about the message object.');
     }
@@ -162,10 +163,12 @@ export class Controller {
           }
         }
       }
+      console.log('Allowed: ' + this.allowed);
       if (!this.allowed){
-        reject({message: 'Permission denied.'});
+        resolve(false);
+        return;
       }
-      resolve();
+      resolve(true);
     }
 
     });
