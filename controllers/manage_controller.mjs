@@ -12,7 +12,7 @@ perm = {'users': ['330279218543984641']
   this.auth(this.perm);
 
   // Windows check
-  if (process.env.OS = 'Windows'){
+  if (process.env.OS == 'Windows'){
     this.message.reply("Lobster is currently running on Windows, don't expect any manage functions to work");
   }
 
