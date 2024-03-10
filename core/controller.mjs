@@ -196,6 +196,7 @@ export class Controller {
 
     for (let [k, v] of Object.entries(args)){
       res[k] = v;
+    }
 
     return res;
 
