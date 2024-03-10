@@ -59,9 +59,6 @@ perm = {'users': ['330279218543984641']
   }
 
   gitlog(){
-    let os = process.env.OS;
-    let p;
-    let spawn = sub.spawn;
     sub.exec('git log | head -5', (error, stdout, stderr) => {
       if (error){
         this.message.reply('Error in exec:' + error.message);

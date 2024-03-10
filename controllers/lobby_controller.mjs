@@ -22,21 +22,20 @@ export class lobby_controller extends Controller {
   constructor(msg) {
     super(msg);
 
-    this.auth(this.perm).catch((err) => {
+    /*this.auth(this.perm).catch((err) => {
       console.log('Error in lobby_controller auth: ' + err.message);
-    });
+    });*/
 
     this.model = new lobby_model();
   }
 
   index(args){
-    console.log('lobby/index hit');
+    
   }
 
   test_input(input) {
     console.log(input);
-    //console.log(input.default);
-    //console.log(input['default']);
+    
     if (input.default[0] == 'join'){
       input = input.default.join(' ');
     }
@@ -107,9 +106,9 @@ export class lobby_controller extends Controller {
     this.model.confirm_lobby({code, pingtime, state}, (err, res) => {
       if (err){
         if (this.message){ this.message.reply("Couldn't update lobby, because: " + err.message);}
-        else {console.log("Couldn't update lobby, because: " + err.message);}
+        else {this.message.reply("Couldn't update lobby, because: " + err.message);}
       }
-      console.log('res.mentions: ' + res.mentions);
+      
       // If all went well, post the confirm_lobby.
       this.view.template_path = 'lobby/confirm_lobby';
       let is_vanilla = (conf.is_vanilla) ? 'Yes' : 'No';
@@ -129,10 +128,6 @@ export class lobby_controller extends Controller {
   let host = args['host'] || this.message.author.id;
   let code = (args.code || args.default[0]).toUpperCase() || null;
   let server = (args.server || args.default[1]).toUpperCase() || null;
-  //let host = args['host'] || this.message.author.username;
-  /*if ((!args.code && !args.default?.[0]) || 
-  (!args.server && !args.default?.[1])){return;}*/
-    console.log('args in create: '+JSON.stringify(args));
     this.view.data['server'] = server;
     this.view.data['code'] = code;
     this.view.data['host'] = this.message.author.username;
@@ -198,7 +193,6 @@ export class lobby_controller extends Controller {
 
   queue(args){
     let code = (args.code || args.default?.[0]);
-    console.log('code: ' + code);
     if (!code ||code == '' || code == 'undefined' || code == undefined || typeof(code) == undefined){
       code = lobby_model.active_lobbies[0].code;
       this.message.reply('You forgot the code :eyes:')
@@ -372,7 +366,9 @@ export class lobby_controller extends Controller {
       if (oldActivity?.state == 'In Menus' && newActivity?.state == 'In Lobby'){
         let member_id = newPresence.userId;
         this.model.getAnnounced({member_id: newPresence.userId}, (err, res) => {
-          if (err){return console.log('Error while getting announced lobbies in lobby_controller.testPresence');}
+          if (err)
+          {return console.log('Error while getting announced lobbies in lobby_controller.testPresence');
+        }
           if (res.length < 1){
             //channels.get(channels['lob-test']).send('Lobby started, but the host is not infohost');
             return;
@@ -392,7 +388,7 @@ export class lobby_controller extends Controller {
               if (err){return console.log('Unannounce failed because: ' + err.message);}
             });
             
-            console.log('Cres: ' + JSON.stringify(cres));
+            
             if (cerr){console.log('Error creating lobby from testPresence: ' + cerr.message);}
             else if (!res){console.log('There are somehow no announced lobbies (we have just determined that there is, so this is a coding error.)');}
             else {console.log('Created lobby from testPresence: ' + newActivity.party.id);}
