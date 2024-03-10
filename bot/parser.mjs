@@ -90,7 +90,7 @@ export class Parser{
       }
       console.log('Ins perm: ' + ins.perm);
       
-      if (!command.method){reject({message: "That's not a function."});}
+      if (!command.method || parseInt(command.method)){reject({message: "That's not a function."});}
       
         let func = eval("ins."+command.method+'.bind(ins)');
       if (typeof(func) !== 'function'){
