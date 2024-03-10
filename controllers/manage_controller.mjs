@@ -36,7 +36,7 @@ perm = {'users': ['330279218543984641']
         this.message.reply('Error enabling execute permissions to shell scripts: ' + err.message);
         return;
       }
-      this.message..reply('Shell scripts can now be executed');
+      this.message.reply('Shell scripts can now be executed');
     });
   }
 
