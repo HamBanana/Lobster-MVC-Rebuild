@@ -164,8 +164,9 @@ perm = {'users': ['330279218543984641']
 
   log(args){
     let { lines } = this.extractArgs(args, 'lines');
-    sub.exec('tail -' + lines || '10' + process.env.LOBSTER_ROOT + '../log_lobster', (err, stdout, stderr) => {
-      if (err){return this.message.reply("can't get log, because: " + err.message);}
+    if (!lines){lines = 10;}
+    sub.exec('tail -' + lines + process.env.LOBSTER_ROOT + '../log_lobster', (err, stdout, stderr) => {
+      if (err){return this.message.reply("Can't get log, because: " + err.message);}
       this.message.reply(stdout);
     });
   }
