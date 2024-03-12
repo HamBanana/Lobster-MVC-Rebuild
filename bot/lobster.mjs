@@ -47,14 +47,24 @@ export class Lobster extends Discord{
 
       if (msg.content.toLowerCase().startsWith('!lob')){
         let parser = new Parser(msg);
-      //return this.parseCommand(msg)
-      return parser.parseCommand(msg).then((command) => { 
-        parser.executeCommand(command)
+        //return this.parseCommand(msg)
+        parser.parseCommand(msg)
+        .then((command) => { 
+          return parser.executeCommand(command)
+          
+        })
         .catch((err) => {
+          if (typeof(err) == 'string'){err = {'message':err};}
+          console.log('Error code: ' + err.code);
           switch(err.code){
             case 'ERR_MODULE_NOT_FOUND': return msg.reply('The controller "' + command.controller + '" doesn\'t exist.');
             case 'PERMISSION_DENIED': return msg.react('<:no:1047889973631782994>');
-            default: msg.reply('Error because: ' + err.message); 
+            case 'ENOENT': return msg.reply("That controller doesn't exist");
+            default:
+              if (err.message == "Cannot read properties of undefined (reading 'bind')"){
+                return msg.reply('That function does not exist');
+              }
+            msg.reply('Error because: ' + err.message); 
             console.log('Execute command failed:\n' 
             + 'Message: ' + err.message
             + '\nCode: ' + err.code
@@ -63,41 +73,14 @@ export class Lobster extends Discord{
             return;
           }
         });
-      });
-      /*.catch((err) => {
-        if (err.message == "Cannot read properties of undefined (reading 'bind')"){
-          return msg.reply("That's not a function.");
-        }
-        if (err){
-          switch (err.code){
-            case "ERR_MODULE_NOT_FOUND":
-              return msg.reply("That's not a thing.");
-            default:
-            if (msg.channelId == channels['lob-test']){
-              msg.reply('Error: ' + err.code);
-              msg.reply('Error: ' + err.message);
-              console.log('Error: ' + JSON.stringify(err));
-            } else {
-              msg.reply(gif.random('denied'));
-            }
-            return;
-          }
-        }
-        //msg.reply(gif.random('denied'));
-        //console.log('Controller import failed: '+err.message);
-      });*/
-
-      }
+      } else {
         // Test the string for other triggers.
-        import('../controllers/end_controller.mjs')
-        .then((module) => {
-          let ins = new module.end_controller(msg);
-          if (!ins.allowed){
-            console.log('Permission error');
-            return;
-          }
-          return ins.test_input(msg.content);
-        })
+        return import('../controllers/end_controller.mjs')
+      .then((module) => { return new module.end_controller(msg); })
+      .then((ins) => { ins.auth(ins.perm); return ins;})
+      .then((ins) => {
+        return ins.test_input(msg.content);
+      })
         .then(() => {
           let cc = new count.count_controller(msg);
             cc.test_string();
@@ -105,10 +88,9 @@ export class Lobster extends Discord{
         .then(() => {
       // input random eyes reaction..
       //if (Math.random() < 0.05){msg.react('👀').catch((err) => {console.log('Failed reacting to a message.')});}
-          })
-          .catch((err) => {
-            return console.log('Error in other triggers: ' + err.message);
           });
+      }
+          
     });
 
     client.on('interactionCreate', (interaction) => {

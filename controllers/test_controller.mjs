@@ -29,13 +29,19 @@ constructor(msg){
 
   say(args){
     //let word = (args['word']) ? args['word'] : args['default'][0];
-    let { word } = this.extractArgs(args, ['word']);
+    let { word, reply } = this.extractArgs(args, ['word', 'reply']);
     if (!word){
       return;
     }
-    let client = Discord.client;
-    let channel = client.channels.cache.get('1200927450536890429');
-    channel.send(word);
+    if (reply){
+      this.view.type = 'reply';
+    } else {
+    this.view.channelid = this.message.channel.id;
+    this.view.type = 'channel';
+    }
+    //let channel = client.channels.cache.get('1200927450536890429');
+    //channel.send(word);
+    this.post(word);
   }
 
   getpresence(){

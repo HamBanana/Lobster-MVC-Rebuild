@@ -5,14 +5,14 @@ import {Time} from '../tools/time.mjs';
 
 export class end_controller extends Controller {
 
-  perm = {
+  //perm = {
     //'channels': ['949274005511229520']
-  }
+  //}
 
   constructor(msg) {
     super(msg);
 
-    this.auth(this.perm).catch(() => {return;});
+    //this.auth(this.perm).catch(() => {return;});
   }
 
   index(args){

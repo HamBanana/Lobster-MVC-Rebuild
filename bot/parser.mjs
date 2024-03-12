@@ -77,63 +77,38 @@ export class Parser{
 
   executeCommand(command){
     return new Promise((resolve, reject) => {
-      if (!command || command == undefined){reject({message: 'Error in command'});}
+      if (!command || command == undefined){reject('Error in command');}
       let ctrlpath = "../controllers/"+command.controller+"_controller.mjs";
       let __filename = fileURLToPath(import.meta.url);
       let __dirname = path.dirname(__filename);
-      /*let exists = async function(ctrlpath){
-        try {
-          console.log('CWD: ' + process.cwd());
-          await fs.stat(path.join(__dirname, '..', 'controllers', command.controller+"_controller.mjs"), false, (err, stats) => {
-            console.log('Stats: ' + JSON.stringify(stats));
-            if (err){
-              console.log('Async test error: ' + err.message);
-              return false;
-            }
-            return true;
-          });
-        } catch (error) {
-          console.log('Catch error: ' + error.message);
-          return false;
-        }
-      }
-
-      return exists(ctrlpath).then(path => {
-        console.log('Path: ' + path);
-      });*/
-
       if (fs.statSync(__dirname+'/'+ctrlpath)){
         resolve(ctrlpath);
       } else {
-        reject('Controller not found');
+        throw new Error({message: 'The controller "'+ command.controller +'" does not exist.'});
       }
 
     })
-    .then((ctrlpath) => {
-      console.log('ctrlpath: ' + ctrlpath);
-      return import(ctrlpath).then((module) => {
+    .then((ctrlpath) => { return import(ctrlpath)})
+      .then((module) => {
         let cons = eval('module.'+command.controller+'_controller');
         let ins = new cons(this.msg);
         return ins.auth(ins.perm).then((allowed) => {
-          if (!allowed) {
-            reject({message: 'Permission denied', code:'PERMISSION_DENIED'});
-            return;
-          }
-          console.log('Ins perm: ' + ins.perm);
-          
-          if (!command.method || parseInt(command.method)){
-            //return reject("That's not a function.");
-            throw new Error('Not a function');
-          }
+          return new Promise((resolve, reject) => {
+            if (!allowed) {
+              reject({code:'PERMISSION_DENIED'});
+            } else {resolve(ins);}
+          });
+        });
+      })
+          .then((ins) => {
+          console.log('Ins perm: ' + JSON.stringify(ins.perm));
           
             let func = eval("ins."+command.method+'.bind(ins)');
           if (typeof(func) !== 'function'){
             reject(command.method + ' is not a valid function of '+command.controller);}
         // Execute the parsed function.
-            func(command.args);
-        });
-        });
-    });
+           func(command.args);
+          });
 
   }
 

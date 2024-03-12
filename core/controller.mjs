@@ -7,6 +7,7 @@ export class Controller {
   static message_retainer = {}
 
   allowed = true;
+  client = Discord.client;
 
   constructor(msg) {
     this.client = Discord.client;
@@ -40,6 +41,7 @@ export class Controller {
   }
 
   post(content) {
+    //console.log('Client: ' + JSON.stringify(this.client));
     let view = this.view;
     let template_path = this.view.template_path;
 
