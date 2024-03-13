@@ -102,6 +102,46 @@ export const prompt_server =
 		icon_url: 'https://i.imgur.com/AfFp7pu.png',
 	});
 
-export const embed_example_json = {"embeds": [{"title":"{{title}}","type":"rich","description":"Some description here","url":"https://discord.js.org","timestamp":"{{Time.now}}","color":6243481,"fields":[{"name":"Regular field title","value":"Some value here","inline":false},{"name":"​","value":"​","inline":false},{"name":"Inline field title","value":"Some value here","inline":true},{"name":"Inline field title","value":"Some value here","inline":true},{"name":"Inline field title","value":"Some value here","inline":true}],"thumbnail":{"url":"https://i.imgur.com/AfFp7pu.png"},"image":{"url":"https://i.imgur.com/AfFp7pu.png"},"author":{"name":"Some name","url":"https://discord.js.org"},"footer":{"text":"Some footer text here"},
+export const embed_example_json = {
+  "embeds": 
+  [
+    {
+      "title":"{{title}}",
+      "type":"rich",
+      "description":"{{description}}",
+      "url":"https://discord.js.org",
+      "timestamp":"{{Time.now}}",
+      "color":6243481,
+      "fields":[
+          {
+            "name":"Regular field title",
+            "value":"Some value here",
+            "inline":false
+          },
+          {
+            "name":"Another regular field​",
+            "value":"with another regular value​",
+            "inline":false
+          },
+          {
+            "name":"Inline field title",
+            "value":"Some value here",
+            "inline":true
+          },
+          {
+            "name":"Inline field title",
+            "value":"Some value here",
+            "inline":true
+          },
+          {
+            "name":"Inline field title",
+            "value":"Some value here","inline":true
+          }
+        ],
+        "thumbnail":{
+          "url":"https://i.imgur.com/AfFp7pu.png"},
+          "image":{"url":"https://i.imgur.com/AfFp7pu.png"},
+          "author":{"name":"Some name","url":"https://discord.js.org"},
+          "footer":{"text":"Some footer text here"},
                                              }
                                             ]};

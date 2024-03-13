@@ -6,7 +6,6 @@ export class Controller {
 
   static message_retainer = {}
 
-  allowed = true;
   client = Discord.client;
 
   constructor(msg) {
@@ -70,6 +69,9 @@ export class Controller {
         }
         if (typeof(content) === 'string' && template) {
           content = this.applyTemplate(template, this.view.data);
+        }
+        if (this.view.embeds.length > 0){
+          content = {embeds:this.view.embeds};
         }
       }
         let output_message;
