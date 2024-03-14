@@ -59,10 +59,11 @@ export class Controller {
       })
       .then((template) => {
       if (this.view.template_type === 'embed'){
-        /*content = this.applyTemplate(JSON.stringify(template), this.view.data);
+        content = this.applyTemplate(JSON.stringify(template), this.view.data);
         console.log('Content: '+content+'\n\n');
-        content = {embeds: [content]}*/
-        content = template;
+        content = JSON.parse(content);
+        content = {embeds: [content]}
+        //content = template;
       } else {
         if (!content) {
           content = this.view.content

@@ -45,7 +45,7 @@ export class Lobster extends Discord{
       //console.log(msg);
       console.log('Input: '+msg.content);
 
-      if (msg.content.toLowerCase().startsWith('!lob')){
+      if (msg.content.toLowerCase().startsWith('!lob') || msg.content.toLowerCase().startsWith('!test')){
         let parser = new Parser(msg);
         //return this.parseCommand(msg)
         parser.parseCommand(msg)

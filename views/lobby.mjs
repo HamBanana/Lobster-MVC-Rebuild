@@ -102,9 +102,7 @@ export const prompt_server =
 		icon_url: 'https://i.imgur.com/AfFp7pu.png',
 	});
 
-export const embed_example_json = {
-  "embeds": 
-  [
+export const embed_example_json = 
     {
       "title":"{{title}}",
       "type":"rich",
@@ -135,13 +133,12 @@ export const embed_example_json = {
           },
           {
             "name":"Inline field title",
-            "value":"Some value here","inline":true
+            "value":"Some value here",
+            "inline":true
           }
         ],
-        "thumbnail":{
-          "url":"https://i.imgur.com/AfFp7pu.png"},
+        "thumbnail":{"url":"https://i.imgur.com/AfFp7pu.png"},
           "image":{"url":"https://i.imgur.com/AfFp7pu.png"},
           "author":{"name":"Some name","url":"https://discord.js.org"},
           "footer":{"text":"Some footer text here"},
-                                             }
-                                            ]};
+                                             };

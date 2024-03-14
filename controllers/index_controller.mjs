@@ -14,12 +14,12 @@ export class index_controller extends Controller{
     //this.view.template_type = 'embed';
     //this.view.template_path = 'lobby/embed_example_json';
     //this.view.data['title'] = "A better title";
-    //this.view.data['description'] = "A better description"
+    //this.view.data['description'] = "A better description";
 
     this.view.embeds[0] = new MessageEmbed().setTitle('Yay').addFields([{name:'Yay', value:'An embed with a field'}]); 
     //this.post({embeds:[embed_example]});
     //this.message.reply({embeds:[embed_example]});
-    this.post()
+    this.post();
   }
 
   info(){
