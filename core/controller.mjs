@@ -11,6 +11,8 @@ export class Controller {
   constructor(msg) {
     this.client = Discord.client;
 
+    this.allowed = true;
+
     this.view = {
       content: '',
       type: 'reply',
