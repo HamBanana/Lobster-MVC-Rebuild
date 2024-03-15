@@ -10,13 +10,13 @@ export class index_controller extends Controller{
   index(){
     let __filename = fileURLToPath(import.meta.url);
     let __dirname = path.dirname(__filename);
-    //this.view.content = {files: [__dirname + '/../res/img/idiot.png']};
+    this.view.content = {files: [__dirname + '/../res/img/idiot.png']};
     //this.view.template_type = 'embed';
     //this.view.template_path = 'lobby/embed_example_json';
     //this.view.data['title'] = "A better title";
     //this.view.data['description'] = "A better description";
 
-    this.view.embeds[0] = new MessageEmbed().setTitle('Yay').addFields([{name:'Yay', value:'An embed with a field'}]); 
+    //this.view.embeds[0] = new MessageEmbed().setTitle('Yay').addFields([{name:'Yay', value:'An embed with a field'}]); 
     //this.post({embeds:[embed_example]});
     //this.message.reply({embeds:[embed_example]});
     this.post();
