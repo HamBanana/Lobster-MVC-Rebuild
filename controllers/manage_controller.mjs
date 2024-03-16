@@ -30,6 +30,41 @@ perm = {'users': ['330279218543984641']
       });
   }
 
+  restart(args){
+    let { mode } = this.extractArgs(args, 'mode');
+    if (!mode) {mode = 'default';}
+    (async function() {
+
+      try {
+    
+        const out = fs.openSync('./out.log', 'a');
+        const err = fs.openSync('./out.log', 'a');
+    
+        console.log('spawn sub');
+    
+        const sub = spawn(process.env.LOBSTER_ROOT + '/utils/start', [], {
+          detached: true,               // this removes ties to the parent
+          stdio: [ 'ignore', out, err ]
+        });
+    
+        sub.unref();
+        console.log('waiting..');
+    
+        await new Promise((resolve,reject) =>
+          setTimeout(() => resolve(), 3000)
+        );
+        console.log('exiting main..');
+        this.message.reply('Restarting');
+    
+      } catch(e) {
+        console.error();
+      } finally {
+       // process.exit();
+      }
+    
+    })();
+  }
+
   enable(){
     sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/*', (err, stdout, stderr) => {
       if (err){
