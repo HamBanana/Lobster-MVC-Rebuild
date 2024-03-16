@@ -168,7 +168,8 @@ export class lobby_controller extends Controller {
   }
 
   delete(args){
-    const code = (args.code || args.default?.[0]).toUpperCase();
+    //const code = (args.code || args.default?.[0]).toUpperCase();
+    const { code } = this.extractArgs(args, 'code');
     if (!code){return this.message.reply('Delete what?');}
     //let host = this.model.getLobby(code).host;
     /*if (host !== this.message.author.username){
