@@ -44,8 +44,14 @@ export class Lobster extends Discord{
          || msg.content.length > 2000) {return;}
       //console.log(msg);
       console.log('Input: '+msg.content);
+      let pf = '!lob';
+      if (process.env.OS == 'Windows'){
+        pf = '!test';
+      } else {
+        pf = '!lob';
+      }
 
-      if (msg.content.toLowerCase().startsWith('!lob') || msg.content.toLowerCase().startsWith('!test')){
+      if (msg.content.toLowerCase().startsWith(pf)){
         let parser = new Parser(msg);
         //return this.parseCommand(msg)
         parser.parseCommand(msg)
