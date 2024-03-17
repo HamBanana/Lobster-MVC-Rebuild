@@ -8,7 +8,7 @@ import { lobby_model } from '../models/lobby_model.mjs';
 import {Parser} from './parser.mjs';
 
 export class Lobster extends Discord{
-  
+
   constructor(){
     super();
     console.log('Lobster started.');
@@ -26,7 +26,7 @@ export class Lobster extends Discord{
       //console.log(msg);
       console.log('Input: '+msg.content);
       let pf = '!lob';
-      if (process.env.OS == 'Windows'){
+      if (process.env.OS == 'Windows' && msg.author.id == members.Ham){
         pf = '!test';
       } else {
         pf = '!lob';
