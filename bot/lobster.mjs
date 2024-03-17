@@ -6,6 +6,7 @@ import * as gif from '../tools/gif.mjs';
 import { channels, members } from '../core/statics.mjs';
 import { lobby_model } from '../models/lobby_model.mjs';
 import {Parser} from './parser.mjs';
+import { Database } from '../core/database.mjs';
 
 export class Lobster extends Discord{
 
@@ -44,7 +45,7 @@ export class Lobster extends Discord{
           if (typeof(err) == 'string'){err = {'message':err};}
           console.log('Error code: ' + err.code);
           switch(err.code){
-            case 'ERR_MODULE_NOT_FOUND': return msg.reply('The controller "' + command.controller + '" doesn\'t exist.');
+            case 'ERR_MODULE_NOT_FOUND': return msg.reply('The controller doesn\'t exist, I guess?');
             case 'PERMISSION_DENIED': return msg.react('<:no:1047889973631782994>');
             case 'ENOENT': return msg.reply("That controller doesn't exist");
             default:
@@ -86,6 +87,11 @@ export class Lobster extends Discord{
 
     // When client has logged in
     client.on("ready", (client) => {
+      let db = Database.getInstance();
+      let message = "";
+      if (process.env.OS == "Windows"){
+        
+      }
   console.log("Logged in as " + client.user.tag);
   let c = client.channels.cache.get('1200927450536890429');
   if (!c){
