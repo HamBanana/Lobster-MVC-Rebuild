@@ -46,17 +46,6 @@ export class Parser{
       };
 
       console.log(JSON.stringify('Parms: ' + parms));
-
-      //Test if command is an alias
-      /*for (let [k, v] of Object.entries(this.#method_alias)){
-        if (k !== parms[1]){continue;}
-        let spl = v.split('.');
-        command = {
-          'controller': spl[0],
-          'method'    : spl[1],
-          'args'      :parms.splice(2)
-        };
-      }*/
       
           let args = {'default': []};
           for (let i of command.args){
