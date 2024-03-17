@@ -96,7 +96,13 @@ export class Parser{
           if (typeof(func) !== 'function'){
             reject(command.method + ' is not a valid function of '+command.controller);}
         // Execute the parsed function.
-           func(command.args);
+           let p = func(command.args);
+           console.log('Check 1');
+           if (typeof(p) == "Promise"){
+            p.then((op) => {
+              console.log("Return value from promise after executing function: " + JSON.stringify(op));
+            });
+           }
           });
 
   }

@@ -33,6 +33,7 @@ export class my_controller extends Controller{
   }
 
   index(){
+    return new Promise((resolve, reject) => {
     let db = Database.getInstance();
     db.get("*", 'members', "userid = " + this.message.author.id, (err, res) => {
       res = res[0];
@@ -42,7 +43,15 @@ export class my_controller extends Controller{
         + "\nPreferred name: " + res['preferred_name']
         + "\nPrefix: " + res['prefix']
         + "```";
+        return user;
+    });
+      
+    })
+    .then((user) => {
       this.message.reply("Your config: \n" + user);
+    })
+    .catch((err) => {
+      if (err){throw err;}
     });
   }
 
