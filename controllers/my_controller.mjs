@@ -43,16 +43,13 @@ export class my_controller extends Controller{
         + "\nPreferred name: " + res['preferred_name']
         + "\nPrefix: " + res['prefix']
         + "```";
-        return user;
+        resolve(user);
     });
       
     })
     .then((user) => {
       this.message.reply("Your config: \n" + user);
     })
-    .catch((err) => {
-      if (err){throw err;}
-    });
   }
 
   create(args){

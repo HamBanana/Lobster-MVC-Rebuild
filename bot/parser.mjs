@@ -97,8 +97,11 @@ export class Parser{
             reject(command.method + ' is not a valid function of '+command.controller);}
         // Execute the parsed function.
            let p = func(command.args);
-           console.log('Check 1');
-           if (typeof(p) == "Promise"){
+           console.log("Type of p: " + typeof(p));
+           console.log("content of p: " + JSON.stringify(p));
+           reject('Test');
+           if (typeof(p) == "object"){
+            console.log('Check 2');
             p.then((op) => {
               console.log("Return value from promise after executing function: " + JSON.stringify(op));
             });
