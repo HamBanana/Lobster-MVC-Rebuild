@@ -8,26 +8,7 @@ import { lobby_model } from '../models/lobby_model.mjs';
 import {Parser} from './parser.mjs';
 
 export class Lobster extends Discord{
-
-  #method_alias = {
-    'd'   : 'random.dice',
-    'dice': 'random.dice',
-    'c'   : 'random.coin',
-    'coin': 'random.coin',
-    'join': 'lobby.queue',
-    'unjoin': 'lobby.unqueue',
-    'list': 'lobby.list',
-    'code': 'lobby.list',
-    'kill': 'lobby.delete',
-    'create': 'lobby.create',
-    'reboot': 'manage.reboot'
-  }
-
-  static channels = {
-    'spam': '949274005511229520',
-    'game-codes': '883526058236854312'
-  }
-
+  
   constructor(){
     super();
     console.log('Lobster started.');
