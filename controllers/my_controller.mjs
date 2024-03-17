@@ -1,5 +1,6 @@
 import {Controller} from '../core/controller.mjs';
 import { Database } from '../core/database.mjs';
+import { Discord } from '../core/discord.mjs';
 
 export class my_controller extends Controller{
 
@@ -17,7 +18,7 @@ export class my_controller extends Controller{
     'preferred_name': null,
     'username': null,
     'userid': null,
-    'prefix': null
+    'prefix': '!lob'
    }
 
 
@@ -27,17 +28,58 @@ export class my_controller extends Controller{
     let db = Database.getInstance();
     //this.auth(this.perm).catch((err) => {return console.log('Error in count: ' + err.message);});
 
-    db.connection.query('CREATE TABLE IF NOT EXISTS users ('+this.table_users+')');
+    db.connection.query('CREATE TABLE IF NOT EXISTS members ('+this.table_users+')');
 
   }
 
   index(){
-    this.message.reply(JSON.stringify(this.user) || 'I dunno :eyes:');
+    let db = Database.getInstance();
+    db.get("*", 'members', "userid = " + this.message.author.id, (err, res) => {
+      res = res[0];
+      if (err){throw err;}
+      let user = "```"
+        + "Username: " + res["username"]
+        + "\nPreferred name: " + res['preferred_name']
+        + "\nPrefix: " + res['prefix']
+        + "```";
+      this.message.reply("Your config: \n" + user);
+    });
+  }
+
+  create(args){
+    let client = Discord.client;
+    let { name, prefix } = this.extractArgs(args, 'name');
+    let db = Database.getInstance();
+    db.insert('members', {
+      preferred_name: name ||'you',
+      username: client.users.cache.get(this.message.author.id).username,
+      userid: this.message.author.id,
+      prefix: '!lob'
+    }, (err, res) => {
+      if (err){throw err;}
+      console.log('Inserted row in members: ' + JSON.stringify(res));
+      this.message.react('✅');
+    });
+  }
+
+  forget(args){
+    let db = Database.getInstance();
+    db.delete('members', 'userid = ' + this.message.author.id, (err, res) => {
+      if (err){throw err;}
+      this.message.react('✅');
+    });
   }
 
   prefix(args){
     let { prefix } = this.extractArgs(args, 'prefix');
-    console.log('args: ' + JSON.stringify(args));
+
+    let db = Database.getInstance();
+    db.get('prefix', 'members', 'userid = "' + this.message.author.id + '"', (err, res) => {
+      if (err){throw err;}
+      
+      this.message.reply("Your prefix is: " + this.user['prefix'] + "\nPretty sure you already knew that :eyes:");
+
+    });
   }
 
 }
