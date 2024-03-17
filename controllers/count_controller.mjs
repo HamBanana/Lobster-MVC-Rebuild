@@ -67,6 +67,7 @@ export class count_controller extends Controller{
   }
 
   test_string(){
+    if (process.env.OS == "Windows"){return;}
     this.db = Database.getInstance();
     
     if (this.message.channelId != channels.counting){return;}
@@ -104,8 +105,8 @@ export class count_controller extends Controller{
       this.session.last_incorrect = this.message.author.id;
       this.message.reply('Result:\
       \nScore: ' + this.session.score + '\
-      \nLast correct number by: ' + client.users.cache.get(this.session.last_correct).username + '\
-      \nIncorrect number by: ' + client.users.cache.get(this.session.last_incorrect).username
+      \nLast correct number by: ' + client.users.cache.get(this.session.last_correct).username || 'Noone' + '\
+      \nIncorrect number by: ' + client.users.cache.get(this.session.last_incorrect).username || 'Noone'
       );
      // Start new session
      this.makeNewSession();
