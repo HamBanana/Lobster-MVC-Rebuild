@@ -109,7 +109,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
   let lm = new lobby_model();
   lm.testPresence(oldPresence, newPresence);
 
-})
+});
 
   /*this.client.on('reactionCreate', (reaction) => {
   console.log('Reaction: '+reaction);
