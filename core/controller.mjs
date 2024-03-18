@@ -172,18 +172,18 @@ export class Controller {
       }
       console.log('Allowed: ' + this.allowed);
       if (!this.allowed){
-        resolve(false);
+        reject('Permission denied'  );
         return;
       }
       resolve(true);
     }
 
-    });
+    }).catch((e) => {throw e;});
   }
 
   help(args){
     
-    this.message.reply(this.getAllFuncs([1, 3]));
+    this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 3])));
 
   }
 
