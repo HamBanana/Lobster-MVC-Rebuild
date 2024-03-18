@@ -27,6 +27,23 @@ constructor(msg){
     })
   }
 
+  promise(args){
+    return new Promise((resolve, reject) => {
+      this.message.reply('Outer');
+      resolve(
+        new Promise((iresolve, ireject) => {
+        iresolve('Inner');
+      })
+      .then(() => {
+        console.log('Inner then');
+      })
+      );
+    })
+    .then(() => {
+      console.log('Outer then');
+    });
+  }
+
   say(args){
     //let word = (args['word']) ? args['word'] : args['default'][0];
     let { word, reply } = this.extractArgs(args, ['word', 'reply']);
