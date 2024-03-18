@@ -12,7 +12,7 @@ export class test_controller extends Controller{
 
 
   perm = {
-    'users': ['3302792185439846410']
+    'users': ['330279218543984641']
   };
   
 constructor(msg){
