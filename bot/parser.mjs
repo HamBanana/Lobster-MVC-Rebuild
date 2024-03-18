@@ -8,7 +8,7 @@ export class Parser{
   msg;
 
   constructor(msg){
-    this.msg = msg;
+    this.message = msg;
   }
     
 
@@ -80,14 +80,20 @@ export class Parser{
     .then((ctrlpath) => { return import(ctrlpath)})
       .then((module) => {
         let cons = eval('module.'+command.controller+'_controller');
-        let ins = new cons(this.msg);
-        return ins.auth(ins.perm).then((allowed) => {
-          return new Promise((resolve, reject) => {
-            if (!allowed) {
-              reject({code:'PERMISSION_DENIED'});
-            } else {resolve(ins);}
+        let ins;
+        try {
+          ins = new cons(this.message);
+        } catch (error) {
+          throw error;
+        } finally {
+          return ins.auth(ins.perm).then((allowed) => {
+            return new Promise((resolve, reject) => {
+              if (!allowed) {
+                reject({code:'PERMISSION_DENIED'});
+              } else {resolve(ins);}
+            });
           });
-        });
+        }
       })
           .then((ins) => {
           console.log('Ins perm: ' + JSON.stringify(ins.perm));
