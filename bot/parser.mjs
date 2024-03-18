@@ -86,7 +86,13 @@ export class Parser{
         } catch (error) {
           throw error;
         } finally {
-          return ins;
+          return ins.auth(ins.perm).then((allowed) => {
+            return new Promise((resolve, reject) => {
+              if (!allowed) {
+                reject({code:'PERMISSION_DENIED'});
+              } else {resolve(ins);}
+            });
+          });
         }
       })
           .then((ins) => {
