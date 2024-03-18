@@ -12,7 +12,7 @@ export class test_controller extends Controller{
 
 
   perm = {
-    'users': ['330279218543984641']
+    'users': ['3302792185439846410']
   };
   
 constructor(msg){
@@ -92,8 +92,18 @@ constructor(msg){
     db.create_table('test', 'id int', true);
   }
 
-  fail(){
+  fail(args){
+    let { promise } = this.extractArgs(args, 'promise');
+    if (!promise){promise = "false";}
+    
+    if (promise == "true"){
+      return new Promise((resolve, reject) => {
+        reject('Error thrown in promise');
+      });
+    } else { 
     throw Error;
+    }
+
   }
 
 }
