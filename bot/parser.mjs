@@ -8,7 +8,7 @@ export class Parser{
   msg;
 
   constructor(msg){
-    this.msg = msg;
+    this.message = msg;
   }
     
 
@@ -80,13 +80,14 @@ export class Parser{
     .then((ctrlpath) => { return import(ctrlpath)})
       .then((module) => {
         let cons = eval('module.'+command.controller+'_controller');
-        let ins = new cons(this.msg);
-        return ins.auth(ins.perm).then((allowed) => {
-          return new Promise((resolve, reject) => {
-            if (!allowed) {
-              reject({code:'PERMISSION_DENIED'});
-            } else {resolve(ins);}
-          });
+        let ins;
+        try {
+          ins = new cons(this.message);
+        } catch (error) {if (error){throw error;} }
+        return ins.auth(ins.perm)
+        .catch((err) => {
+          console.log('CATCH after auth');
+          if (err){throw err;}
         });
       })
           .then((ins) => {
@@ -106,7 +107,27 @@ export class Parser{
               console.log("Return value from promise after executing function: " + JSON.stringify(op));
             });
            }
-          });
+          })
+          .catch((err) => {
+            if (typeof(err) == 'string'){err = {'message':err};}
+            console.log('Error code: ' + err.code);
+            switch(err.code){
+              case 'ERR_MODULE_NOT_FOUND': return this.message.reply('The controller doesn\'t exist, I guess?');
+              case 'PERMISSION_DENIED': return this.message.react('<:no:1047889973631782994>');
+              case 'ENOENT': return msg.reply("That controller doesn't exist");
+              default:
+                if (err.message == "Cannot read properties of undefined (reading 'bind')"){
+                  return this.message.reply('That function does not exist');
+                }
+              this.message.reply('Error because: ' + err.message);
+              console.log('Execute command failed:\n' 
+              + 'Message: ' + err.message
+              + '\nCode: ' + err.code
+              + '\nStack: ' + (err.stack) ? err.stack : 'No stack.'
+              );
+              return;
+            }
+          });;
 
   }
 

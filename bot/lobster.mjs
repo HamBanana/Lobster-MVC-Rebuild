@@ -40,26 +40,6 @@ export class Lobster extends Discord{
         .then((command) => { 
           return parser.executeCommand(command)
           
-        })
-        .catch((err) => {
-          if (typeof(err) == 'string'){err = {'message':err};}
-          console.log('Error code: ' + err.code);
-          switch(err.code){
-            case 'ERR_MODULE_NOT_FOUND': return msg.reply('The controller doesn\'t exist, I guess?');
-            case 'PERMISSION_DENIED': return msg.react('<:no:1047889973631782994>');
-            case 'ENOENT': return msg.reply("That controller doesn't exist");
-            default:
-              if (err.message == "Cannot read properties of undefined (reading 'bind')"){
-                return msg.reply('That function does not exist');
-              }
-            msg.reply('Error because: ' + err.message); 
-            console.log('Execute command failed:\n' 
-            + 'Message: ' + err.message
-            + '\nCode: ' + err.code
-            + '\nStack: ' + (err.stack) ? err.stack : 'No stack.'
-            );
-            return;
-          }
         });
       } else {
         // Test the string for other triggers.
