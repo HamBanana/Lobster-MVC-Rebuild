@@ -100,7 +100,7 @@ export class Parser{
            let p = func(command.args);
            console.log("Type of p: " + typeof(p));
            console.log("content of p: " + JSON.stringify(p));
-           reject('Test');
+           //reject('Test');
            if (typeof(p) == "object"){
             console.log('Check 2');
             p.then((op) => {
