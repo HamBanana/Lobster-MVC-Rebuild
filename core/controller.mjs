@@ -172,7 +172,7 @@ export class Controller {
       }
       console.log('Allowed: ' + this.allowed);
       if (!this.allowed){
-        reject('Permission denied'  );
+        reject('Permission denied');
         return;
       }
       resolve(true);
