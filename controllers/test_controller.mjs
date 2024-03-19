@@ -70,32 +70,21 @@ constructor(msg){
   }
 
   count(){
-    this.message.reply('Test');
-    let db = Database.getInstance();
-    //db.connection.connect((err) => {
-    //  if (err){
-    //    return this.message.reply('Connect failed because: '+err.message);
-    //  }
-
-    db.p_getLatest('counting')
-    .then((result) => {
-      this.message.reply('Result: ' + result.count);
-    })
-    .catch((err) => {
-      this.message.reply('Error: ' + err.message);
-      return;
+    return new Promise((resolve, reject0) => {
+      let db = Database.getInstance();
+  
+      db.p_getLatest('counting')
+      .then((result) => {
+        this.message.reply('Result: ' + result.count);
+        resolve(result.count);
+      })
+      .catch((err) => {
+        this.message.reply('Error: ' + err.message);
+        reject(err);
+      });
     });
-    /*db.get('count', 'counting', 'id=1', (error, results, fields) => {
-      if (error){
-        this.message.reply('Error in db.get:' + error.message);
-        return;
-      }
-      this.message.reply('Result:'+ results[0].count);
-    });*/
-
-      //db.connection.query('select count from Lobster.counting WHERE id=1', );
-    //})
   }
+
   create(){
     let db = Database.getInstance();
     db.create_table('test', 'id int', true);
