@@ -31,7 +31,7 @@ export class Lobster extends Discord{
         pf = '!lob ';
       }
       else if (process.env.OS == 'Windows' && msg.author.id == members.Ham){
-        pf = '!';
+        pf = '!!';
       }
 
       if (msg.content.toLowerCase().startsWith(pf)){
