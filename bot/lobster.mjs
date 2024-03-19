@@ -53,6 +53,7 @@ export class Lobster extends Discord{
             case 'ERR_MODULE_NOT_FOUND': return msg.reply('The controller doesn\'t exist, I guess?');
             case 'PERMISSION_DENIED': return msg.react('<:no:1047889973631782994>');
             case 'ENOENT': return msg.reply("That controller doesn't exist");
+            case 'SILENT' : return;
             default:
               if (err.message == "Cannot read properties of undefined (reading 'bind')"){
                 return msg.reply('That function does not exist');

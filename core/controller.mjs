@@ -81,7 +81,7 @@ export class Controller {
             }
           }
             let output_message;
-            if (JSON.stringify(content) == '{"default":[]}'){throw new Error('What?');}
+            if (JSON.stringify(content) == '{"default":[]}'){throw new Error({code:'SILENT'});}
             switch (this.view.type) {
               case 'reply':
                 output_message = this.message.reply(content);
@@ -130,8 +130,8 @@ export class Controller {
             });
         }
         return ret.msg;
-      }).catch((err) => {
-        this.message.reply('Error in post: ' + err.message);
+      })
+      .catch((err) => {
         return;
       });
 
