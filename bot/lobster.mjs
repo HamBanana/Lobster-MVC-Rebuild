@@ -26,7 +26,7 @@ export class Lobster extends Discord{
          || msg.content.length > 2000) {return;}
       //console.log(msg);
       console.log('Input: '+msg.content);
-      let pf = '!lob';
+      let pf;
       if (process.env.OS == 'Windows' && msg.author.id == members.Ham){
         pf = '!';
       } else {
@@ -51,7 +51,7 @@ export class Lobster extends Discord{
           switch(err.code){
             case 'ERR_MODULE_NOT_FOUND': return msg.reply('The controller doesn\'t exist, I guess?');
             case 'PERMISSION_DENIED': return msg.react('<:no:1047889973631782994>');
-            case 'ENOENT': return msg.reply("That controller doesn't exist");
+            case 'ENOENT': throw err; return msg.reply("That controller doesn't exist");
             default:
               if (err.message == "Cannot read properties of undefined (reading 'bind')"){
                 return msg.reply('That function does not exist');
