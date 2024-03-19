@@ -78,15 +78,14 @@ export class Parser{
     })
     .then((ctrlpath) => { return import(ctrlpath)})
       .then((module) => {
-        let cons = eval('module.'+command.controller+'_controller');
-        let ins = new cons(this.msg);
-        return ins.auth(ins.perm).then((allowed) => {
-          return new Promise((resolve, reject) => {
-            if (!allowed) {
-              reject({code:'PERMISSION_DENIED'});
-            } else {resolve(ins);}
-          });
-        });
+        return new Promise((resolve, reject) => {
+          try {
+            let cons = eval('module.'+command.controller+'_controller');
+            resolve(new cons(this.msg));
+          } catch (error) {
+            reject(error);
+          }
+        })
       })
           .then((ins) => {
           console.log('Ins perm: ' + JSON.stringify(ins.perm));

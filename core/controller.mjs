@@ -1,6 +1,7 @@
 //import {View} from './view.mjs';
 import {Time} from '../tools/time.mjs';
 import { Discord } from '../core/discord.mjs';
+import { PermissionError } from '../core/error.mjs';
 
 export class Controller {
 
@@ -150,10 +151,9 @@ export class Controller {
   }
 
   auth(permissions) {
-    return new Promise((resolve, reject) => {
-      if (typeof(permissions) == 'undefined'){resolve(true);}
+      if (typeof(permissions) == 'undefined'){return;}
     if (!this.message) {
-      reject('Controller doesn\'t know about the message object.');
+      throw new Error('Controller doesn\'t know about the message object.');
     }
     for (let [k, v] of Object.entries(permissions)) {
       for (let i of v) {
@@ -172,13 +172,10 @@ export class Controller {
       }
       console.log('Allowed: ' + this.allowed);
       if (!this.allowed){
-        reject('Permission denied');
-        return;
+        throw new PermissionError();
       }
-      resolve(true);
+      return;
     }
-
-    }).catch((e) => {throw e;});
   }
 
   help(args){

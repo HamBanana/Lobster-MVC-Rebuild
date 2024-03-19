@@ -17,6 +17,7 @@ export class test_controller extends Controller{
   
 constructor(msg){
   super(msg);
+  this.auth(this.perm);
 }
   
   index() {
