@@ -51,14 +51,14 @@ constructor(msg){
     if (!word){
       return;
     }
+    reply = (reply !== "false");
     if (reply){
       this.view.type = 'reply';
     } else {
     this.view.channelid = this.message.channel.id;
     this.view.type = 'channel';
     }
-    //let channel = client.channels.cache.get('1200927450536890429');
-    //channel.send(word);
+    
     this.post(word);
   }
 
