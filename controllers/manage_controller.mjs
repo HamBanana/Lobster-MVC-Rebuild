@@ -98,8 +98,8 @@ perm = {'users': ['330279218543984641']}
         this.message.reply('Error in exec:' + error.message);
         return;
       }
-      let o = stdout || 'Nothing here.'
-      this.message.reply(stdout);
+      let o = stdout || 'Nothing here.';
+      this.message.reply(o);
     });
     return;
     
