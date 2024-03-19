@@ -70,6 +70,7 @@ constructor(msg){
   }
 
   count(){
+    this.message.reply('Test');
     let db = Database.getInstance();
     //db.connection.connect((err) => {
     //  if (err){
