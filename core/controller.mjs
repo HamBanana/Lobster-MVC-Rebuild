@@ -84,7 +84,7 @@ export class Controller {
             if (JSON.stringify(content) == '{"default":[]}'){throw new Error('What?');}
             switch (this.view.type) {
               case 'reply':
-                output_message = this.message.reply('Test: ' + content);
+                output_message = this.message.reply(content);
                 break;
               case 'channel':
                 output_message = this.client.channels.cache.get(this.view.channelid).send(content);
