@@ -29,6 +29,7 @@ export class count_controller extends Controller{
 
   constructor(msg){
     super(msg);
+    this.auth(this.perm);
     
     this.db = Database.getInstance();
     //this.auth(this.perm).catch((err) => {return console.log('Error in count: ' + err.message);});

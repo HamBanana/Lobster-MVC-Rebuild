@@ -4,11 +4,12 @@ import * as sub from 'child_process';
 import { once } from 'events';
 
 export class manage_controller extends Controller{
+  
 perm = {'users': ['330279218543984641']}
 
   constructor(msg){
   super(msg);
-  //this.auth(this.perm);
+  this.auth(this.perm);
 
   // Windows check
   if (process.env.OS == 'Windows'){
