@@ -27,10 +27,11 @@ export class Lobster extends Discord{
       //console.log(msg);
       console.log('Input: '+msg.content);
       let pf;
-      if (process.env.OS == 'Windows' && msg.author.id == members.Ham){
-        pf = '!';
-      } else {
+      if (process.env.OS == "Linux"){
         pf = '!lob ';
+      }
+      else if (process.env.OS == 'Windows' && msg.author.id == members.Ham){
+        pf = '!';
       }
 
       if (msg.content.toLowerCase().startsWith(pf)){
