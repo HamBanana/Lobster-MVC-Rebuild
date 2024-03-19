@@ -209,7 +209,7 @@ export class Controller {
 
   help(args){
     
-    this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 2, 3])));
+    this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 3])));
 
   }
 
