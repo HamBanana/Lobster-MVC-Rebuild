@@ -43,6 +43,7 @@ export class Controller {
   }
 
   post(content) {
+    console.log('View: ' + JSON.stringify(this.view));
     //console.log('Client: ' + JSON.stringify(this.client));
     let view = this.view;
     let template_path = this.view.template_path;
@@ -61,35 +62,37 @@ export class Controller {
         }
       })
       .then((template) => {
-      if (this.view.template_type === 'embed'){
-        content = this.applyTemplate(JSON.stringify(template), this.view.data);
-        console.log('Content: '+content+'\n\n');
-        content = JSON.parse(content);
-        content = {embeds: [content]}
-        //content = template;
-      } else {
-        if (!content) {
-          content = this.view.content
-        }
-        if (typeof(content) === 'string' && template) {
-          content = this.applyTemplate(template, this.view.data);
-        }
-        if (this.view.embeds.length > 0){
-          content = {embeds:this.view.embeds};
-        }
-      }
-        let output_message;
-        if (!content || content == ""){throw new Error('What?');}
-        switch (this.view.type) {
-          case 'reply':
-            output_message = this.message.reply(content);
-            break;
-          case 'channel':
-            output_message = this.client.channels.cache.get(this.view.channelid).send(content);
-            break;
-        }
-        return output_message
-          .then((msg) => {
+        return new Promise((resolve, reject) => { 
+          if (this.view.template_type === 'embed'){
+            content = this.applyTemplate(JSON.stringify(template), this.view.data);
+            console.log('Content: '+content+'\n\n');
+            content = JSON.parse(content);
+            content = {embeds: [content]}
+            //content = template;
+          } else {
+            if (!content) {
+              content = this.view.content
+            }
+            if (typeof(content) === 'string' && template) {
+              content = this.applyTemplate(template, this.view.data);
+            }
+            if (this.view.embeds.length > 0){
+              content = {embeds:this.view.embeds};
+            }
+          }
+            let output_message;
+            if (JSON.stringify(content) == '{"default":[]}'){throw new Error('What?');}
+            switch (this.view.type) {
+              case 'reply':
+                output_message = this.message.reply('Test: ' + content);
+                break;
+              case 'channel':
+                output_message = this.client.channels.cache.get(this.view.channelid).send(content);
+                break;
+            }
+            return output_message
+        })
+        .then((msg) => {
             // Reaction handling..
             let listen = false;
             for (let [r, c] of Object.entries(this.view.reactions)) {
@@ -98,11 +101,11 @@ export class Controller {
                 listen = true;
               }
             }
-            return {
+            resolve( {
               listen,
               msg
-            };
-          });
+            } );
+          })
       })
       .then((ret) => {
         if (ret.listen) {
@@ -127,7 +130,10 @@ export class Controller {
             });
         }
         return ret.msg;
-      })
+      }).catch((err) => {
+        this.message.reply('Error in post: ' + err.message);
+        return;
+      });
 
     /*.catch((err) => {
       console.log('Error happened in controller.post()');
