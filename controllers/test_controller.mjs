@@ -2,6 +2,7 @@ import {Controller} from '../core/controller.mjs';
 import { Discord } from '../core/discord.mjs';
 //import {Test} from '../core/database.js';
 import { Database } from '../core/database.mjs';
+import { PermissionError } from '../core/error.mjs';
 
 const guild = await Discord.client.guilds.fetch('817607509984018442');
 
@@ -92,15 +93,13 @@ constructor(msg){
   }
 
   fail(args){
-    let { promise } = this.extractArgs(args, 'promise');
-    if (!promise){promise = "false";}
-    
-    if (promise == "true"){
-      return new Promise((resolve, reject) => {
-        reject('Error thrown in promise');
-      });
-    } else { 
-    throw Error;
+    let { type } = this.extractArgs(args, 'type');
+
+    switch(type){
+      case 'permissionerror':
+        throw new PermissionError();
+      case 'auth': this.auth({'users':['noone']});
+      default: throw Error;
     }
 
   }
