@@ -3,6 +3,7 @@ import { Discord } from '../core/discord.mjs';
 //import {Test} from '../core/database.js';
 import { Database } from '../core/database.mjs';
 import { PermissionError } from '../core/error.mjs';
+import { MessageEmbed } from 'discord.js';
 
 const guild = await Discord.client.guilds.fetch('817607509984018442');
 
@@ -59,8 +60,10 @@ constructor(msg){
     this.view.channelid = this.message.channel.id;
     this.view.type = 'channel';
     }
+    //this.view.content = word;
+    this.view.embeds[0] = new MessageEmbed().setTitle(word);
     
-    this.post(word);
+    this.post();
   }
 
   getpresence(){
