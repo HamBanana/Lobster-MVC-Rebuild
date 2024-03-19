@@ -77,7 +77,15 @@ constructor(msg){
     //    return this.message.reply('Connect failed because: '+err.message);
     //  }
 
-    db.get('count', 'Lobster.counting', 'id=1', (error, results, fields) => {
+    db.p_getLatest('counting')
+    .then((result) => {
+      this.message.reply('Result: ' + JSON.stringify(result));
+    })
+    .catch((err) => {
+      this.message.reply('Error: ' + err.message);
+      return;
+    });
+    db.get('count', 'counting', 'id=1', (error, results, fields) => {
       if (error){
         this.message.reply('Error in db.get:' + error.message);
         return;

@@ -44,6 +44,15 @@ export class Database {
         return this.connection.query('SELECT ' + select + ' from ' + from + ((where) ? ' where ' + where : ''), callback);
     }
 
+    p_getLatest(table){
+        return new Promise((resolve, reject) => {
+            return this.connection.query("SELECT * from " + table + " ORDER BY id DESC LIMIT 1", (err, res) => {
+                if (err){throw err;}
+                resolve(res);
+            });
+        });
+    }
+
     update(table, set, where, callback){
         return this.connection.query("UPDATE " + table + " SET " + set + " WHERE " + where, callback);
     }
