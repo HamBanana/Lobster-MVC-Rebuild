@@ -75,7 +75,6 @@ export class Parser{
       } else {
         throw new Error({message: 'The controller "'+ command.controller +'" does not exist.'});
       }
-      
     })
     .then((ctrlpath) => { return import(ctrlpath)})
       .then((module) => {
