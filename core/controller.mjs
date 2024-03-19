@@ -185,12 +185,6 @@ export class Controller {
     }
   }
 
-  help(args){
-    
-    this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 3])));
-
-  }
-
   extractArgs(args, defaults = null){
     let res = {};
     if (defaults !== null){
@@ -210,6 +204,12 @@ export class Controller {
     }
 
     return res;
+
+  }
+
+  help(args){
+    
+    this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 2, 3])));
 
   }
 

@@ -75,8 +75,12 @@ export class Lobster extends Discord{
         return ins.test_input(msg.content);
       })
         .then(() => {
+          try {
           let cc = new count.count_controller(msg);
             cc.test_string();
+          } catch (error) {
+            return;
+          }
         })
         .then(() => {
       // input random eyes reaction..
