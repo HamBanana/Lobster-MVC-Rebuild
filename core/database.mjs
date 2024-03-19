@@ -47,7 +47,7 @@ export class Database {
     p_getLatest(table){
         return new Promise((resolve, reject) => {
             return this.connection.query("SELECT * from " + table + " ORDER BY id DESC LIMIT 1", (err, res) => {
-                if (err){throw err;}
+                if (err){reject(err); return;}
                 resolve(res[0]);
             });
         });

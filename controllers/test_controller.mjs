@@ -70,7 +70,7 @@ constructor(msg){
   }
 
   count(){
-    return new Promise((resolve, reject0) => {
+    return new Promise((resolve, reject) => {
       let db = Database.getInstance();
   
       db.p_getLatest('counting')
@@ -80,7 +80,7 @@ constructor(msg){
       })
       .catch((err) => {
         this.message.reply('Error: ' + err.message);
-        reject(err);
+        //reject(err);
       });
     });
   }
