@@ -28,15 +28,19 @@ export class Lobster extends Discord{
       console.log('Input: '+msg.content);
       let pf = '!lob';
       if (process.env.OS == 'Windows' && msg.author.id == members.Ham){
-        pf = '!test';
+        pf = '!';
       } else {
-        pf = '!lob';
+        pf = '!lob ';
       }
 
       if (msg.content.toLowerCase().startsWith(pf)){
         let parser = new Parser(msg);
-        //return this.parseCommand(msg)
-        parser.parseCommand(msg)
+
+        console.log('Content before slice: ' + msg.content);
+        let cmd = msg.content.slice(pf.length, msg.content.length);
+        console.log('CMD after slice: ' + cmd);
+
+        parser.parseCommand(cmd)
         .then((command) => { 
           return parser.executeCommand(command)
           

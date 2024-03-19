@@ -30,19 +30,19 @@ export class Parser{
   parseCommand(msg){
     return new Promise((resolve, reject)=> {
       let c = (typeof(msg) === 'string') ? msg.toLowerCase() : msg.content.toLowerCase();
-      if (!c.startsWith('!lob') && c.startsWith('!lobster')){return;}
+      
       let parms = c.split(" ");
 
-      if (parms[1] in this.#method_alias){
-        c = c.replace(parms[1], this.#method_alias[parms[1]]);
+      if (parms[0] in this.#method_alias){
+        c = c.replace(parms[0], this.#method_alias[parms[0]]);
       }
 
       parms = this.splitStringBySpaces(c);
 
       let command = {
-        'controller': parms[1] || 'index',
-        'method'    : parms[2] || 'index',
-        'args'      : parms.splice(3)
+        'controller': parms[0] || 'index',
+        'method'    : parms[1] || 'index',
+        'args'      : parms.splice(2)
       };
 
       console.log(JSON.stringify('Parms: ' + parms));
