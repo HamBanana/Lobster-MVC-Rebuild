@@ -48,7 +48,7 @@ export class Database {
         return new Promise((resolve, reject) => {
             return this.connection.query("SELECT * from " + table + " ORDER BY id DESC LIMIT 1", (err, res) => {
                 if (err){throw err;}
-                resolve(res);
+                resolve(res[0]);
             });
         });
     }

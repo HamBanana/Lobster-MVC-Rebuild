@@ -79,19 +79,19 @@ constructor(msg){
 
     db.p_getLatest('counting')
     .then((result) => {
-      this.message.reply('Result: ' + JSON.stringify(result));
+      this.message.reply('Result: ' + result.count);
     })
     .catch((err) => {
       this.message.reply('Error: ' + err.message);
       return;
     });
-    db.get('count', 'counting', 'id=1', (error, results, fields) => {
+    /*db.get('count', 'counting', 'id=1', (error, results, fields) => {
       if (error){
         this.message.reply('Error in db.get:' + error.message);
         return;
       }
       this.message.reply('Result:'+ results[0].count);
-    });
+    });*/
 
       //db.connection.query('select count from Lobster.counting WHERE id=1', );
     //})
