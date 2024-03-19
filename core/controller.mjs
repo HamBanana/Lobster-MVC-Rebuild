@@ -79,6 +79,7 @@ export class Controller {
         }
       }
         let output_message;
+        if (!content || content == ""){throw new Error('What?');}
         switch (this.view.type) {
           case 'reply':
             output_message = this.message.reply(content);
