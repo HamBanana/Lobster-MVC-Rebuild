@@ -113,7 +113,7 @@ perm = {'users': ['330279218543984641']}
   }
 
   pull(){
-    sub.exec('sudo ' + process.env.LOBSTER_ROOT + '/utils/pull', (err, stdout, stderr) => {
+    sub.exec(process.env.LOBSTER_ROOT + '/utils/pull', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in pull: ' + err.message);
         return;
