@@ -15,7 +15,6 @@ perm = {'users': ['330279218543984641']}
   if (process.env.OS == 'Windows'){
     this.message.reply("Lobster is currently running on Windows, don't expect any manage functions to work");
   }
-
   }
   
   index(){}
