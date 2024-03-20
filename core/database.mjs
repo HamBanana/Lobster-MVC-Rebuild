@@ -23,14 +23,19 @@ export class Database {
         return Database._instance;
     }
 
-    insert(table, values, callback = () => {}){
-
+    getStringsFromJson(values){
         let keystring = ''
         let valuestring = '';
         for (const [key, value] of Object.entries(values)){
             keystring += (keystring == '') ? key : ', ' + key;
             valuestring += (valuestring == '') ? '"'+value+'"' : ', "' + value + '"';
         }
+        return {keystring, valuestring};
+    }
+
+    insert(table, values, callback = () => {}){
+
+        let {keystring, valuestring} = this.getStringsFromJson(values);
 
         //console.log('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')');
         return this.connection.query('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')', callback);
@@ -38,6 +43,13 @@ export class Database {
 
     create_table(name, values, if_not_exists = true, callback = null){
         return this.connection.query('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')', callback);
+    }
+
+    p_createtable(name, values, options){
+        return new Promise((resolve, reject) => {
+            let {keystring, valuestring} = this.getStringsFromJson(values);
+            return this.connection.query("CREATE TABLE " + ((options.if_not_exists) ? "IF NOT EXISTS " : " ") + name + " (" + values );
+        });
     }
 
     get(select, from, where = undefined, callback = () => {}){
