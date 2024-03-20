@@ -20,6 +20,13 @@ perm = {'users': ['330279218543984641']}
   
   index(){}
 
+  who(){
+    sub.exec('whoami', (err, stdout, stderr) => {
+      if(err){throw err;}
+      this.message.reply('I am ' + stdout);
+    });
+  }
+
   reboot(){
       sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot', (err, stdout, stderr) => {
         if (err){
