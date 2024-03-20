@@ -6,6 +6,10 @@ echo "Attempting commit"
 git commit -a -m "Commit from Pi"
 echo "git reset"
 git reset --hard
+echo "git stash"
+git stash
+echo "drop stash"
+git stash drop
 echo "git pull"
 git pull
 npm install
