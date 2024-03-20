@@ -1,7 +1,7 @@
 //import {View} from './view.mjs';
 import {Time} from '../tools/time.mjs';
 import { Discord } from '../core/discord.mjs';
-import { PermissionError } from '../core/error.mjs';
+import { PermissionError, warn } from '../core/error.mjs';
 
 export class Controller {
 
@@ -43,8 +43,6 @@ export class Controller {
   }
 
   post(content) {
-    console.log('View: ' + JSON.stringify(this.view));
-    //console.log('Client: ' + JSON.stringify(this.client));
     let view = this.view;
     let template_path = this.view.template_path;
 
@@ -65,7 +63,6 @@ export class Controller {
         return new Promise((resolve, reject) => { 
           if (this.view.template_type === 'embed'){
             content = this.applyTemplate(JSON.stringify(template), this.view.data);
-            console.log('Content: '+content+'\n\n');
             content = JSON.parse(content);
             content = {embeds: [content]}
             //content = template;
@@ -125,7 +122,7 @@ export class Controller {
               }
             })
             .catch((err) => {
-              console.log('Reaction timeout hit!');
+              warn('Reaction timeout hit!');
               ret.msg.delete();
             });
         }
@@ -134,11 +131,6 @@ export class Controller {
       .catch((err) => {
         return;
       });
-
-    /*.catch((err) => {
-      console.log('Error happened in controller.post()');
-      console.log(err.message);
-    });*/
   }
 
   applyTemplate(template, properties) {
@@ -166,18 +158,17 @@ export class Controller {
       for (let i of v) {
         if (k === 'channels') {
           if (!v.includes(this.message.channelId)) {
-            console.log('Controller auth failed: channel denied');
+            warn('Controller auth failed: channel denied');
             this.allowed = false;
           }
         }
         if (k === 'users') {
           if (!v.includes(this.message.author.id)) {
-            console.log('Controller auth failed: user denied');
+            warn('Controller auth failed: user denied');
             this.allowed = false;
           }
         }
       }
-      console.log('Allowed: ' + this.allowed);
       if (!this.allowed){
         throw new PermissionError();
       }

@@ -1,5 +1,6 @@
 import * as Mysql from 'mysql';
 import { LobsterConfig } from '../../secret.mjs'
+import { warn } from './error.mjs';
 
 export class Database {
 
@@ -10,9 +11,9 @@ export class Database {
         this.connection = Mysql.createConnection(LobsterConfig);
 
         if (!this.connection){
-            console.log('Error in creating database connection');
+            warn('Error in creating database connection');
         } else {
-            console.log('Database connection created.');
+            warn('Database connection created.');
         }
     }
     
@@ -37,7 +38,7 @@ export class Database {
 
         let {keystring, valuestring} = this.getStringsFromJson(values);
 
-        //console.log('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')');
+        //warn('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')');
         return this.connection.query('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')', callback);
     }
 
@@ -70,7 +71,7 @@ export class Database {
     }
 
     delete(table, where, callback){
-        //console.log('DELETE FROM ' + table + ' WHERE ' + where);
+        //warn('DELETE FROM ' + table + ' WHERE ' + where);
        return this.connection.query('DELETE FROM ' + table + ' WHERE ' + where, callback);
     }
 }

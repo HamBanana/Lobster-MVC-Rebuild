@@ -5,6 +5,7 @@ import {count_controller} from "../controllers/count_controller.mjs";
 import { Database } from './database.mjs';
 
 import {Lobster} from "../bot/lobster.mjs";
+import { warn } from '../core/error.mjs';
 
 //import Database from "@replit/database";
 //import { createRxDatabase } from "rxdb";
@@ -15,7 +16,7 @@ import {Lobster} from "../bot/lobster.mjs";
 export class Bootstrap {
 
   constructor(){
-    console.log('Application started.');
+    warn('Application started.');
     
   }
 
@@ -27,7 +28,7 @@ export class Bootstrap {
 
     db.connection.connect((err) => {
       if (err){
-        console.log('Failed to get database connection\n');
+        warn('Failed to get database connection\n');
       }
       
       //Bootstrap.loadInitialValues();
@@ -38,7 +39,7 @@ export class Bootstrap {
     //return db.get("count", 'counting', 'ID = 1');
     //.then((val) => {
     //  count_controller.last_number = val;
-    //  console.log('last_number: '+val);
+    //  warn('last_number: '+val);
    //});
     
   }
