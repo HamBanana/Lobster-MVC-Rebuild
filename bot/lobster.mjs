@@ -67,6 +67,7 @@ export class Lobster extends Discord{
             return;
           }
         });
+        
       } else {
         // Test the string for other triggers.
         return import('../controllers/end_controller.mjs')
