@@ -87,19 +87,22 @@ perm = {'users': ['330279218543984641']}
     if (!mode) {mode = 'default';}
 
     return new Promise((resolve, reject) => {
-      let child = sub.spawn(this.paths.start, [], {detached: true});
-      child.unref();
-      return this.message.reply('<a:loading:1220396138860122162> Restarting').then((m) => {
-        console.log('m: '+ JSON.stringify(m));
-        let timerId = setTimeout(() => {m.edit('\:white_check_mark: Shutting down :)'); process.exit();}, 5000);
-        child.stdout.on('data', (data) => {
+      return sub.exec('chmod +x ' + this.paths.start, (err, stdout, stderr) => {
+        if (process.env.OS == "Windows"){return;}
+        let child = sub.spawn(this.paths.start, [], {detached: true});
+        child.unref();
+        return this.message.reply('<a:loading:1220396138860122162> Restarting').then((m) => {
+          console.log('m: '+ JSON.stringify(m));
+          let timerId = setTimeout(() => {m.edit('\:white_check_mark: Shutting down :)'); process.exit();}, 5000);
+          child.stdout.on('data', (data) => {
+          });
+          child.stderr.on('data', (data) => {m.edit('Error: ' + data);});
+          /*child.on('exit', () => {
+            m.edit('\:white_check_mark: Shutting down :)');
+            this.message.react('✅');
+            process.exit();
+          });*/
         });
-        child.stderr.on('data', (data) => {m.edit('Error: ' + data);});
-        /*child.on('exit', () => {
-          m.edit('\:white_check_mark: Shutting down :)');
-          this.message.react('✅');
-          process.exit();
-        });*/
       });
     })
     .catch((err) => {
