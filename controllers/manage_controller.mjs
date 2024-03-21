@@ -4,6 +4,7 @@ import { logpath } from '../core/error.mjs';
 import {Time} from '../tools/time.mjs';
 
 import { once } from 'events';
+import { warn } from '../core/error.mjs';
 
 export class manage_controller extends Controller{
   
@@ -17,6 +18,13 @@ perm = {'users': ['330279218543984641']}
   if (process.env.OS == 'Windows'){
     this.message.reply("Lobster is currently running on Windows, don't expect any manage functions to work");
   }
+
+  let root = process.env.LOBSTER_ROOT;
+  let w = (process.env.OS == "Windows");
+  this.paths = {
+    reboot: (w)?root+'\\utils\\win_reboot':root+'/utils/reboot',
+    pull: (w) ? root+'\\utils\\win_pull.bat' : '/utils/pull'
+  }
   }
   
   index(){}
@@ -28,13 +36,31 @@ perm = {'users': ['330279218543984641']}
     });
   }
 
-  reboot(){
-      sub.exec(process.env.LOBSTER_ROOT+'/utils/reboot', (err, stdout, stderr) => {
-        if (err){
-          this.message.reply('Error rebooting: ' + err.message);
-          return;
-        }
-      this.message.react('✅');
+  reboot(args){
+    let {update} = this.extractArgs(args, 'update');
+    update = (update == "true") ? true : false;
+
+    return new Promise((resolve, reject) => {
+      if (update){
+        sub.exec(this.paths.pull, (err, stdout, stderr) => {
+          if (err){reject('Error while pulling for reboot: ' + err.message); return;}
+          return stdout;
+        });
+      }
+
+    })
+    .then((pullout) => {
+      return new Promise((resolve, reject) => {
+        if (process.env.OS == "Windows"){reject('Just pretend like it rebooted'); return;}
+      sub.exec(this.paths.reboot, (err, stdout, stderr) => {
+        if (err){reject('Error rebooting: ' + err.message); return;}
+      resolve(this.message.react('✅'));
+      
+    })
+      });
+      })
+      .catch((err) => {
+        this.message.reply('Error: ' + err.message); return;
       });
   }
 
@@ -115,11 +141,12 @@ perm = {'users': ['330279218543984641']}
   }
 
   pull(){
-    sub.exec(process.env.LOBSTER_ROOT + '/utils/pull', (err, stdout, stderr) => {
+    sub.exec(this.paths.pull, (err, stdout, stderr) => {
       if (err){
         this.message.reply('Error in pull: ' + err.message);
         return;
       }
+      warn('Pull: ' + stdout);
     this.message.react('✅');
     });
   }
