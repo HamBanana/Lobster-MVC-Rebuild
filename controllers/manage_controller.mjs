@@ -89,7 +89,7 @@ perm = {'users': ['330279218543984641']}
     return new Promise((resolve, reject) => {
       let child = sub.spawn(this.paths.start, [], {detached: true});
       child.unref();
-      this.message.reply('<a:loading:1220396138860122162> Restarting').then((m) => {
+      return this.message.reply('<a:loading:1220396138860122162> Restarting').then((m) => {
         console.log('m: '+ JSON.stringify(m));
         let timerId = setTimeout(() => {m.edit('\:white_check_mark: Shutting down :)'); process.exit();}, 5000);
         child.stdout.on('data', (data) => {
