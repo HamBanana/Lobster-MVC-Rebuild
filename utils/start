@@ -2,6 +2,7 @@
 #LOBSTER_ROOT=/home/thawasta/codespace/Lobster-MVC-Rebuild
 cd $LOBSTER_ROOT
 git config --global --add safe.directory $LOBSTER_ROOT
+git config pull.ff only
 echo "Attempting commit"
 git commit -a -m "Commit from Pi"
 echo "git reset"
