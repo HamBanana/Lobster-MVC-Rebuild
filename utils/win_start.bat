@@ -1,3 +1,2 @@
 cd %LOBSTER_ROOT%
-pwd
 node index.mjs

@@ -5,6 +5,7 @@ import {Time} from '../tools/time.mjs';
 
 import { once } from 'events';
 import { warn } from '../core/error.mjs';
+import { Database } from '../core/database.mjs';
 
 export class manage_controller extends Controller{
   
@@ -24,7 +25,8 @@ perm = {'users': ['330279218543984641']}
 
   this.paths = {
     reboot: (w)?root+'\\utils\\win_reboot':root+'/utils/reboot',
-    pull: (w) ? root+'\\utils\\win_pull.bat' : root+'/utils/pull'
+    pull: (w) ? root+'\\utils\\win_pull.bat' : root+'/utils/pull',
+    start: (w) ? root+'\\utils\\win_start.bat' : root + '/utils/start'
   }
 
   }
@@ -54,18 +56,53 @@ perm = {'users': ['330279218543984641']}
         if (err){reject('Error rebooting: ' + err.message); return;}
       resolve(this.message.react('✅'));
     })
-    
+
     })
       .catch((err) => {
         this.message.reply('Error: ' + JSON.stringify(err)); return;
       });
   }
 
+  sql(args){
+    let { query } = this.extractArgs(args, 'query');
+    let db = Database.getInstance();
+    return new Promise((resolve, reject) => {
+      this.message.reply('Query: ' + query);
+      db.connection.query(query, (err, res) => {
+        if (err){reject(err);}
+        resolve(res);
+      });
+    })
+    .then((output) => {
+      this.message.reply('SQL: ' + JSON.stringify(output));
+    })
+    .catch((err) => {
+      this.message.reply('SQL error: ' + err.message);
+    });
+
+  }
+
   restart(args){
     let { mode } = this.extractArgs(args, 'mode');
     if (!mode) {mode = 'default';}
-    (async function() {
 
+    return new Promise((resolve, reject) => {
+      let child = sub.spawn(this.paths.start, [], {detached: true});
+      child.unref();
+      this.message.reply('<a:loading:1220396138860122162> Restarting').then((m) => {
+        console.log('m: '+ JSON.stringify(m));
+        let timerId = setTimeout(() => {m.edit('\:white_check_mark: Shutting down :)'); process.exit();}, 5000);
+        child.stdout.on('data', (data) => {
+        });
+        child.stderr.on('data', (data) => {m.edit('Error: ' + data);});
+        child.on('exit', () => {
+          m.edit('\:white_check_mark: Shutting down :)');
+          this.message.react('✅');
+          process.exit();
+        });
+      });
+    });
+/*
       try {
     
         const out = fs.openSync('./out.log', 'a');
@@ -91,8 +128,7 @@ perm = {'users': ['330279218543984641']}
       } finally {
        // process.exit();
       }
-    
-    })();
+  */  
   }
 
   enable(){
@@ -134,6 +170,21 @@ perm = {'users': ['330279218543984641']}
     });
     return;
     
+  }
+
+  ppull(){
+    return new Promise((resolve, reject) => {
+      let child = sub.spawn(this.paths.pull);
+      this.message.reply('<a:loading:1220396138860122162> Beginning pull').then((omsg) => {
+        console.log('OMSG: ' + JSON.stringify(omsg));
+        child.stdout.on('data', (data) => {omsg.edit('\:loading: '+data);});
+        child.stderr.on('data', (data) => {omsg.edit('\:fail: '+data)});
+        child.on('exit', () => {omsg.edit('\:white_check_mark: Pull done');});
+      })
+    })
+    .catch((err) => {
+      this.message.reply('Error: ' + err.message);
+    });
   }
 
   pull(){

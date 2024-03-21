@@ -57,6 +57,19 @@ export class Database {
         return this.connection.query('SELECT ' + select + ' from ' + from + ((where) ? ' where ' + where : ''), callback);
     }
 
+    p_get(from, where, operator = "AND"){
+        return new Promise((resolve, reject) => {
+            let wherestring = "";
+            for (let [k, v] of Object.entries(where)){
+                wherestring += (wherestring == "") ? k+' = '+v : ' AND '+k+' = '+v;
+            }
+            return this.connection.query('SELECT * from ' + from + ((wherestring !== "") ? ' where ' + wherestring : ''), (err, res) => {
+                if (err){reject(err); return;}
+                resolve(res);
+            });
+        });
+    }
+
     p_getLatest(table){
         return new Promise((resolve, reject) => {
             return this.connection.query("SELECT * from " + table + " ORDER BY id DESC LIMIT 1", (err, res) => {
