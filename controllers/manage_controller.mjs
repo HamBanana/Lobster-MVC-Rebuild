@@ -101,11 +101,11 @@ perm = {'users': ['330279218543984641']}
             m.edit('Error: ' + data);
             clearTimeout(timerId);
           });
-          /*child.on('exit', () => {
+          child.on('exit', () => {
             m.edit('\:white_check_mark: Shutting down :)');
             this.message.react('✅');
-            process.exit();
-          });*/
+            //process.exit();
+          });
         });
       });
     })
