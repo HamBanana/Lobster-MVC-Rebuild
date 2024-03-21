@@ -99,7 +99,7 @@ perm = {'users': ['330279218543984641']}
           });
           child.stderr.on('data', (data) => {
             m.edit('Error: ' + data);
-            clearTimeout(timerId);
+            //clearTimeout(timerId);
           });
           child.on('exit', () => {
             m.edit('\:white_check_mark: Shutting down :)');
