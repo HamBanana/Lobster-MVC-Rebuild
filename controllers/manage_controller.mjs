@@ -101,6 +101,9 @@ perm = {'users': ['330279218543984641']}
           process.exit();
         });
       });
+    })
+    .catch((err) => {
+      this.message.reply('Error: ' + err.message);
     });
 /*
       try {
