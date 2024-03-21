@@ -1,5 +1,7 @@
 import * as sub from 'child_process';
 
+export const logpath =  (process.env.OS == "Windows") ? process.env.LOBSTER_ROOT+'\\..\\log_lobster' : process.env.LOBSTER_ROOT+'/../log_lobster' ;
+
 export class PermissionError extends Error{
     constructor(msg){
         super(msg);
@@ -10,9 +12,12 @@ export class PermissionError extends Error{
 
 export function warn(error, fail = false){
     return new Promise((resolve, reject) => {
-        sub.exec('"'+ ((typeof(error) == "string") ? error : error.message) + '" >> ' + process.env.LOBSTER_ROOT + '/../log_lobster', (err, stdout, stderr) => {
-            if (err){throw err;}
+        sub.exec('echo "<t:'+Time.now+':t>: '+ ( (typeof(error) == "string") ? error : error.message) + '" >> ' + logpath, (err, stdout, stderr) => {
+            if (err){reject(err);}
             resolve(stdout);
         });
+    })
+    .catch((err) => {
+        console.log('Warn failed: ' + JSON.stringify(error));
     });
 }

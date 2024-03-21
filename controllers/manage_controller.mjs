@@ -1,5 +1,7 @@
 import {Controller} from '../core/controller.mjs';
 import * as sub from 'child_process';
+import { logpath } from '../core/error.mjs';
+import {Time} from '../tools/time.mjs';
 
 import { once } from 'events';
 
@@ -201,12 +203,41 @@ perm = {'users': ['330279218543984641']}
   }
 
   log(args){
-    let { lines } = this.extractArgs(args, 'lines');
+    let { lines, clear } = this.extractArgs(args, 'lines');
+
+    if (clear == "true"){
+      let success = (err, stdout, stderr) => {
+        if (err){this.message.reply('Log error: ' + err.message);}
+        this.message.react('✅');
+      };
+      if (process.env.OS == "Windows"){
+        sub.exec('rem ' + logpath, success);
+      } else {
+        sub.exec('rm ' + logpath, success);
+      }
+      return;
+    }
+
     if (!lines){lines = 10;}
-    sub.exec('tail -' + lines + ' ' + process.env.LOBSTER_ROOT + '/../log_lobster', (err, stdout, stderr) => {
-      if (err){return this.message.reply("Can't get log, because: " + err.message);}
-      this.message.reply(stdout);
-    });
+    if (process.env.OS == "Windows"){
+      console.log('LOGPATH: ' + logpath);
+      let child = sub.spawn('powershell.exe', [process.env.LOBSTER_ROOT+"\\utils\\win_logtail.ps1 -path "+logpath+" -lines " + lines]);
+      let out = "";
+      child.stdout.on('data', (data) => {
+        out += data;
+      });
+      child.stderr.on('data', (data) => {
+        out += 'ERROR: ' + data;
+      });
+      child.on('exit', () => {
+        this.message.reply((out !== "") ? out : "Log is empty");
+      });
+    } else {
+      sub.exec('tail -' + lines + ' ' + logpath, (err, stdout, stderr) => {
+        if (err){return this.message.reply("Can't get log, because: " + err.message);}
+        this.message.reply(stdout);
+      }); 
+    }
   }
 
 }
