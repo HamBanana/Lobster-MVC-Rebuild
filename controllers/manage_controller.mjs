@@ -95,11 +95,11 @@ perm = {'users': ['330279218543984641']}
         child.stdout.on('data', (data) => {
         });
         child.stderr.on('data', (data) => {m.edit('Error: ' + data);});
-        child.on('exit', () => {
+        /*child.on('exit', () => {
           m.edit('\:white_check_mark: Shutting down :)');
           this.message.react('✅');
           process.exit();
-        });
+        });*/
       });
     })
     .catch((err) => {
