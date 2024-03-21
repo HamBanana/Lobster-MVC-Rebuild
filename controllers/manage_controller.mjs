@@ -59,9 +59,9 @@ perm = {'users': ['330279218543984641']}
     })
       });
       })
-      .catch((err) => {
+      /*.catch((err) => {
         this.message.reply('Error: ' + err.message); return;
-      });
+      });*/
   }
 
   restart(args){
