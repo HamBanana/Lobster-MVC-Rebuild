@@ -131,6 +131,7 @@ export class Controller {
       .catch((err) => {
         return;
       });
+      
   }
 
   applyTemplate(template, properties) {
