@@ -52,7 +52,7 @@ perm = {'users': ['330279218543984641']}
 
     })
     .then((pullout) => {
-      console.log(JSON.stringify(pullout));
+      console.log('PULLOUT: ' + JSON.stringify(pullout));
       return new Promise((resolve, reject) => {
         if (process.env.OS == "Windows"){reject('Just pretend like it rebooted'); return;}
       sub.exec(this.paths.reboot, (err, stdout, stderr) => {
