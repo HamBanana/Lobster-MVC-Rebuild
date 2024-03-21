@@ -215,6 +215,7 @@ perm = {'users': ['330279218543984641']}
       } else {
         sub.exec('rm ' + logpath, success);
       }
+      sub.exec('"" > ' + logpath)
       return;
     }
 
