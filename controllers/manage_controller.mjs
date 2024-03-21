@@ -47,13 +47,13 @@ perm = {'users': ['330279218543984641']}
         sub.exec(this.paths.pull, (err, stdout, stderr) => {
           if (err){reject('Error while pulling for reboot: ' + err.message); return;}
             if (process.env.OS == "Windows"){reject('Just pretend like it rebooted'); return;}
-          sub.exec(this.paths.reboot, (err, stdout, stderr) => {
-            if (err){reject('Error rebooting: ' + err.message); return;}
-          resolve(this.message.react('✅'));
-          
-        })
         });
       }
+      
+      sub.exec(this.paths.reboot, (err, stdout, stderr) => {
+        if (err){reject('Error rebooting: ' + err.message); return;}
+      resolve(this.message.react('✅'));
+    })
 
     })
       .catch((err) => {
