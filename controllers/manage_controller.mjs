@@ -77,7 +77,6 @@ perm = {'users': ['330279218543984641']}
         const err = fs.openSync('./out.log', 'a');
     
         console.log('spawn sub');
-    
         const sub = spawn(process.env.LOBSTER_ROOT + '/utils/start', [], {
           detached: true,               // this removes ties to the parent
           stdio: [ 'ignore', out, err ]
