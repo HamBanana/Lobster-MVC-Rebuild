@@ -236,7 +236,7 @@ perm = {'users': ['330279218543984641']}
     } else {
       sub.exec('tail -' + lines + ' ' + logpath, (err, stdout, stderr) => {
         if (err){return this.message.reply("Can't get log, because: " + err.message);}
-        this.message.reply(stdout);
+        this.message.reply('Output: '+stdout);
       }); 
     }
   }
