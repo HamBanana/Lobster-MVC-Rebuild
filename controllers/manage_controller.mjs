@@ -95,7 +95,7 @@ perm = {'users': ['330279218543984641']}
           console.log('m: '+ JSON.stringify(m));
           let timerId = setTimeout(() => {m.edit('\:white_check_mark: Shutting down :)'); process.exit();}, 15000);
           child.stdout.on('data', (data) => {
-            m.edit('Data: ' + data);
+            warn('Data: ' + data);
           });
           child.stderr.on('data', (data) => {
             m.edit('Error: ' + data);
