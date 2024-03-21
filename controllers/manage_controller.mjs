@@ -46,7 +46,7 @@ perm = {'users': ['330279218543984641']}
       if (update){
         sub.exec(this.paths.pull, (err, stdout, stderr) => {
           if (err){reject('Error while pulling for reboot: ' + err.message); return;}
-          return stdout;
+          resolve(stdout);
         });
       }
 
