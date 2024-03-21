@@ -54,6 +54,7 @@ perm = {'users': ['330279218543984641']}
         if (err){reject('Error rebooting: ' + err.message); return;}
       resolve(this.message.react('✅'));
     })
+    
     })
       .catch((err) => {
         this.message.reply('Error: ' + JSON.stringify(err)); return;
