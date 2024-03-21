@@ -21,10 +21,12 @@ perm = {'users': ['330279218543984641']}
 
   let root = process.env.LOBSTER_ROOT;
   let w = (process.env.OS == "Windows");
+  
   this.paths = {
     reboot: (w)?root+'\\utils\\win_reboot':root+'/utils/reboot',
     pull: (w) ? root+'\\utils\\win_pull.bat' : root+'/utils/pull'
   }
+
   }
   
   index(){}
