@@ -7,6 +7,7 @@ import { channels, members } from '../core/statics.mjs';
 import { lobby_model } from '../models/lobby_model.mjs';
 import {Parser} from './parser.mjs';
 import { Database } from '../core/database.mjs';
+import * as Setup from './setup.mjs';
 
 export class Lobster extends Discord{
 
@@ -15,7 +16,9 @@ export class Lobster extends Discord{
     console.log('Lobster started.');
     let client = Discord.client;
     this.login();
-    setInterval(this.interval, 10000);
+
+
+    let db = Database.getInstance();
 
     // Listen for Discord events.
 
@@ -98,21 +101,35 @@ export class Lobster extends Discord{
 
     // When client has logged in
     client.on("ready", (client) => {
-      let db = Database.getInstance();
-      let message = "";
-      if (process.env.OS == "Windows"){
-        
-      }
-  console.log("Logged in as " + client.user.tag);
-  let c = client.channels.cache.get('1200927450536890429');
-  if (!c){
-    console.log("Could not send startup message, channel not found.");
-  } else if (c == undefined) {
-    console.log('Can\'t get channel for startup message');
-  } else {
-    c.send('Hello?');
-  }
-});
+
+        console.log("Logged in as " + client.user.tag);
+        let c = client.channels.cache.get('1200927450536890429');
+        let wm;
+        if (!c){
+          console.log("Could not send startup message, channel not found.");
+        } else if (c == undefined) {
+          console.log('Can\'t get channel for startup message');
+        } else {
+          wm = c.send('Hello?');
+        }
+        if (!wm){return;}
+        wm.then((m) => {
+          return Setup.createTables((u) => {
+            return m.edit((u) ? JSON.stringify(u) : ':eyes:');
+          })
+          .then(() => {
+            return Setup.pull((data) => {
+              return m.edit((data) ? data : 'No data');
+            });
+          })
+          .then(() => {
+           m.edit(":white_check_mark: Lobster started");
+          })
+          .catch((err) => {
+            m.edit("Something went wrong during boot: " + err.message);
+          });
+        });
+    });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
   //let c = client.channels.cache.get('1200927450536890429');

@@ -8,22 +8,6 @@ export class lobby_model extends Model {
   static active_players = {};
   static infohosts = [];
 
-  table_active_lobbies = "\
-  id INT AUTO_INCREMENT NOT NULL, \
-  code CHAR(6) UNIQUE NOT NULL, \
-  server VARCHAR(20), \
-  creationtime BIGINT, \
-  pingtime BIGINT, \
-  is_vc_lobby TINYINT(1), \
-  host VARCHAR(20), \
-  is_vanilla TINYINT(1), \
-  notes TEXT, \
-  infohost VARCHAR(25), \
-  state varchar(8), \
-  post_id varchar(25), \
-  PRIMARY KEY (id)\
-  ";
-
   table_infohosts = 
   'id INT AUTO_INCREMENT NOT NULL, '
   +'member_id VARCHAR(25) UNIQUE, '
@@ -32,15 +16,6 @@ export class lobby_model extends Model {
   object_lobby = {
     
   }
-
-  table_queue = "\
-  id INT AUTO_INCREMENT, \
-  member_id VARCHAR(20) UNIQUE, \
-  join_request_time BIGINT, \
-  lobby_code VARCHAR(6), \
-  is_infohost TINYINT(1), \
-  PRIMARY KEY (id) \
-  "
 
   table_announced = 
   'id INT AUTO_INCREMENT, '
@@ -273,7 +248,7 @@ export class lobby_model extends Model {
     });
   }
   
-
+/*
   static createtables(){
       let lm = new lobby_model();
       lm.db.create_table('lobby_infohosts', lm.table_infohosts, true, (err, res) => {
@@ -327,6 +302,7 @@ export class lobby_model extends Model {
         console.log('Active lobbies:\n' + JSON.stringify(res));
       });
   }
+  */
 
   
   testPresence(oldPresence, newPresence){
@@ -448,4 +424,4 @@ newGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,
 
 }
 
-await lobby_model.createtables();
+//await lobby_model.createtables();

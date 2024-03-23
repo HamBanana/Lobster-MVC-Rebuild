@@ -34,6 +34,14 @@ export class Database {
         return {keystring, valuestring};
     }
 
+    getCreateValueString(values){
+        let valuestring = '';
+        for (const [key, value] of Object.entries(values)){
+            valuestring += (valuestring == '') ? key+' '+value : ', '+key+' '+value;
+        }
+        return { valuestring };
+    }
+
     insert(table, values, callback = () => {}){
 
         let {keystring, valuestring} = this.getStringsFromJson(values);
@@ -46,10 +54,13 @@ export class Database {
         return this.connection.query('CREATE TABLE ' +  ((if_not_exists) ? 'IF NOT EXISTS ' : ' ') + name + ' (' + values + ')', callback);
     }
 
-    p_createtable(name, values, options){
+    p_create_table(name, values, options){
         return new Promise((resolve, reject) => {
-            let {keystring, valuestring} = this.getStringsFromJson(values);
-            return this.connection.query("CREATE TABLE " + ((options.if_not_exists) ? "IF NOT EXISTS " : " ") + name + " (" + values );
+            let {valuestring} = this.getCreateValueString(values);
+            return this.connection.query("CREATE TABLE IF NOT EXISTS " + name + " (" + valuestring + ")" , (err, res) => {
+                if (err){reject(err);}
+                resolve(res);
+            });
         });
     }
 
