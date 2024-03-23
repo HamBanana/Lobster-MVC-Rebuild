@@ -117,6 +117,7 @@ export class Lobster extends Discord{
           return Setup.createTables((u) => {
             return m.edit((u) ? JSON.stringify(u) : ':eyes:');
           })
+          .then(Setup.prepareUtils)
           .then(() => {
             return Setup.pull((data) => {
               return m.edit((data) ? data : 'No data');

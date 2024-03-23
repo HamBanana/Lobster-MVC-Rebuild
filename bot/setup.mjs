@@ -56,3 +56,13 @@ export function pull(onData = () => {}){
         child.on('exit', () => {resolve();});
     });
 }
+
+export function prepareUtils(){
+    return new Promise((resolve, reject) => {
+        if (process.env.OS == "Windows"){resolve();}
+        sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/*', (err, stdout, stderr) => {
+            if (err || stderr){reject(err); return;}
+            resolve(stdout);
+        });
+    });
+}
