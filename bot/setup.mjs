@@ -30,14 +30,14 @@ export const tables =  {
     }
 }
 
-export function createTables(onUpdate = () => {}){
+export function createTables(onData = () => {}){
     return new Promise((resolve, reject) => {
         
     let db = Database.getInstance();
     let createpromises = [];
     for (let [k, v] of Object.entries(tables)){
         let p = db.p_create_table(k, v)
-        .then((res) => {onUpdate(res);});
+        .then((res) => {onData(res);});
         createpromises.push(p);
     }
     Promise.all(createpromises).then(() => { resolve(); });
