@@ -98,7 +98,6 @@ export class Parser{
            console.log("Type of p: " + typeof(p));
            console.log("content of p: " + JSON.stringify(p));
            if (typeof(p) == "object"){
-            console.log('Check 2');
             p.then((op) => {
               console.log("Return value from promise after executing function: " + JSON.stringify(op));
             });
@@ -116,7 +115,7 @@ export class Parser{
       console.log('match: ' + JSON.stringify(match));
       console.log('capture: ' + JSON.stringify(capture));
         // Replace each character in the enclosed segment with a placeholder
-        return capture.replace(/\s/g, '_');
+        return capture.replace(/\s/g, 'ø');
     });
     
     // Split the replaced string by spaces
@@ -124,7 +123,7 @@ export class Parser{
     
     // Restore the original segments by replacing the placeholders
     const finalSegments = segments.map(segment => {
-        return segment.replace(/_/g, ' ');
+        return segment.replace(/ø/g, ' ');
     });
     
     return finalSegments;
