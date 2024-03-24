@@ -32,7 +32,7 @@ root = process.env.LOBSTER_ROOT;
             'PRIMARY KEY': '(id)'
         },
         system_vars:{
-            name: 'VARCHAR(32) UNIQUE', value: 'VARCHAR(256)'
+            name: 'VARCHAR(32) UNIQUE', value: 'TEXT'
         }
     }
 
@@ -102,6 +102,10 @@ root = process.env.LOBSTER_ROOT;
             let db = Database.getInstance();
             db.p_get('system_vars')
             .then((res) => {
+                for (let i in res){
+                    console.log('i: ' + JSON.stringify(i));
+                    System.vars[i.name] = i.value;
+                }
                 console.log('Vars: \n'+JSON.stringify(res));
                 resolve(res);
             })
