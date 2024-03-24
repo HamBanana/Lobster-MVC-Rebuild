@@ -7,7 +7,7 @@ import { channels, members } from '../core/statics.mjs';
 import { lobby_model } from '../models/lobby_model.mjs';
 import {Parser} from './parser.mjs';
 import { Database } from '../core/database.mjs';
-import * as Setup from './setup.mjs';
+import { System } from './system.mjs';
 
 export class Lobster extends Discord{
 
@@ -105,31 +105,48 @@ export class Lobster extends Discord{
         console.log("Logged in as " + client.user.tag);
         let c = client.channels.cache.get('1200927450536890429');
         let wm;
-        if (!c){
-          console.log("Could not send startup message, channel not found.");
-        } else if (c == undefined) {
-          console.log('Can\'t get channel for startup message');
-        } else {
-          wm = c.send('Hello?');
-        }
-        if (!wm){return;}
-        wm.then((m) => {
-          return Setup.createTables((u) => {
-            return m.edit((u) ? JSON.stringify(u) : ':eyes:');
-          })
-          .then(Setup.prepareUtils)
-          .then(() => {
-            return Setup.pull((data) => {
-              return m.edit((data) ? data : 'No data');
+        let sys = new System();
+        sys.createTables()
+        .then(() => {return sys.loadVars();})
+        .then(() => {
+          console.log('Loaded vars');
+          if (!System.vars.boot_mode){System.vars.boot_mode = "default";}
+          if (System.vars.boot_mode == "default"){
+            //if (!c){
+            //  console.log("Could not send startup message, channel not found.");
+            //} else if (c == undefined) {
+            //  console.log('Can\'t get channel for startup message');
+            //} else {
+              wm = c.send('Hello?');
+            //}
+          } else {
+            wm = System.getBootMessage();
+          }
+          wm.then((m) => {
+            // Begin initialization.
+            sys.prepareUtils()
+            .then(() => {
+              sys.pull((data) => {
+                m.edit((data) ? data : 'No data');
+              });
+            })
+            /*.then(() => {
+              return sys.npm((data) => {
+                m.edit((data) ? data : 'No data');
+              });
+            })*/
+            .then(() => {
+              switch(System.vars.boot_mode){
+                case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
+                default: m.edit(":white_check_mark: Lobster started"); break;
+              }
+            })
+            .then(sys.resetBootMode)
+            .catch((err) => {
+              m.edit("Something went wrong during boot: " + err.message);
             });
-          })
-          .then(() => {
-           m.edit(":white_check_mark: Lobster started");
-          })
-          .catch((err) => {
-            m.edit("Something went wrong during boot: " + err.message);
           });
-        });
+        })
     });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {

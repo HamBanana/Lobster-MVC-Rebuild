@@ -34,6 +34,13 @@ export class Database {
         return {keystring, valuestring};
     }
 
+    getWhereString(where, op = "AND"){
+        let wherestring = "";
+        for (const [key, value] of Object.keys(where)){
+            wherestring += (wherestring == "") ? key + " = " + value : op + ' ' + key + " = " + value;
+        }
+    }
+
     getCreateValueString(values){
         let valuestring = '';
         for (const [key, value] of Object.entries(values)){
@@ -48,6 +55,16 @@ export class Database {
 
         //warn('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')');
         return this.connection.query('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')', callback);
+    }
+
+    p_insert(table, values){
+        let {keystring, valuestring} = this.getStringsFromJson(values);
+        return new Promise((resolve, reject) => {
+            return this.connection.query('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')', (err, res) => {
+                if (err){reject(err); return;}
+                resolve(res);
+            });
+        });
     }
 
     create_table(name, values, if_not_exists = true, callback = null){
@@ -68,7 +85,7 @@ export class Database {
         return this.connection.query('SELECT ' + select + ' from ' + from + ((where) ? ' where ' + where : ''), callback);
     }
 
-    p_get(from, where, operator = "AND"){
+    p_get(from, where = {}, operator = "AND"){
         return new Promise((resolve, reject) => {
             let wherestring = "";
             for (let [k, v] of Object.entries(where)){
@@ -97,5 +114,11 @@ export class Database {
     delete(table, where, callback){
         //warn('DELETE FROM ' + table + ' WHERE ' + where);
        return this.connection.query('DELETE FROM ' + table + ' WHERE ' + where, callback);
+    }
+
+    p_delete(table, where = {}){
+        return new Promise((resolve, reject) => {
+
+        });
     }
 }

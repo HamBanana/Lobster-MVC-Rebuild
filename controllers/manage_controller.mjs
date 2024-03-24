@@ -42,25 +42,33 @@ perm = {'users': ['330279218543984641']}
 
   reboot(args){
     let {update} = this.extractArgs(args, 'update');
+    let db = Database.getInstance();
     update = (update == "true") ? true : false;
 
     return new Promise((resolve, reject) => {
       if (update){
         sub.exec(this.paths.pull, (err, stdout, stderr) => {
           if (err){reject('Error while pulling for reboot: ' + err.message); return;}
-            if (process.env.OS == "Windows"){reject('Just pretend like it rebooted'); return;}
         });
       }
-      
-      sub.exec(this.paths.reboot, (err, stdout, stderr) => {
-        if (err){reject('Error rebooting: ' + err.message); return;}
-      resolve(this.message.react('✅'));
-    })
+        if (process.env.OS == "Windows"){reject('Restart Lobster manually.'); return;}
+        this.message.reply('<a:loading:1220396138860122162> Rebooting').then((m) => {
+          let promises = [];
+          promises.push(db.p_insert('system_vars', {name: 'boot_mode', value: 'reboot'}));
+          promises.push(db.p_insert('system_vars', {name: 'boot_channel', value:this.message.channelId}));
+          promises.push(db.p_insert('system_vars', {name: 'boot_message', value:m.id}));
+          Promise.all(promises).then(() => {
+            sub.exec(this.paths.reboot, (err, stdout, stderr) => {
+              if (err){reject('Error rebooting: ' + err.message); return;}
+            resolve(this.message.react('✅'));
+          });
+          });
+        });
 
     })
-      .catch((err) => {
-        this.message.reply('Error: ' + JSON.stringify(err)); return;
-      });
+    .catch((err) => {
+      this.message.reply('Error: ' + JSON.stringify(err.message)); return;
+    });
   }
 
   sql(args){
@@ -111,34 +119,7 @@ perm = {'users': ['330279218543984641']}
     })
     .catch((err) => {
       this.message.reply('Error: ' + err.message);
-    });
-/*
-      try {
-    
-        const out = fs.openSync('./out.log', 'a');
-        const err = fs.openSync('./out.log', 'a');
-    
-        console.log('spawn sub');
-        const sub = spawn(process.env.LOBSTER_ROOT + '/utils/start', [], {
-          detached: true,               // this removes ties to the parent
-          stdio: [ 'ignore', out, err ]
-        });
-    
-        sub.unref();
-        console.log('waiting..');
-    
-        await new Promise((resolve,reject) =>
-          setTimeout(() => resolve(), 3000)
-        );
-        console.log('exiting main..');
-        this.message.reply('Restarting');
-    
-      } catch(e) {
-        console.error();
-      } finally {
-       // process.exit();
-      }
-  */  
+    }); 
   }
 
   enable(){
@@ -171,8 +152,8 @@ perm = {'users': ['330279218543984641']}
 
   gitlog(){
     sub.exec('git log | head -5', (error, stdout, stderr) => {
-      if (error){
-        this.message.reply('Error in exec:' + error.message);
+      if (error || stderr){
+        this.message.reply('Error in exec:' + error.message||stderr.message);
         return;
       }
       let o = stdout || 'Nothing here.';
