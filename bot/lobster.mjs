@@ -8,6 +8,7 @@ import { lobby_model } from '../models/lobby_model.mjs';
 import {Parser} from './parser.mjs';
 import { Database } from '../core/database.mjs';
 import { System } from './system.mjs';
+import { lobby_controller } from '../controllers/lobby_controller.mjs';
 
 export class Lobster extends Discord{
 
@@ -163,8 +164,7 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
   //console.log('oldPresence:'+ JSON.stringify(oldPresence || 'oldPresence is null'));
   //console.log('newPresence:'+ JSON.stringify(newPresence || 'newPresence is null'));
 
-  let lm = new lobby_model();
-  lm.testPresence(oldPresence, newPresence);
+  lobby_controller.testPresence(oldPresence, newPresence);
 
 });
 
