@@ -1,6 +1,7 @@
 import { Database } from "../core/database.mjs";
 import * as sub from 'child_process';
 import { Discord } from "../core/discord.mjs";
+import { lobby_controller } from "../controllers/lobby_controller.mjs";
 
 export class System{
     
@@ -39,6 +40,7 @@ root = process.env.LOBSTER_ROOT;
 
     constructor(){
         this.db = Database.getInstance();
+        setInterval(lobby_controller.clearOld, 10000);
     }
 
     static setVar(name, value){

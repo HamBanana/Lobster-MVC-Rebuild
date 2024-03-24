@@ -341,12 +341,15 @@ export class lobby_controller extends Controller {
   }
 
 
-  clearOld(){
-    for (let [k, v] of Object.entries(lobby_model.active_lobbies)){
-      if (Time.now - v.pingtime > (3 * 60 * 60)){
-        console.log('Deleting '+k);
-        delete lobby_model.active_lobbies[k];
+  static clearOld(){
+    let db = Database.getInstance();
+    db.p_get('lobby_active_lobbies').then((lobbies) => {
+      for (let i in lobbies){
+        let lobby = lobbies[i];
+        if(Time.now - lobby.pingtime > 180000){
+          db.p_delete('lobby_active_lobbies', {code:lobby.code}).then((res) => {console.log('Deleted: ' + lobby.code);});
+        }
       }
-    }
+    });
   }
 }
