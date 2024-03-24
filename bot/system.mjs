@@ -134,7 +134,10 @@ root = process.env.LOBSTER_ROOT;
         return new Promise((resolve, reject) => {
             if (!System.vars.boot_channel || !System.vars.boot_message){reject('Cannot get boot message');}
             let channel = Discord.client.channels.cache.get(System.vars.boot_channel);
-            channel.messages.fetch(System.vars.boot_message).then((m) => {resolve(m);});
+            channel.messages.fetch(System.vars.boot_message).then((m) => {
+                console.log('Boot message:\n' + JSON.stringify(m));
+                resolve(m);
+            });
         })
         .catch((err) => {console.log("Can't get boot message, because: " + err.message);});
     }

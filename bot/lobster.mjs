@@ -140,7 +140,7 @@ export class Lobster extends Discord{
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
             })
-            .then(sys.resetBootmode)
+            //.then(sys.resetBootmode)
             .catch((err) => {
               //let e_stack = "🥞";
               m.edit("Something went wrong during boot: "
