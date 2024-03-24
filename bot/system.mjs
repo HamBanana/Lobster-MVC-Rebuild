@@ -1,5 +1,6 @@
 import { Database } from "../core/database.mjs";
 import * as sub from 'child_process';
+import { Discord } from "../core/discord.mjs";
 
 export class System{
     
@@ -103,10 +104,8 @@ root = process.env.LOBSTER_ROOT;
             db.p_get('system_vars')
             .then((res) => {
                 for (let i in res){
-                    console.log('i: ' + JSON.stringify(i));
-                    System.vars[i.name] = i.value;
+                    System.vars[res[i].name] = res[i].value;
                 }
-                console.log('Vars: \n'+JSON.stringify(res));
                 resolve(res);
             })
             .catch((err) => {throw err;});
@@ -118,9 +117,9 @@ root = process.env.LOBSTER_ROOT;
             let db = Database.getInstance();
             console.log('resetBootmode is running');
             let promises = [];
-            promises.push(db.p_delete('system_vars', {name: 'boot_mode'}).then(() => {console.log('boot_mode deleted');}).catch((err) => {reject(err);}));
-            promises.push(db.p_delete('system_vars', {name: 'boot_channel'}).then(() => {console.log('boot_channel deleted');}).catch((err) => {reject(err);}));
-            promises.push(db.p_delete('system_vars', {name: 'boot_message'}).then(() => {console.log('boot_message deleted');}).catch((err) => {reject(err);}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_mode'}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_channel'}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_message'}));
                 
             Promise.all(promises).then(() => {
                 console.log('Bootmode is reset');
@@ -135,7 +134,7 @@ root = process.env.LOBSTER_ROOT;
         return new Promise((resolve, reject) => {
             if (!System.vars.boot_channel || !System.vars.boot_message){reject('Cannot get boot message');}
             let channel = Discord.client.channels.cache.get(System.vars.boot_channel);
-            return channel.messages.fetch(System.vars.boot_message).then((m) => {resolve(m);});
+            channel.messages.fetch(System.vars.boot_message).then((m) => {resolve(m);});
         })
         .catch((err) => {console.log("Can't get boot message, because: " + err.message);});
     }

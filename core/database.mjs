@@ -37,7 +37,6 @@ export class Database {
     getWhereString(where, op = "AND"){
         let wherestring = "";
         for (const [key, value] of Object.entries(where)){
-            console.log('Key: ' + key, 'Value: ' + value);
             wherestring += (wherestring == "") ? key + " = '" + value + "'" : op + ' ' + key + " = '" + value + "'";
         }
         return {wherestring};
@@ -133,12 +132,9 @@ export class Database {
     p_delete(table, where = {}){
         return new Promise((resolve, reject) => {
             let {wherestring} = this.getWhereString(where, 'AND');
-            console.log('About to delete: ' + wherestring);
             let sql = 'DELETE FROM ' + table + ((where == {}) ? '' : ' WHERE ' + wherestring);
-            console.log('SQL: ' + sql);
             this.connection.query(sql, (err, res) => {
                 if (err){reject(err); return;}
-                console.log('Deleted ' + JSON.stringify(where) + ' from ' + table);
                 resolve(res);
             });
         });

@@ -109,6 +109,7 @@ export class Lobster extends Discord{
         sys.createTables()
         .then(() => {return sys.loadVars();})
         .then(() => {
+          console.log('Boot mode is: ' + System.vars.boot_mode);
           if (!System.vars.boot_mode){System.vars.boot_mode = "default";}
           c.send('Loaded vars: ' + JSON.stringify(System.vars));
           switch(System.vars.boot_mode){
@@ -120,6 +121,7 @@ export class Lobster extends Discord{
 
           }
           wm.then((m) => {
+            console.log('m: ' + JSON.stringify(m));
             // Begin initialization.
             sys.prepareUtils()
             .then(() => {
@@ -132,13 +134,13 @@ export class Lobster extends Discord{
                 m.edit((data) ? data : 'No data');
               });
             })*/
-            .then(sys.resetBootmode)
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
             })
+            .then(sys.resetBootmode)
             .catch((err) => {
               //let e_stack = "🥞";
               m.edit("Something went wrong during boot: "
