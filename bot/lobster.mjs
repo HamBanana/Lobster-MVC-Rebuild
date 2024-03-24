@@ -109,18 +109,15 @@ export class Lobster extends Discord{
         sys.createTables()
         .then(() => {return sys.loadVars();})
         .then(() => {
-          console.log('Loaded vars');
           if (!System.vars.boot_mode){System.vars.boot_mode = "default";}
-          if (System.vars.boot_mode == "default"){
-            //if (!c){
-            //  console.log("Could not send startup message, channel not found.");
-            //} else if (c == undefined) {
-            //  console.log('Can\'t get channel for startup message');
-            //} else {
-              wm = c.send('Hello?');
-            //}
-          } else {
-            wm = System.getBootMessage();
+          console.log('Loaded vars: ' + JSON.stringify(System.vars));
+          switch(System.vars.boot_mode){
+            case "default":
+                wm = c.send('Hello?'); break;
+            default:
+              wm = System.getBootMessage();
+              break;
+
           }
           wm.then((m) => {
             // Begin initialization.

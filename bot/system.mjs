@@ -32,7 +32,7 @@ root = process.env.LOBSTER_ROOT;
             'PRIMARY KEY': '(id)'
         },
         system_vars:{
-            name: 'VARCHAR(16) UNIQUE', value: 'VARCHAR(256)'
+            name: 'VARCHAR(32) UNIQUE', value: 'VARCHAR(256)'
         }
     }
 
