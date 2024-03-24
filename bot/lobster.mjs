@@ -110,7 +110,7 @@ export class Lobster extends Discord{
         .then(() => {return sys.loadVars();})
         .then(() => {
           if (!System.vars.boot_mode){System.vars.boot_mode = "default";}
-          console.log('Loaded vars: ' + JSON.stringify(System.vars));
+          c.send('Loaded vars: ' + JSON.stringify(System.vars));
           switch(System.vars.boot_mode){
             case "default":
                 wm = c.send('Hello?'); break;
