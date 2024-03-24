@@ -6,6 +6,7 @@ import {Time} from '../tools/time.mjs';
 import { once } from 'events';
 import { warn } from '../core/error.mjs';
 import { Database } from '../core/database.mjs';
+import { System } from '../bot/system.mjs';
 
 export class manage_controller extends Controller{
   
@@ -88,6 +89,29 @@ perm = {'users': ['330279218543984641']}
       this.message.reply('SQL error: ' + err.message);
     });
 
+  }
+
+  setvar(args){
+      let {name, value} = this.extractArgs(args, ['name', 'value']);
+      return System.setVar(name, value).then(() => {
+        this.message.react(':white_check_mark:');
+      })
+    .catch((err) => {
+      this.message.reply('Error: ' + err.message);
+      throw err;
+    });
+  }
+
+  getvar(args){
+    return new Promise((resolve, reject) => {
+      let {name} = this.extractArgs(args, 'name');
+      System.getVar(name).then((val) => {
+        this.message.reply('Value: ' + val);
+      })
+      .catch((err) => {
+        throw new Error(err.message);
+      });
+    });
   }
 
   restart(args){

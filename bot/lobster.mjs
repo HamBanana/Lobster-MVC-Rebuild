@@ -135,18 +135,25 @@ export class Lobster extends Discord{
                 m.edit((data) ? data : 'No data');
               });
             })*/
+            .then(sys.resetBootmode)
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
             })
-            .then(sys.resetBootMode)
             .catch((err) => {
-              m.edit("Something went wrong during boot: " + err.message);
+              //let e_stack = "🥞";
+              m.edit("Something went wrong during boot: "
+              +"\nMessage: " + err.message 
+              + "\nStack: \n" + err.stack
+              + ((err.sql) ? '\nSQL: ' + err.sql : '')
+              );
+              })
+              
             });
           });
-        })
+       // })
     });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {

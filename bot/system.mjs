@@ -39,6 +39,17 @@ root = process.env.LOBSTER_ROOT;
     constructor(){
         this.db = Database.getInstance();
     }
+
+    static setVar(name, value){
+        let db = Database.getInstance();
+        return new Promise((resolve, reject) => {
+            return db.p_set('system_vars', {name, value}).then((res) => {resolve(res);}).catch((err) => {reject();});
+        });
+    }
+
+    static getVar(name){
+        return System.vars[name];
+    }
     
     createTables(onData = () => {}){
         return new Promise((resolve, reject) => {
@@ -100,13 +111,19 @@ root = process.env.LOBSTER_ROOT;
 
     resetBootmode(){
         return new Promise((resolve, reject) => {
+            let db = Database.getInstance();
+            console.log('resetBootmode is running');
             let promises = [];
-            promises.push(this.db.p_delete('system_vars', {name: 'boot_mode'}));
-            promises.push(this.db.p_delete('system_vars', {name: 'boot_channel'}));
-            promises.push(this.db.p_delete('system_vars', {name: 'boot_message'}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_mode'}).then(() => {console.log('boot_mode deleted');}).catch((err) => {reject(err);}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_channel'}).then(() => {console.log('boot_channel deleted');}).catch((err) => {reject(err);}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_message'}).then(() => {console.log('boot_message deleted');}).catch((err) => {reject(err);}));
+                
             Promise.all(promises).then(() => {
+                console.log('Bootmode is reset');
+                db.p_get('system_vars').then((res) => {console.log('Vars after delete: ' + JSON.stringify(res));});
                 resolve();
-            });
+            })
+            .catch((err) => {throw err;});
         });
     }
 

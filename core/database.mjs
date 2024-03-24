@@ -36,9 +36,11 @@ export class Database {
 
     getWhereString(where, op = "AND"){
         let wherestring = "";
-        for (const [key, value] of Object.keys(where)){
-            wherestring += (wherestring == "") ? key + " = " + value : op + ' ' + key + " = " + value;
+        for (const [key, value] of Object.entries(where)){
+            console.log('Key: ' + key, 'Value: ' + value);
+            wherestring += (wherestring == "") ? key + " = '" + value + "'" : op + ' ' + key + " = '" + value + "'";
         }
+        return {wherestring};
     }
 
     getCreateValueString(values){
@@ -111,6 +113,18 @@ export class Database {
         return this.connection.query("UPDATE " + table + " SET " + set + " WHERE " + where, callback);
     }
 
+    p_set(table, key, values){
+        let {keystring, valuestring} = this.getStringsFromJson(values);
+        return new Promise((resolve, reject) => {
+            return this.p_delete(table, {key}).then(() => {
+                return this.p_insert(table, {...key, ...values}).then((res) => {resolve(res);});
+            });
+            //return this.connection.query('INSERT INTO ' + table + '(' + keystring + ') VALUES (' + valuestring + ')', () => {
+            //    resolve(res);
+            //});
+        });
+    }
+
     delete(table, where, callback){
         //warn('DELETE FROM ' + table + ' WHERE ' + where);
        return this.connection.query('DELETE FROM ' + table + ' WHERE ' + where, callback);
@@ -118,7 +132,15 @@ export class Database {
 
     p_delete(table, where = {}){
         return new Promise((resolve, reject) => {
-
+            let {wherestring} = this.getWhereString(where, 'AND');
+            console.log('About to delete: ' + wherestring);
+            let sql = 'DELETE FROM ' + table + ((where == {}) ? '' : ' WHERE ' + wherestring);
+            console.log('SQL: ' + sql);
+            this.connection.query(sql, (err, res) => {
+                if (err){reject(err); return;}
+                console.log('Deleted ' + JSON.stringify(where) + ' from ' + table);
+                resolve(res);
+            });
         });
     }
 }
