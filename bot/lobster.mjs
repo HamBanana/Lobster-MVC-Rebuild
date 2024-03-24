@@ -111,7 +111,6 @@ export class Lobster extends Discord{
         .then(() => {
           console.log('Boot mode is: ' + System.vars.boot_mode);
           if (!System.vars.boot_mode){System.vars.boot_mode = "default";}
-          c.send('Loaded vars: ' + JSON.stringify(System.vars));
           switch(System.vars.boot_mode){
             case "default":
                 wm = c.send('Hello?'); break;
@@ -140,7 +139,7 @@ export class Lobster extends Discord{
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
             })
-            //.then(sys.resetBootmode)
+            .then(sys.resetBootmode)
             .catch((err) => {
               //let e_stack = "🥞";
               m.edit("Something went wrong during boot: "
