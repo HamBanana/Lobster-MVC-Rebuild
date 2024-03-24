@@ -137,6 +137,6 @@ export class Database {
                 if (err){reject(err); return;}
                 resolve(res);
             });
-        });
+        }).catch((err) => {throw err;});
     }
 }
