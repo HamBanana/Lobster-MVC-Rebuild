@@ -18,6 +18,7 @@ export class Controller {
     this.allowed = true;
 
     this.view = {
+      components: [],
       content: '',
       type: 'reply',
       channelid: '',
@@ -76,8 +77,8 @@ export class Controller {
             if (typeof(content) === 'string' && template) {
               content = this.applyTemplate(template, this.view.data);
             }
-            if (this.view.embeds.length > 0){
-              content = {embeds:this.view.embeds};
+            if (this.view.embeds.length > 0 || this.view.components.length > 0){
+              content = {embeds:this.view.embeds, components: this.view.components};
             }
           }
             let output_message;
