@@ -2,10 +2,13 @@
 import {Time} from '../tools/time.mjs';
 import { Discord } from '../core/discord.mjs';
 import { PermissionError, warn } from '../core/error.mjs';
+import { MessageEmbed } from 'discord.js';
 
 export class Controller {
 
   static message_retainer = {}
+  functions = {};
+  controllername = "";
 
   client = Discord.client;
 
@@ -153,7 +156,8 @@ export class Controller {
   auth(permissions) {
       if (typeof(permissions) == 'undefined'){return;}
     if (!this.message) {
-      throw new Error('Controller doesn\'t know about the message object.');
+      warn('Controller doesn\'t know about the message object.');
+      return;
     }
     for (let [k, v] of Object.entries(permissions)) {
       for (let i of v) {
@@ -201,7 +205,19 @@ export class Controller {
 
   help(args){
     
-    this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 3])));
+    return new Promise((resolve, reject) => {
+      if (!this.controllername){resolve(this.message.reply('```No help here yet```')); return;}
+      let {fun} = this.extractArgs(args, 'fun');
+      let e = new MessageEmbed();
+      //this.view.embeds[0] = new MessageEmbed()
+      e.setTitle('Help for ' + this.controllername);
+      for (let [k, v] of Object.entries(this.functions)){
+        e.addFields({name: k + ((k == "index") ? ' (This function is called, if you specify no function name)' : ''), value: v.description});
+      }
+      this.view.embeds[0] = e;
+      resolve(this.post());
+    });
+    //this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 3])));
 
   }
 

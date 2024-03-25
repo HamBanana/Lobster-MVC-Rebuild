@@ -41,8 +41,10 @@ explosions = ['https://media3.giphy.com/media/xUA7aQ21bruxszHmRW/giphy.gif?cid=7
 
   constructor(msg){
     super(msg);
-    //this.auth(this.perm);
-    console.log('Explode constructor');
+    this.functions = {
+      'index': {description: 'Explodes', arguments: {}}
+    };
+    this.controllername = 'explode';
   }
 
   index(){

@@ -163,8 +163,8 @@ client.on('presenceUpdate', (oldPresence, newPresence) => {
   }
   //console.log('oldPresence:'+ JSON.stringify(oldPresence || 'oldPresence is null'));
   //console.log('newPresence:'+ JSON.stringify(newPresence || 'newPresence is null'));
-
-  lobby_controller.testPresence(oldPresence, newPresence);
+  let lc = new lobby_controller();
+  lc.testPresence(oldPresence, newPresence);
 
 });
 
