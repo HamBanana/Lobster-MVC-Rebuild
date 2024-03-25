@@ -2,7 +2,7 @@
 import {Time} from '../tools/time.mjs';
 import { Discord } from '../core/discord.mjs';
 import { PermissionError, warn } from '../core/error.mjs';
-import { MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 
 export class Controller {
 
@@ -209,8 +209,8 @@ export class Controller {
     return new Promise((resolve, reject) => {
       if (!this.controllername){resolve(this.message.reply('```No help here yet```')); return;}
       let {fun} = this.extractArgs(args, 'fun');
-      let e = new MessageEmbed();
-      //this.view.embeds[0] = new MessageEmbed()
+      let e = new EmbedBuilder();
+      //this.view.embeds[0] = new EmbedBuilder()
       e.setTitle('Help for ' + this.controllername);
       for (let [k, v] of Object.entries(this.functions)){
         e.addFields({name: k + ((k == "index") ? ' (This function is called, if you specify no function name)' : ''), value: v.description});

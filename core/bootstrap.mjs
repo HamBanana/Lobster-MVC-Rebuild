@@ -6,6 +6,7 @@ import { Database } from './database.mjs';
 
 import {Lobster} from "../bot/lobster.mjs";
 import { warn } from '../core/error.mjs';
+import { Discord } from "./discord.mjs";
 
 //import Database from "@replit/database";
 //import { createRxDatabase } from "rxdb";
@@ -32,7 +33,8 @@ export class Bootstrap {
       }
       
       //Bootstrap.loadInitialValues();
-
+      let d = new Discord();
+      d.login();
       let lob = new Lobster();
     });
 

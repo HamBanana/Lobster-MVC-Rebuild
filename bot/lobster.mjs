@@ -10,14 +10,11 @@ import { Database } from '../core/database.mjs';
 import { System } from './system.mjs';
 import { lobby_controller } from '../controllers/lobby_controller.mjs';
 
-export class Lobster extends Discord{
+export class Lobster{
 
   constructor(){
-    super();
     console.log('Lobster started.');
     let client = Discord.client;
-    this.login();
-
 
     let db = Database.getInstance();
 
@@ -29,7 +26,7 @@ export class Lobster extends Discord{
           || msg.channelID == channels['venting'] 
          || msg.content.length > 2000) {return;}
       //console.log(msg);
-      console.log('Input: '+msg.content);
+      console.log('\n\nInput: '+JSON.stringify(msg));
       let pf;
       if (process.env.OS == "Linux"){
         pf = '!lob ';

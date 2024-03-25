@@ -1,4 +1,4 @@
-import { Client, Intents } from "discord.js";
+import { Client, GatewayIntentBits, Partials } from "discord.js";
 //import {DISCORD_TOKEN} from '../../secret.mjs';
 
 export class Discord {
@@ -7,19 +7,18 @@ export class Discord {
   constructor() {
     Discord.client = new Client({
       intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.GUILD_PRESENCES,
-        Intents.FLAGS.GUILD_MEMBERS
-      ]
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.MessageContent
+      ], 
+      //partials: [Partials.GuildMember, Partials.Channel]
     });
   }
 
   login() {
     return Discord.client.login(process.env.DISCORD_TOKEN);
   }
-
-  addReaction(messageid, reaction) {}
-  editMessage(messageid, callback) {}
 }

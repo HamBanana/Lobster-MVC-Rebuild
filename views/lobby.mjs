@@ -1,4 +1,4 @@
-import {MessageEmbed} from 'discord.js';
+import {EmbedBuilder} from 'discord.js';
 
 export const create =
   '\`\`\`'
@@ -58,7 +58,7 @@ export const prompt_server =
     +"React with :point_up: or write \"!lob join {{code}}\" to get pinged for next game.";
 
   export const embed_example =
-  new MessageEmbed()
+  new EmbedBuilder()
   .setColor(0x5f4499)
   .setTitle('{{title}}')
   .setURL('https://discord.js.org')

@@ -1,10 +1,9 @@
 import {Controller} from '../core/controller.mjs';
 import { Discord } from '../core/discord.mjs';
-//import { EmbedBuilder, ActionRowBuilder, SelectMenuBuilder } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 //import {Test} from '../core/database.js';
 import { Database } from '../core/database.mjs';
 import { PermissionError } from '../core/error.mjs';
-import { MessageEmbed } from 'discord.js';
 
 //import pkg from 'discord.js';
 //const { EmbedBuilder, MessageActionRow, StringSelectMenuBuilder } = pkg;
@@ -36,7 +35,7 @@ constructor(msg){
 
   helpexample(){
 
-    let helpMenu = new MessageActionRow()
+    let helpMenu = new ActionRowBuilder()
     .addComponents(
       new StringSelectMenuBuilder()
       .setCustomId("help_menu")
@@ -148,7 +147,7 @@ constructor(msg){
     this.view.type = 'channel';
     }
     //this.view.content = word;
-    this.view.embeds[0] = new MessageEmbed().setTitle(word);
+    this.view.embeds[0] = new EmbedBuilder().setTitle(word);
     
     this.post();
   }
