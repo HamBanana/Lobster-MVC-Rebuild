@@ -21,10 +21,20 @@ export class lobby_controller extends Controller {
 
   constructor(msg) {
     super(msg);
-
     this.auth(this.perm);
-
     this.model = new lobby_model();
+
+    this.controllername = 'lobby';
+    this.functions = {
+      prompt_lobby: { 
+        description: 'Asks for confirmation that a game has entered lobby', 
+        arguments:{
+          code:'The code for joining the lobby',
+          server: 'The server for joining the lobby',
+          host: 'The name of the lobby host',
+          pingtime: "Timestamp of lobby entered"
+        } }
+    };
   }
 
   index(args){
