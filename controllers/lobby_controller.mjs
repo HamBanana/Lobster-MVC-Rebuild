@@ -67,8 +67,20 @@ export class lobby_controller extends Controller {
         arguments: {
           code: 'The code of the lobby to unjoin from.'
         }
+      },
+      list:{
+        description: 'Shows a list of active_lobbies'
+      },
+      announce:{
+        description: 'Sets up a trigger that automatically posts the lobby code when you enter a lobby',
+        arguments: {
+          is_vc_lobby: 'true, if the lobby uses voice chat',
+          is_vanilla: 'true, if the lobby is not modded'
+        }
+      },
+      unannounce: {
+        description: 'Removes trigger to post code when you enter a lobby'
       }
-
     };
   }
 
@@ -344,12 +356,12 @@ export class lobby_controller extends Controller {
     }
   }
 
-  getAnnounced(args, callback){
+  /*getAnnounced(args, callback){
     if (!args.member_id){return callback({message: "getAnnounced only works with a member_id"});}
     this.db.get('*', 'lobby_announced', "member_id = " + args.member_id, (err, res) => {
       return callback(err, res);
     });
-  }
+  }*/
 
   announce(args){
     if (lobby_model.infohosts.indexOf(this.message.author.id) < 0){
