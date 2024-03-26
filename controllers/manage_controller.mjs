@@ -165,13 +165,13 @@ perm = {'users': ['330279218543984641']}
       this.message.reply('Execute permission for shell scripts are removed');
     });
     // start must always be enabled, otherwise Lobster cannot start
-    sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/start', (err, stdout, stderr) => {
+    /*sub.exec('chmod +x ' + process.env.LOBSTER_ROOT + '/utils/start', (err, stdout, stderr) => {
       if (err){
         this.message.reply('Failed reenabling execute permission on start: ' + err.message);
         return;
       }
       this.message.reply('Reenabled execute permission on start (Required for Lobster to work)');
-    });
+    });*/
   }
 
   gitlog(){
