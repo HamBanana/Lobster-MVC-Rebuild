@@ -176,8 +176,12 @@ perm = {'users': ['330279218543984641']}
 
   gitlog(){
     sub.exec('git log | head -5', (error, stdout, stderr) => {
-      if (error || stderr){
-        this.message.reply('Error in exec:' + error.message||stderr.message);
+      if (error){
+        this.message.reply('Error in exec:' + error.message);
+        return;
+      }
+      if (stderror){
+        this.message.reply('stderror in exec:' + stderr.message);
         return;
       }
       let o = stdout || 'Nothing here.';
