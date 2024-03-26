@@ -196,10 +196,10 @@ perm = {'users': ['330279218543984641']}
       let child = sub.spawn(this.paths.pull);
       this.message.reply('<a:loading:1220396138860122162> Beginning pull').then((omsg) => {
         console.log('OMSG: ' + JSON.stringify(omsg));
-        child.stdout.on('data', (data) => {omsg.edit('\:loading: '+data);});
-        child.stderr.on('data', (data) => {omsg.edit('\:fail: '+data)});
-        child.on('exit', () => {omsg.edit('\:white_check_mark: Pull done');});
-      })
+      });
+      child.stdout.on('data', (data) => {omsg.edit('\:loading: '+data);});
+      child.stderr.on('data', (data) => {omsg.edit('\:fail: '+data)});
+      child.on('exit', () => {omsg.edit('\:white_check_mark: Pull done');});
     })
     .catch((err) => {
       this.message.reply('Error: ' + err.message);
