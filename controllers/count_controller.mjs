@@ -117,7 +117,7 @@ export class count_controller extends Controller{
   }
 
   test(args){
-    console.log('\n\nTEST: ' + JSON.stringify(this.client.users.cache.get(this.session.last_correct)));
+    console.log('TEST: ' + JSON.stringify(this.client.users.cache.get(330279218543984641).username));
   }
 
   set(args){
