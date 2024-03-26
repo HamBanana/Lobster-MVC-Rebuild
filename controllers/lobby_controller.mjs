@@ -276,10 +276,6 @@ export class lobby_controller extends Controller {
     return false;
   }
 
-  test(){
-    this.post(':eyes:');
-  }
-
   prompt_create(args) {
     this.view.data['server'] = (args.server || args.default?.[1]).toUpperCase();
     this.view.data['code'] = (args.code || args.default?.[0]).toUpperCase();
