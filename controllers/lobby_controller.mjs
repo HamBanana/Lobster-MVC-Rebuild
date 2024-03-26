@@ -26,14 +26,49 @@ export class lobby_controller extends Controller {
 
     this.controllername = 'lobby';
     this.functions = {
-      prompt_lobby: { 
-        description: 'Asks for confirmation that a game has entered lobby', 
+      confirm_lobby: {
+        alias: 'lobby',
+        description: 'Confirm game has entered lobby.',
+        arguments: {
+          code: 'The code of the lobby.'
+        }
+      },
+      create: {
+        description: 'Creates a new lobby',
         arguments:{
           code:'The code for joining the lobby',
-          server: 'The server for joining the lobby',
-          host: 'The name of the lobby host',
-          pingtime: "Timestamp of lobby entered"
-        } }
+          server: 'The server for joining the lobby'
+        }
+      },
+      register_infohost: {
+        description: 'Registers yourself as infohost.\nAs infohost, you activity status will be used for tracking active Among Us lobbies.'
+      },
+      unregister_infohost: {
+        description: 'Removes registration as infohost, Lobster will not read your activity status.'
+      },
+
+      delete: {
+        description: 'Deletes a lobby',
+        arguments: {
+          code: 'The code of the lobby to be deleted.'
+        }
+      },
+
+      queue:{
+        description: 'Join the queue for a lobby.',
+        alias: 'join',
+        arguments: {
+          code: 'The code of the lobby to join'
+        }
+      },
+      unqueue:{
+        description: 'Leave the queue for a lobby.',
+        alias: 'unjoin',
+        arguments: {
+          code: 'The code of the lobby to unjoin from.'
+        }
+      }
+
     };
   }
 

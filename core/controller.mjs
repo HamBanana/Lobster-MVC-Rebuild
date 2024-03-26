@@ -205,6 +205,8 @@ export class Controller {
   }
 
   help(args){
+
+    //this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs(this)));
     
     return new Promise((resolve, reject) => {
       if (!this.controllername){resolve(this.message.reply('```No help here yet```')); return;}
@@ -213,12 +215,16 @@ export class Controller {
       //this.view.embeds[0] = new EmbedBuilder()
       e.setTitle('Help for ' + this.controllername);
       for (let [k, v] of Object.entries(this.functions)){
-        e.addFields({name: k + ((k == "index") ? ' (This function is called, if you specify no function name)' : ''), value: v.description});
+        let a = v.arguments;
+        e.addFields({
+          name: k + ((a) ? ' ('+Object.keys(a).join(', ')+')' : '') 
+          + ((k == "index") ? ' (Default function)' : ''
+          + ((v.alias) ? ' (Same as !lob ' + v.alias + ')' : '')), 
+          value: v.description});
       }
       this.view.embeds[0] = e;
       resolve(this.post());
     });
-    //this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs([1, 3])));
 
   }
 

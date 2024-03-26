@@ -42,7 +42,7 @@ explosions = ['https://media3.giphy.com/media/xUA7aQ21bruxszHmRW/giphy.gif?cid=7
   constructor(msg){
     super(msg);
     this.functions = {
-      'index': {description: 'Explodes', arguments: {}}
+      'index': {description: 'Explodes'}
     };
     this.controllername = 'explode';
   }

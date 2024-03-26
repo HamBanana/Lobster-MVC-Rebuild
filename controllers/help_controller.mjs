@@ -12,5 +12,7 @@ export class help_controller extends Controller{
 
   addCategory(){
     this.auth({'users':[members.Ham]});
+
+    
   }
 }
