@@ -33,9 +33,8 @@ constructor(msg){
     })
   }
 
-  async helpexample(){
-    try {
-      return await new Promise((resolve, reject) => {
+  helpexample(){
+      return new Promise((resolve, reject) => {
 
         let helpMenu = new ActionRowBuilder()
           .addComponents(
@@ -63,7 +62,7 @@ constructor(msg){
                   value: "fun",
                   emoji: "🎲"
                 },
-                {
+                /*{
                   label: "Image",
                   description: "Shows all the image commands",
                   value: "image",
@@ -104,7 +103,7 @@ constructor(msg){
                   description: "Shows all the game commands",
                   value: "game",
                   emoji: "🎮"
-                }
+                }*/
               ])
           );
 
@@ -116,10 +115,9 @@ constructor(msg){
         this.view.embeds.push(editEmbed);
         this.view.components.push(this.helpMenu);
         this.post();
+      }).catch((e) => {
+        this.message.reply("That didn't work, because: " + e.message);
       });
-    } catch (e) {
-      this.message.reply("That didn't work, because: " + e.message);
-    }
   }
 
   promise(args){

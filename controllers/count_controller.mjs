@@ -30,6 +30,8 @@ export class count_controller extends Controller{
   constructor(msg){
     super(msg);
     this.auth(this.perm);
+
+    this.client = Discord.client;
     
     this.db = Database.getInstance();
     //this.auth(this.perm).catch((err) => {return console.log('Error in count: ' + err.message);});
@@ -57,16 +59,6 @@ export class count_controller extends Controller{
 
   }
 
-  test(){
-    let client = Discord.client;
-    /*this.message.reply(
-      'Score: ' + this.session.score
-      + '\nLast correct: ' + client.users.cache.get(this.session.last_correct)
-      + '\nLast incorrect: ' + client.users.cache.get(this.session.last_incorrect)
-      );*/
-      this.message.reply(JSON.stringify(this.session));
-  }
-
   test_string(){
     if (process.env.OS == "Windows"){return;}
     this.db = Database.getInstance();
@@ -82,7 +74,6 @@ export class count_controller extends Controller{
         return;
       }
 
-      let client = Discord.client;
 
       if (!res){this.makeNewSession();}
       let rec = res[0];
@@ -106,8 +97,8 @@ export class count_controller extends Controller{
       this.session.last_incorrect = this.message.author.id;
       this.message.reply('Result:\
       \nScore: ' + this.session.score + '\
-      \nLast correct number by: ' + client.users.cache.get(this.session.last_correct).username || 'Noone' + '\
-      \nIncorrect number by: ' + client.users.cache.get(this.session.last_incorrect).username || 'Noone'
+      \nLast correct number by: ' + this.client.users.cache.get(this.session.last_correct).username || 'Noone' + '\
+      \nIncorrect number by: ' + this.client.users.cache.get(this.session.last_incorrect).username || 'Noone'
       );
      // Start new session
      this.makeNewSession();
@@ -123,6 +114,10 @@ export class count_controller extends Controller{
     WHERE id = ' + rec.id );
   });
     
+  }
+
+  test(args){
+    console.log('\n\nTEST: ' + JSON.stringify(this.client.users.cache.get(this.session.last_correct)));
   }
 
   set(args){
