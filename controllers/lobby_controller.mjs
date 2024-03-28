@@ -469,17 +469,17 @@ export class lobby_controller extends Controller {
 
       }
 
-      if (oldActivity.state == "In Lobby" && newActivity.state == "In Game"){
+      if (oldActivity?.state == "In Lobby" && newActivity?.state == "In Game"){
         // Code for when a game is started.
       }
 
-      if (oldActivity.state == "In Game" && newActivity.state == "In Lobby"){
+      if (oldActivity?.state == "In Game" && newActivity?.state == "In Lobby"){
         let code = newActivity.party.id;
         if (!lobby_model.active_lobbies[code].infohost == newActivity.userId){return;}
         this.confirm_lobby({code: newActivity.party.id});
       }
 
-      if ((oldActivity.state == "In Lobby" || oldActivity.state == "In Game") && newActivity.state == "In Menus"){
+      if ((oldActivity?.state == "In Lobby" || oldActivity?.state == "In Game") && newActivity?.state == "In Menus"){
         // Infohost left a game
         let code = oldActivity.party.id;
         this.model.assign_infohost(code, (err, res) => {
