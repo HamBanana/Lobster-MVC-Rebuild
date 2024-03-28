@@ -95,10 +95,10 @@ export class count_controller extends Controller{
     } else {
       // Display session result.
       this.session.last_incorrect = this.message.author.id;
-      this.message.reply('Result:\
-      @\nScore: ' + this.session.score + '\
-      @\nLast correct number by: ' + (this.client.users.cache.get(this.session.last_correct).username || 'Noone') + '\
-      @\nIncorrect number by: ' + (this.client.users.cache.get(this.session.last_incorrect).username || 'Noone')
+      this.message.reply("Result:\
+      \r\nScore: " + this.session.score + "\
+      \r\nLast correct number by: " + (this.client.users.cache.get(this.session.last_correct).username || "Noone") + "\
+      \r\nIncorrect number by: " + (this.client.users.cache.get(this.session.last_incorrect).username || "Noone")
       );
      // Start new session
      this.makeNewSession();
