@@ -10,9 +10,14 @@ root = process.env.LOBSTER_ROOT;
 
     static vars = {boot_mode: "default"}
     static boot_flags = [];
+
+    static BootFlag = Object.freeze({
+        NPM_INSTALL: 1,
+        GIT_PULL: 2
+    });
     
      tables =  {
-        lobby_active_lobbies:{
+        lobby_active_lobbies: {
             id: 'INT AUTO_INCREMENT NOT NULL',
             code: 'CHAR(6) UNIQUE NOT NULL',
             server: 'VARCHAR(20)',
@@ -26,15 +31,19 @@ root = process.env.LOBSTER_ROOT;
             post_id: 'varchar(25)',
             'PRIMARY KEY': '(id)'
         },
-        lobby_queue:{
+        lobby_queue: {
             id: 'INT AUTO_INCREMENT',
             member_id: 'VARCHAR(20) UNIQUE',
             join_request_time: 'BIGINT',
             lobby_code: 'VARCHAR(6)',
             'PRIMARY KEY': '(id)'
         },
-        system_vars:{
+        system_vars: {
             name: 'VARCHAR(32) UNIQUE', value: 'TEXT'
+        },
+        boot_flags: {
+            flag: 'INT UNIQUE',
+            'PRIMARY KEY': '(flag)'
         }
     }
 
