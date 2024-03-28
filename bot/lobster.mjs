@@ -131,13 +131,14 @@ export class Lobster{
                 m.edit((data) ? data : 'No data');
               });
             })*/
+            .then(m.edit('Resetting Bootmode'))
+            .then(sys.resetBootmode)
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
             })
-            .then(sys.resetBootmode)
             .catch((err) => {
               //let e_stack = "🥞";
               m.edit("Something went wrong during boot: "

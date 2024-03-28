@@ -408,40 +408,32 @@ export class lobby_controller extends Controller {
   
   testPresence(oldPresence, newPresence){
     console.log('Infohosts: ' + JSON.stringify(lobby_model.infohosts));
-    if (!lobby_model.infohosts.includes(oldPresence?.userId)){return;}
     let oldActivity = oldPresence?.activities[0];
     let newActivity = newPresence?.activities[0];
         //let c = this.client.channels.cache.get('1200927450536890429');
     if (oldActivity && newActivity){
       if (oldActivity.name !== "Among Us" || newActivity.name !== "Among Us"){return;}
     }
-    /*if (oldActivity){
-      console.log('oldGame: ' + JSON.stringify(oldActivity));
-    }
-    if (newActivity){
-      console.log('newGame: ' + JSON.stringify(newActivity));
-    }*/
 
     if (newPresence){
       console.log('newPresence: ' + JSON.stringify(newPresence));
     }
-    //if (newActivity !== 'Among Us')
+    
       if (oldActivity?.state == 'In Menus' && newActivity?.state == 'In Lobby'){
+        /* Check if lobby has been announced */
         let member_id = newPresence.userId;
         this.model.getAnnounced({member_id: newPresence.userId}, (err, res) => {
-          if (err)
-          {return console.log('Error while getting announced lobbies in lobby_controller.testPresence');
-        }
+          if (err){
+            return console.log('Error while getting announced lobbies in lobby_controller.testPresence: ' + err.message);
+          }
           if (res.length < 1){
-            //channels.get(channels['lob-test']).send('Lobby started, but the host is not infohost');
             return;
           }
 
           let create_vals = {
             code: newActivity.party.id, 
             host: member_id,
-            state: newActivity.state,
-            infohost: member_id
+            state: newActivity.state
           }
 
           this.model.create(create_vals
