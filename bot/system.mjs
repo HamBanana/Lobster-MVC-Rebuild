@@ -9,12 +9,13 @@ os = process.env.OS;
 root = process.env.LOBSTER_ROOT;
 
     static vars = {boot_mode: "default"}
+    /* Not using these yet
     static boot_flags = [];
-
     static BootFlag = Object.freeze({
         NPM_INSTALL: 1,
         GIT_PULL: 2
     });
+    */
     
      tables =  {
         lobby_active_lobbies: {
