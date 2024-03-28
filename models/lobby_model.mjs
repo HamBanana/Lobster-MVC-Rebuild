@@ -33,12 +33,6 @@ export class lobby_model extends Model {
     //if (lobby_model.active_lobbies[code]) {
     //  return false;
     //}
-    return this.db.create_table('lobby_active_lobbies', this.table_active_lobbies, true, (error) => {
-      if (error){
-        console.log('Error when trying to create lobby_active_lobbies: ' + error.message);
-        callback(err, res);
-        return;
-      }
       let letter = args.code.slice(-1);
       let server = '';
       if (letter == 'F' || letter == 'Q'){server = "Europe, probably";}
@@ -65,7 +59,6 @@ export class lobby_model extends Model {
         lobby_model.active_lobbies[args.code] = values;
         return callback(err, values);
       });
-    });
   }
 
   setLobbyState(args, callback){

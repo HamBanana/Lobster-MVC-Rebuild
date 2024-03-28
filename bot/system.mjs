@@ -8,7 +8,8 @@ export class System{
 os = process.env.OS;
 root = process.env.LOBSTER_ROOT;
 
-    static vars = {}
+    static vars = {boot_mode: "default"}
+    static boot_flags = [];
     
      tables =  {
         lobby_active_lobbies:{
@@ -17,11 +18,10 @@ root = process.env.LOBSTER_ROOT;
             server: 'VARCHAR(20)',
             creationtime: 'BIGINT',
             pingtime: 'BIGINT',
-            is_vc_lobby: 'TINYINT(1)',
+            voicechat: 'VARCHAR(20)',
             host: 'VARCHAR(20)',
             is_vanilla: 'TINYINT(1)',
             notes: 'TEXT',
-            infohost: 'VARCHAR(25)',
             state: 'varchar(8)',
             post_id: 'varchar(25)',
             'PRIMARY KEY': '(id)'
@@ -66,7 +66,7 @@ root = process.env.LOBSTER_ROOT;
         }
         Promise.all(createpromises).then(() => { resolve(); }).catch((err) => {throw err;});
     
-        });
+        }).catch((err) => {throw err;});
     }
     
     pull(onData = () => {}){
@@ -78,6 +78,8 @@ root = process.env.LOBSTER_ROOT;
             child.stderr.on('data', (data) => {reject(data);});
             child.stdout.on('data', (data) => {onData(data);});
             child.on('exit', () => {resolve();});
+        }).catch((err) => {
+            throw err;
         });
     }
     
@@ -88,6 +90,8 @@ root = process.env.LOBSTER_ROOT;
                 if (err || stderr){reject(err); return;}
                 resolve(stdout);
             });
+        }).catch((err) => {
+            throw err;
         });
     }
     
@@ -97,7 +101,7 @@ root = process.env.LOBSTER_ROOT;
             child.stderr.on('data', (data) => {reject(data);});
             child.stdout.on('data', (data) => {onData(data);});
             child.on('exit', () => {resolve();});
-        });
+        }).catch((err) => {throw err;});
     }
     
     loadVars(){
