@@ -97,8 +97,8 @@ export class count_controller extends Controller{
       this.session.last_incorrect = this.message.author.id;
       this.message.reply('Result:\
       \nScore: ' + this.session.score + '\
-      \nLast correct number by: ' + (this.client.users.cache.get(this.session.last_correct).username) || 'Noone' + '\
-      \nIncorrect number by: ' + (this.client.users.cache.get(this.session.last_incorrect).username) || 'Noone'
+      \nLast correct number by: ' + (this.client.users.cache.get(this.session.last_correct).username || 'Noone') + '\
+      \nIncorrect number by: ' + (this.client.users.cache.get(this.session.last_incorrect).username) || 'Noone')
       );
      // Start new session
      this.makeNewSession();
