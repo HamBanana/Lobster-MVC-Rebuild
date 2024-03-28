@@ -85,9 +85,9 @@ perm = {'users': ['330279218543984641']}
     .then((output) => {
       this.message.reply('SQL: ' + JSON.stringify(output));
     })
-    .catch((err) => {
+    /*.catch((err) => {
       this.message.reply('SQL error: ' + err.message);
-    });
+    });*/
 
   }
 

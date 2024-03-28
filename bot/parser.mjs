@@ -8,7 +8,7 @@ export class Parser{
   msg;
 
   constructor(msg){
-    this.msg = msg;
+    this.message = msg;
   }
     
 
@@ -81,7 +81,7 @@ export class Parser{
         return new Promise((resolve, reject) => {
           try {
             let cons = eval('module.'+command.controller+'_controller');
-            resolve(new cons(this.msg));
+            resolve(new cons(this.message));
           } catch (error) {
             reject(error);
           }
@@ -102,7 +102,10 @@ export class Parser{
               console.log("Return value from promise after executing function: " + JSON.stringify(op));
             });
            }
-          });
+          })
+          /*.catch((err) => {
+            this.message.reply('Error in executeCommand: ' + err.message);
+          });*/
 
   }
 
