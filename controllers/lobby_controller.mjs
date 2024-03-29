@@ -208,6 +208,13 @@ export class lobby_controller extends Controller {
 
   }
 
+  edit(args){
+    let { id, code, member_id, voicechat, is_vanilla, notes, server } = this.extractArgs(args, 'code');
+    if (id){
+      this.model.edit(args, 'id')
+    }
+  }
+
   register_infohost(){
     this.model.register_infohost({member_id: this.message.author.id}, (err, res) => {
       if (err){return this.message.reply("Couldn't register you as infohost, because: " + err.message);}
@@ -364,13 +371,14 @@ export class lobby_controller extends Controller {
   }*/
 
   announce(args){
-    if (lobby_model.infohosts.indexOf(this.message.author.id) < 0){
+    /*if (lobby_model.infohosts.indexOf(this.message.author.id) < 0){
       return this.message.reply('Please run "!lob lobby register_infohost" register as infohost, before using "announce"');
-    }
-    let is_vc_lobby = args.vc || 0;
-    let is_vanilla = args.vanilla || 1;
+    }*/
+    this.message.reply('Please ensure that you have enabled "Share your activity status with others" in Activity settings');
+    let {is_vc_lobby, is_vanilla} = this.extractArgs(args);
+    if (!is_vanilla){is_vanilla = 1;}
 
-    this.model.announce({member_id: this.message.author.id, is_vc_lobby, is_vanilla}, (err, res) => {
+    this.model.announce({host: this.message.author.id, is_vanilla}, (err, res) => {
       if (err){
         switch (err.code){
           case "ER_DUP_ENTRY": return this.message.reply('You have already announced a lobby.\nTo change lobby settings, run "!lob lobby unannounce" first.');
@@ -414,10 +422,6 @@ export class lobby_controller extends Controller {
     if (oldActivity && newActivity){
       if (oldActivity.name !== "Among Us" || newActivity.name !== "Among Us"){return;}
     }
-
-    if (newPresence){
-      console.log('newPresence: ' + JSON.stringify(newPresence));
-    }
     
       if (oldActivity?.state == 'In Menus' && newActivity?.state == 'In Lobby'){
         /* Check if lobby has been announced */
@@ -436,7 +440,7 @@ export class lobby_controller extends Controller {
             state: newActivity.state
           }
 
-          this.model.create(create_vals
+          this.model.edit(create_vals
           , (cerr, cres) => {
             // Unannounce the upcoming lobby, as it has started.
             this.model.unannounce({member_id}, (err, res) => {
@@ -444,7 +448,7 @@ export class lobby_controller extends Controller {
             });
             
             
-            if (cerr){console.log('Error creating lobby from testPresence: ' + cerr.message);}
+            if (cerr){return console.log('Error creating lobby from testPresence: ' + cerr.message);}
             else if (!res){console.log('There are somehow no announced lobbies (we have just determined that there is, so this is a coding error.)');}
             else {console.log('Created lobby from testPresence: ' + newActivity.party.id);}
 
@@ -460,8 +464,8 @@ export class lobby_controller extends Controller {
             this.view.data['pingrole'] = (cres.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
 
             this.view.type = "channel";
-            //this.view.channelid = channels['lob-test'];
-            this.view.channelid = channels['vanilla-codes'];
+            this.view.channelid = channels['lob-test'];
+            //this.view.channelid = channels['vanilla-codes'];
             this.post();
           });
 

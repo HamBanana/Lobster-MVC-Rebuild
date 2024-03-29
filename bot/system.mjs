@@ -20,7 +20,7 @@ root = process.env.LOBSTER_ROOT;
      tables =  {
         lobby_active_lobbies: {
             id: 'INT AUTO_INCREMENT NOT NULL',
-            code: 'CHAR(6) UNIQUE NOT NULL',
+            code: 'CHAR(6) UNIQUE',
             server: 'VARCHAR(20)',
             creationtime: 'BIGINT',
             pingtime: 'BIGINT',
