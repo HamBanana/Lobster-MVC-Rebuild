@@ -121,6 +121,21 @@ export class count_controller extends Controller{
     console.log('TEST: ' + JSON.stringify(this.client.users.cache.get(330279218543984641).username));
   }
 
+  highscore(args){
+    return new Promise((resolve, reject) => {
+      let db = Database.getInstance();
+      db.connection.query('SELECT * FROM counting_session ORDER BY score DESC limit 1', (err, res) => {
+        if (err){reject(err); return;}
+
+        let session = res[0];
+
+        this.view.template_path = "count/session";
+        this.view.data = session;
+        this.post();
+      });
+    });
+  }
+
   set(args){
     return new Promise((resolve, reject) => {
     let number = (args['number']) ? args['number'] : args['default'][0];
