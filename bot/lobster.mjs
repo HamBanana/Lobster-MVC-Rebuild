@@ -120,10 +120,10 @@ export class Lobster{
           wm.then((m) => {
             console.log('m: ' + JSON.stringify(m));
             // Begin initialization.
-            sys.prepareUtils()
+            return sys.prepareUtils()
             .then(() => {
-              sys.pull((data) => {
-                m.edit((data) ? data : 'No data');
+              return sys.pull((data) => {
+                return m.edit((data) ? data : 'No data');
               });
             })
             /*.then(() => {
@@ -139,10 +139,12 @@ export class Lobster{
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
             }).catch((err) => {throw err;});
-            }).catch((err) => {throw err;});
+            }).catch((err) => {
+              //let e_stack = "🥞";
+              return console.log('Error on boot: ' + err.message); });
           }).catch((err) => {
             //let e_stack = "🥞";
-            m.edit("Something went wrong during boot: "
+            return m.edit("Something went wrong during boot: "
             +"\nMessage: " + err.message 
             + "\nStack: \n" + err.stack
             + ((err.sql) ? '\nSQL: ' + err.sql : '')
