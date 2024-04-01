@@ -142,7 +142,6 @@ export class Lobster{
             });
        // })
     });
-
 client.on('presenceUpdate', (oldPresence, newPresence) => {
   return;
   //let c = client.channels.cache.get('1200927450536890429');
