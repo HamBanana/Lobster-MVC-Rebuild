@@ -133,7 +133,7 @@ export class Lobster{
               });
             })*/
 
-            .then(m.edit('Resetting Bootmode'))
+            //.then(m.edit('Resetting Bootmode'))
             .then(sys.resetBootmode((data) => {m.edit(data);}))
             .then(() => {
               switch(System.vars.boot_mode){
