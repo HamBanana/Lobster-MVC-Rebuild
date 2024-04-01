@@ -124,17 +124,17 @@ export class Lobster{
             //.then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');});})
             .then(() => {
               switch(System.vars.boot_mode){
-                case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
-                default: m.edit(":white_check_mark: Lobster started"); break;
+                case 'reboot': m.reply(':white_check_mark: Reboot complete'); break;
+                default: m.reply(":white_check_mark: Lobster started"); break;
               }
             })
-            .then(sys.resetBootmode((data) => {m.edit(data);})).catch((err) => {throw err;});
+            .then(sys.resetBootmode((data) => {m.reply(data);})).catch((err) => {throw err;});
             }).catch((err) => {
               //let e_stack = "🥞";
               return console.log('Error on boot: ' + err.message); });
           }).catch((err) => {
             //let e_stack = "🥞";
-            return m.edit("Something went wrong during boot: "
+            return m.reply("Something went wrong during boot: "
             +"\nMessage: " + err.message 
             + "\nStack: \n" + err.stack
             + ((err.sql) ? '\nSQL: ' + err.sql : '')
