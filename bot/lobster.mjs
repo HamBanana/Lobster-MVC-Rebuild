@@ -121,11 +121,7 @@ export class Lobster{
             console.log('m: ' + JSON.stringify(m));
             // Begin initialization.
             return sys.prepareUtils()
-            .then(() => {
-              return sys.pull((data) => {
-                return m.edit((data) ? data : 'No data');
-              });
-            })
+            //.then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');});})
 
             /*.then(() => {
               return sys.npm((data) => {
