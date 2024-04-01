@@ -121,8 +121,7 @@ export class Lobster{
             console.log('m: ' + JSON.stringify(m));
             // Begin initialization.
             return sys.prepareUtils()
-            //.then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');}).catch((err) => {m.edit('Error in pull: ' + err.message)});
-          })
+            //.then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');}).catch((err) => {m.edit('Error in pull: ' + err.message)});})
             .then(sys.resetBootmode((data) => {m.edit(data);}))/*.catch((err) => {throw err;} )*/
             .then(() => {
               switch(System.vars.boot_mode){
