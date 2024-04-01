@@ -29,7 +29,8 @@ root = process.env.LOBSTER_ROOT;
             is_vanilla: 'TINYINT(1)',
             notes: 'TEXT',
             state: 'varchar(8)',
-            post_id: 'varchar(25)',
+            post_message_id: 'varchar(25)',
+            post_channel_id: 'varchar(25)',
             'PRIMARY KEY': '(id)'
         },
         lobby_queue: {
@@ -136,7 +137,7 @@ root = process.env.LOBSTER_ROOT;
             promises.push(db.p_delete('system_vars', {name: 'boot_mode'}).then((res) => {console.log('Boot_mode deleted'); onData('Boot_mode deleted');}));
             promises.push(db.p_delete('system_vars', {name: 'boot_channel'}).then((res) => {console.log('Boot_channel deleted'); onData('Boot_channel deleted');}));
             promises.push(db.p_delete('system_vars', {name: 'boot_message'}).then((res) => {console.log('Boot_message deleted'); onData('Boot_message deleted');}));
-            
+
             Promise.all(promises).then(() => {
                 onData('Bootmode is reset');
                 db.p_get('system_vars').then((res) => {console.log('Vars after delete: ' + JSON.stringify(res));});
