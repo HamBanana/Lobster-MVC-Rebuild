@@ -142,7 +142,7 @@ root = process.env.LOBSTER_ROOT;
                 db.p_get('system_vars').then((res) => {console.log('Vars after delete: ' + JSON.stringify(res));});
                 resolve();
             })
-            .catch((err) => {throw err;});
+            .catch((err) => {throw new Error('Promise.all in resetBootmode failed because: ' + err.message);});
         });
     }
 
