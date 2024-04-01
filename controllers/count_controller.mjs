@@ -1,6 +1,6 @@
 import {Controller} from '../core/controller.mjs';
 import { Database } from "../core/database.mjs";
-import {channels} from '../core/statics.mjs';
+import {channels, members} from '../core/statics.mjs';
 import { Discord } from '../core/discord.mjs';
 
 export class count_controller extends Controller{
@@ -130,7 +130,9 @@ export class count_controller extends Controller{
         let session = res[0];
 
         this.view.template_path = "count/session";
-        this.view.data = session;
+        this.view.data.score = session.score;
+        this.this.view.data.last_correct = members.get(session.last_correct).username;
+        this.this.view.data.last_incorrect = members.get(session.last_incorrect).username;
         this.post();
       });
     });

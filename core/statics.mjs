@@ -18,5 +18,7 @@ export const roles = {
 }
 
 export const members = {
-    'Ham': '330279218543984641'
+    'Ham': '330279218543984641',
+    get: (id) => {return Discord.client.users.cache.get(id);
+    }
 }
