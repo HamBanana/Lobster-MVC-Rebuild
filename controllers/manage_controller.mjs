@@ -8,6 +8,8 @@ import { warn } from '../core/error.mjs';
 import { Database } from '../core/database.mjs';
 import { System } from '../bot/system.mjs';
 
+import * as pm2 from 'pm2';
+
 export class manage_controller extends Controller{
   
 perm = {'users': ['330279218543984641']}
