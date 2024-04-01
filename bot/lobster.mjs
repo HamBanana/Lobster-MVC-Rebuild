@@ -126,7 +126,10 @@ export class Lobster{
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
-                default: m.edit(":white_check_mark: Lobster started"); break;
+                default: 
+                //m.edit(":white_check_mark: Lobster started");
+                m.delete(); 
+                break;
               }
             }).catch((err) => {throw err;})
             }).catch((err) => {
