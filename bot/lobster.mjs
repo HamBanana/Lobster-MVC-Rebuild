@@ -139,17 +139,17 @@ export class Lobster{
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
             })
-            .catch((err) => {
-              //let e_stack = "🥞";
-              m.edit("Something went wrong during boot: "
-              +"\nMessage: " + err.message 
-              + "\nStack: \n" + err.stack
-              + ((err.sql) ? '\nSQL: ' + err.sql : '')
-              );
-              })
+            .catch((err) => {throw err;})
               
+            }).catch((err) => {throw err;});
+          }).catch((err) => {
+            //let e_stack = "🥞";
+            m.edit("Something went wrong during boot: "
+            +"\nMessage: " + err.message 
+            + "\nStack: \n" + err.stack
+            + ((err.sql) ? '\nSQL: ' + err.sql : '')
+            );
             });
-          });
        // })
     });
 
