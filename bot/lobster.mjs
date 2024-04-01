@@ -126,11 +126,13 @@ export class Lobster{
                 return m.edit((data) ? data : 'No data');
               });
             })
+
             /*.then(() => {
               return sys.npm((data) => {
                 m.edit((data) ? data : 'No data');
               });
             })*/
+            
             .then(m.edit('Resetting Bootmode'))
             .then(sys.resetBootmode)
             .then(() => {
