@@ -129,7 +129,7 @@ root = process.env.LOBSTER_ROOT;
         });
     }
 
-    resetBootmode(onData = () => {}){
+    resetBootmode(onData = (data) => {}){
         return new Promise((resolve, reject) => {
             let db = Database.getInstance();
             console.log('resetBootmode is running');
