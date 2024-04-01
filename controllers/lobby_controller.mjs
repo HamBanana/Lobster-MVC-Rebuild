@@ -408,7 +408,11 @@ export class lobby_controller extends Controller {
       for (let i in lobbies){
         let lobby = lobbies[i];
         if(Time.now - lobby.pingtime > 180000){
-          db.p_delete('lobby_active_lobbies', {code:lobby.code}).then((res) => {console.log('Deleted: ' + lobby.code);});
+          db.p_delete('lobby_active_lobbies', {code:lobby.code}).then((res) => {
+            if (res){
+              console.log('Deleted: ' + lobby.code);
+            }
+          });
         }
       }
     });
