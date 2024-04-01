@@ -85,7 +85,7 @@ root = process.env.LOBSTER_ROOT;
         return new Promise((resolve, reject) => {
             if (process.env.NO_GIT_PULL){resolve();}
             let child = sub.spawn(path);
-            child.stderr.on('data', (data) => {reject(data);});
+            //child.stderr.on('data', (data) => {reject(data);});
             child.stdout.on('data', (data) => {onData(data);});
             child.on('exit', () => {resolve();});
         }).catch((err) => {
