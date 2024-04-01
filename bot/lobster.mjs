@@ -122,21 +122,13 @@ export class Lobster{
             // Begin initialization.
             return sys.prepareUtils()
             //.then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');});})
-
-            /*.then(() => {
-              return sys.npm((data) => {
-                m.edit((data) ? data : 'No data');
-              });
-            })*/
-
-            //.then(m.edit('Resetting Bootmode'))
-            .then(sys.resetBootmode((data) => {m.edit(data);}))
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
-            }).catch((err) => {throw err;});
+            })
+            .then(sys.resetBootmode((data) => {m.edit(data);})).catch((err) => {throw err;});
             }).catch((err) => {
               //let e_stack = "🥞";
               return console.log('Error on boot: ' + err.message); });
