@@ -122,7 +122,7 @@ export class Lobster{
             // Begin initialization.
             return sys.prepareUtils()
             .then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');})
-            .catch((err) => {m.edit('Error in pull: ' + err.message)});
+            //.catch((err) => {m.edit('Error in pull: ' + err.message)});
           })
             .then(sys.resetBootmode((data) => {m.edit(data);}))/*.catch((err) => {throw err;} )*/
             .then(() => {
@@ -144,7 +144,7 @@ export class Lobster{
             });
        // })
     });
-    
+
 client.on('presenceUpdate', (oldPresence, newPresence) => {
   return;
   //let c = client.channels.cache.get('1200927450536890429');
