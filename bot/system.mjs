@@ -134,12 +134,18 @@ root = process.env.LOBSTER_ROOT;
             let db = Database.getInstance();
             console.log('resetBootmode is running');
             let promises = [];
-            promises.push(db.p_delete('system_vars', {name: 'boot_mode'}).then((res) => {console.log('Boot_mode deleted'); onData('Boot_mode deleted');}));
-            promises.push(db.p_delete('system_vars', {name: 'boot_channel'}).then((res) => {console.log('Boot_channel deleted'); onData('Boot_channel deleted');}));
-            promises.push(db.p_delete('system_vars', {name: 'boot_message'}).then((res) => {console.log('Boot_message deleted'); onData('Boot_message deleted');}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_mode'}).then((res) => {console.log('Boot_mode deleted'); 
+           // onData('Boot_mode deleted');
+        }));
+            promises.push(db.p_delete('system_vars', {name: 'boot_channel'}).then((res) => {console.log('Boot_channel deleted'); 
+           // onData('Boot_channel deleted');
+        }));
+            promises.push(db.p_delete('system_vars', {name: 'boot_message'}).then((res) => {console.log('Boot_message deleted');
+           // onData('Boot_message deleted');
+        }));
 
             Promise.all(promises).then(() => {
-                onData('Bootmode is reset');
+               // onData('Bootmode is reset');
                 db.p_get('system_vars').then((res) => {console.log('Vars after delete: ' + JSON.stringify(res));});
                 resolve();
             })
