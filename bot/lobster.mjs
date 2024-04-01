@@ -121,7 +121,7 @@ export class Lobster{
             console.log('m: ' + JSON.stringify(m));
             // Begin initialization.
             return sys.prepareUtils()
-            .then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');});})
+            //.then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');});})
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
