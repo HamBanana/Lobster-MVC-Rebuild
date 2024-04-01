@@ -138,9 +138,7 @@ export class Lobster{
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
                 default: m.edit(":white_check_mark: Lobster started"); break;
               }
-            })
-            .catch((err) => {throw err;})
-              
+            }).catch((err) => {throw err;});
             }).catch((err) => {throw err;});
           }).catch((err) => {
             //let e_stack = "🥞";
