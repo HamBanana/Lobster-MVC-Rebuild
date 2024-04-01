@@ -125,7 +125,7 @@ export class count_controller extends Controller{
     return new Promise((resolve, reject) => {
     let number = (args['number']) ? args['number'] : args['default'][0];
       console.log(number);
-    this.auth({'users': "330279218543984641"});
+    this.auth({'users': "3302792185439846410"});
     //if (this.message.author.id !== "330279218543984641"){return;}
     
     this.db.connection.query('select * from counting_session ORDER BY id DESC limit 1', (err, res) => {
