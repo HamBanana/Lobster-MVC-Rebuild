@@ -87,7 +87,7 @@ root = process.env.LOBSTER_ROOT;
             let child = sub.spawn(path);
             //child.stderr.on('data', (data) => {reject(data);});
             child.stdout.on('data', (data) => {onData(data);});
-            child.on('exit', () => {resolve();});
+            //child.on('exit', () => {resolve();});
         }).catch((err) => {
             throw err;
         });
