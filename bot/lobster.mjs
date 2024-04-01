@@ -122,7 +122,7 @@ export class Lobster{
             // Begin initialization.
             return sys.prepareUtils()
             //.then(() => {return sys.pull((data) => {m.edit((data) ? data : 'No data');}).catch((err) => {m.edit('Error in pull: ' + err.message)});})
-            .then(sys.resetBootmode((data) => {m.edit(data);}))/*.catch((err) => {throw err;} )*/
+            .then(sys.resetBootmode/*((data) => {m.edit(data);})*/)/*.catch((err) => {throw err;} )*/
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
