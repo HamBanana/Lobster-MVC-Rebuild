@@ -143,6 +143,7 @@ export class Lobster{
             );
             });
        // })
+       
     });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
