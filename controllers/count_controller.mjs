@@ -131,8 +131,8 @@ export class count_controller extends Controller{
 
         this.view.template_path = "count/session";
         this.view.data.score = session.score;
-        this.this.view.data.last_correct = members.get(session.last_correct).username;
-        this.this.view.data.last_incorrect = members.get(session.last_incorrect).username;
+        this.view.data.last_correct = members.get(session.last_correct).username;
+        this.view.data.last_incorrect = members.get(session.last_incorrect).username;
         this.post();
       });
     });
