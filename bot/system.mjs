@@ -143,6 +143,7 @@ root = process.env.LOBSTER_ROOT;
             promises.push(db.p_delete('system_vars', {name: 'boot_message'}).then((res) => {console.log('Boot_message deleted');
            // onData('Boot_message deleted');
         }));
+        
             Promise.all(promises).then(() => {
                // onData('Bootmode is reset');
                 db.p_get('system_vars').then((res) => {console.log('Vars after delete: ' + JSON.stringify(res));});
