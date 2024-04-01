@@ -132,9 +132,9 @@ export class Lobster{
                 m.edit((data) ? data : 'No data');
               });
             })*/
-            
+
             .then(m.edit('Resetting Bootmode'))
-            .then(sys.resetBootmode)
+            .then(sys.resetBootmode((data) => {m.edit(data);}))
             .then(() => {
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;

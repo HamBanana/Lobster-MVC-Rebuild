@@ -128,14 +128,14 @@ root = process.env.LOBSTER_ROOT;
         });
     }
 
-    resetBootmode(){
+    resetBootmode(onData = () => {}){
         return new Promise((resolve, reject) => {
             let db = Database.getInstance();
             console.log('resetBootmode is running');
             let promises = [];
-            promises.push(db.p_delete('system_vars', {name: 'boot_mode'}));
-            promises.push(db.p_delete('system_vars', {name: 'boot_channel'}));
-            promises.push(db.p_delete('system_vars', {name: 'boot_message'}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_mode'}).then((res) => {console.log('Boot_mode deleted'); onData(res);}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_channel'}).then((res) => {console.log('Boot_channel deleted'); onData(res);}));
+            promises.push(db.p_delete('system_vars', {name: 'boot_message'}).then((res) => {console.log('Boot_message deleted'); onData(res);}));
                 
             Promise.all(promises).then(() => {
                 console.log('Bootmode is reset');
