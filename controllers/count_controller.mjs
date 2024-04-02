@@ -135,8 +135,8 @@ export class count_controller extends Controller{
         this.view.data.score = session.score;
         console.log('Session: ' + JSON.stringify(session));
         console.log('Type of last_correct: ' + typeof(session.last_correct));
-        this.view.data.last_correct = (typeof(session.last_correct) !== undefined) ? members.get(session.last_correct).username : 'Noone';
-        this.view.data.last_incorrect = (typeof(session.last_incorrect) !== undefined) ? members.get(session.last_incorrect).username : 'Noone';
+        this.view.data.last_correct = (typeof(session.last_correct) !== undefined) ? members.get(session.last_correct)?.username : 'Noone';
+        this.view.data.last_incorrect = (typeof(session.last_incorrect) !== undefined) ? members.get(session.last_incorrect)?.username : 'Noone';
         this.post();
       });
     }).catch((err) => {
