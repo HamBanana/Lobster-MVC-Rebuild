@@ -124,7 +124,7 @@ export class count_controller extends Controller{
   highscore(args){
     return new Promise((resolve, reject) => {
       let db = Database.getInstance();
-      db.connection.query('SELECT * FROM counting_session ORDER BY score DESC limit 1', (err, res) => {
+      db.connection.query('SELECT * FROM counting_session ORDER BY score ASC limit 1', (err, res) => {
         if (err){reject(err); return;}
 
         let session = res[0];
