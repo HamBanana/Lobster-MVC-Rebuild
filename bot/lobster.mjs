@@ -148,6 +148,7 @@ export class Lobster{
     });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
+  return;
   //let c = client.channels.cache.get('1200927450536890429');
   if (oldPresence == null && newPresence == null){
     console.log('presenceUpdate, but no presence is present');

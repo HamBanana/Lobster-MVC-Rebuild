@@ -202,29 +202,34 @@ export class lobby_model extends Model {
   }
 
   unannounce(args, callback){
-    this.db.delete('lobby_active_lobbies', "member_id = " + args.member_id + ' AND code=NULL', (err, res) => {
+    this.db.delete('lobby_active_lobbies', "host = " + args.member_id + ' AND code IS NULL', (err, res) => {
       return callback(err, res);
     });
   }
 
   getAnnounced(args, callback){
     if (!args.member_id){return console.log('lobby_model.getAnnounced was called without a member_id');}
-    this.db.get('*', 'lobby_active_lobbies', "member_id = " + args.member_id + 'AND code=NULL', (err, res) => {
+    this.db.get('*', 'lobby_active_lobbies', "host = " + args.member_id + ' AND code IS NULL', (err, res) => {
       return callback(err, res);
     });
   }
 
-  /*edit(args, selectBy){
-    if (Object.keys(args).includes(selectBy)){throw new Error({message: 'lobby_model.edit called with invalid selectBy argument'});}
-    if (!selectBy){selectBy = 'host'}
+  edit(args, where = {}){
+    //if (Object.keys(args).includes(selectBy)){throw new Error({message: 'lobby_model.edit called with invalid selectBy argument'});}
 
     return new Promise((resolve, reject) => {
-      return this.db.p_update('lobby_active_lobbies', args)
+      return this.db.p_update('lobby_active_lobbies', args, where)
       .then((res) => {
 
-      });
-    });
-  }*/
+        return this.db.p_get('lobby_active_lobbies', where, 'AND').then((row) => {
+          return resolve(row[0]);
+        });
+
+      })
+      .catch((err) => {reject(err); return;})
+    })
+    .catch((err) => {throw err;});
+  }
 
   confirm_lobby(args, callback){
     if (!args.code){return callback({message: "You need to include the lobby code, for now at least."});}

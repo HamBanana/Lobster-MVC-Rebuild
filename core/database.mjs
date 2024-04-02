@@ -34,6 +34,14 @@ export class Database {
         return {keystring, valuestring};
     }
 
+    extractJson(values, seperator){
+        let str = ""
+        for (const [key, value] of Object.entries(values)){
+            str += (str == "") ? key + " = '" + value + "'" : seperator + key + " = '" + value + "'";
+        }
+        return str;
+    }
+
     getWhereString(where, op = "AND"){
         let wherestring = "";
         for (const [key, value] of Object.entries(where)){
@@ -110,6 +118,23 @@ export class Database {
 
     update(table, set, where, callback){
         return this.connection.query("UPDATE " + table + " SET " + set + " WHERE " + where, callback);
+    }
+
+    p_update(table, set, where){
+        console.log('set in p_update: ' + JSON.stringify(set));
+        let setstring = this.extractJson(set, ', ');
+        let wherestring = this.extractJson(where, ' AND ');
+        console.log('setstring: ' + setstring);
+        console.log('wherestring: ' + wherestring);
+        return new Promise((resolve, reject) => {
+            return this.connection.query("UPDATE " + table + " SET " + setstring + ' WHERE ' + wherestring, (err, res) => {
+                if (err){ reject(err); return; }
+                resolve(res);
+            });
+        })
+        .catch((err) => {
+            throw err;
+        });
     }
 
     p_set(table, key, values){

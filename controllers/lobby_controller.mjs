@@ -375,7 +375,7 @@ export class lobby_controller extends Controller {
       return this.message.reply('Please run "!lob lobby register_infohost" register as infohost, before using "announce"');
     }*/
     this.message.reply('Please ensure that you have enabled "Share your activity status with others" in Activity settings');
-    let {is_vc_lobby, is_vanilla} = this.extractArgs(args);
+    let {is_vanilla} = this.extractArgs(args);
     if (!is_vanilla){is_vanilla = 1;}
 
     this.model.announce({host: this.message.author.id, is_vanilla}, (err, res) => {
@@ -444,28 +444,28 @@ export class lobby_controller extends Controller {
             state: newActivity.state
           }
 
-          this.model.edit(create_vals
-          , (cerr, cres) => {
+          this.model.edit(create_vals, { host: newPresence.userId })
+          .then((res) => {
             // Unannounce the upcoming lobby, as it has started.
-            this.model.unannounce({member_id}, (err, res) => {
+            this.model.unannounce({member_id}, (err) => {
               if (err){return console.log('Unannounce failed because: ' + err.message);}
             });
             
             
-            if (cerr){return console.log('Error creating lobby from testPresence: ' + cerr.message);}
-            else if (!res){console.log('There are somehow no announced lobbies (we have just determined that there is, so this is a coding error.)');}
-            else {console.log('Created lobby from testPresence: ' + newActivity.party.id);}
+            //if (cerr){return console.log('Error creating lobby from testPresence: ' + cerr.message);}
+            //else if (!res){console.log('There are somehow no announced lobbies (we have just determined that there is, so this is a coding error.)');}
+            //else {console.log('Created lobby from testPresence: ' + newActivity.party.id);}
 
             // Create the view
             this.view.template_path = 'lobby/autocreate';
             this.view.data['host'] = this.client.users.cache.get(newPresence.userId).username;
             this.view.data['code'] = newActivity.party.id;
-            this.view.data['server'] = cres.server;
-            this.view.data['is_vc_lobby'] = cres.is_vc_lobby;
-            this.view.data['is_vanilla'] = cres.is_vanilla;
-            this.view.data['notes'] = cres.notes;
-            this.view.data['pingtime'] = cres.pingtime;
-            this.view.data['pingrole'] = (cres.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
+            this.view.data['server'] = res.server;
+            this.view.data['is_vc_lobby'] = res.is_vc_lobby;
+            this.view.data['is_vanilla'] = res.is_vanilla;
+            this.view.data['notes'] = res.notes;
+            this.view.data['pingtime'] = res.pingtime;
+            this.view.data['pingrole'] = (res.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
 
             this.view.type = "channel";
             this.view.channelid = channels['lob-test'];
