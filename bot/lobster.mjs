@@ -9,6 +9,7 @@ import {Parser} from './parser.mjs';
 import { Database } from '../core/database.mjs';
 import { System } from './system.mjs';
 import { lobby_controller } from '../controllers/lobby_controller.mjs';
+import { Events } from 'discord.js';
 
 export class Lobster{
 
@@ -127,8 +128,7 @@ export class Lobster{
               switch(System.vars.boot_mode){
                 case 'reboot': m.edit(':white_check_mark: Reboot complete'); break;
                 default: 
-                //m.edit(":white_check_mark: Lobster started");
-                m.delete(); 
+                m.edit(":white_check_mark: Lobster started");
                 break;
               }
             }).catch((err) => {throw err;})
@@ -145,6 +145,14 @@ export class Lobster{
             });
        // })
 
+    });
+
+    client.on(Events.InteractionCreate, async (interaction) => {
+      if (!interaction.isChatInputCommand()) return;
+
+      if (interaction.commandName === 'ping'){
+        interaction.reply('Yay :eyes:');
+      }
     });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
