@@ -19,6 +19,9 @@ export const roles = {
 
 export const members = {
     'Ham': '330279218543984641',
-    get: (id) => {return Discord.client.users.cache.get(id);
+    get: (id) => {
+        let user = Discord.client.users.cache.get(id);
+        console.log('Getting member with id "' + id + '": ' + JSON.stringify(user));
+        return user;
     }
 }

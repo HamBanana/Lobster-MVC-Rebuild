@@ -4,6 +4,7 @@ import { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } from 'discord
 //import {Test} from '../core/database.js';
 import { Database } from '../core/database.mjs';
 import { PermissionError } from '../core/error.mjs';
+import { members } from '../core/statics.mjs';
 
 //import pkg from 'discord.js';
 //const { EmbedBuilder, MessageActionRow, StringSelectMenuBuilder } = pkg;
@@ -31,6 +32,12 @@ constructor(msg){
     .then((reply) => {
     console.log(reply);
     })
+  }
+
+  getmember(args){
+    let { id } = this.extractArgs(args, 'id');
+    let member = members.get(id);
+    console.log('From test_controller: ' + JSON.stringify(member));
   }
 
   helpexample(){
