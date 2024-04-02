@@ -139,6 +139,8 @@ export class count_controller extends Controller{
         this.view.data.last_incorrect = (typeof(session.last_incorrect) !== 'undefined') ? members.get(session.last_incorrect).username : 'Noone';
         this.post();
       });
+    }).catch((err) => {
+      console.error(err);
     });
   }
 
