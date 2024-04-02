@@ -132,7 +132,7 @@ export class count_controller extends Controller{
         let session = {};
         let score = 0;
         for (let i in res){
-          if (res[i].score > score){session = res[i]; score = res[i].score;}
+          if (parseInt(res[i].score) > score){session = res[i]; score = parseInt(res[i].score);}
 
         }
 
