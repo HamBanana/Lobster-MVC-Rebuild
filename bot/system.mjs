@@ -29,6 +29,7 @@ root = process.env.LOBSTER_ROOT;
             is_vanilla: 'TINYINT(1)',
             notes: 'TEXT',
             state: 'varchar(8)',
+            ongoing: 'tinyint(1)',
             post_message_id: 'varchar(25)',
             post_channel_id: 'varchar(25)',
             'PRIMARY KEY': '(id)'

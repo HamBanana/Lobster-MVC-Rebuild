@@ -202,13 +202,13 @@ export class lobby_model extends Model {
   }
 
   unannounce(args, callback){
-    this.db.delete('lobby_active_lobbies', "host = " + args.member_id + ' AND code IS NULL', (err, res) => {
+    this.db.delete('lobby_active_lobbies', "host = " + args.host + ' AND ongoing = 0', (err, res) => {
       return callback(err, res);
     });
   }
 
   getAnnounced(args, callback){
-    this.db.get('*', 'lobby_active_lobbies', "host = " + args.host + ' AND code IS NULL', (err, res) => {
+    this.db.get('*', 'lobby_active_lobbies', "host = " + args.host + ' AND ongoing = 0', (err, res) => {
       return callback(err, res);
     });
   }

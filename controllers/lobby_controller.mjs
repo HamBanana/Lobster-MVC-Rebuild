@@ -378,10 +378,11 @@ export class lobby_controller extends Controller {
     let {is_vanilla} = this.extractArgs(args);
     if (!is_vanilla){is_vanilla = 1;}
 
-    this.model.announce({host: this.message.author.id, is_vanilla}, (err, res) => {
+    this.model.announce({host: this.message.author.id, is_vanilla, ongoing: 0}, (err, res) => {
       if (err){
         switch (err.code){
-          case "ER_DUP_ENTRY": return this.message.reply('You have already announced a lobby.\nTo change lobby settings, run "!lob lobby unannounce" first.');
+          case "ER_DUP_ENTRY": return this.message.reply('You have already announced a lobby.\
+          \nTo change lobby settings, run "!lob lobby edit".');
           default: return this.message.reply("Can't announce lobby, because: " + err.message)
         }
       }
@@ -390,7 +391,7 @@ export class lobby_controller extends Controller {
   }
 
   unannounce(){
-    this.model.unannounce({member_id: this.message.author.id}, (err, res) => {
+    this.model.unannounce({host: this.message.author.id}, (err, res) => {
       if (err){
         switch (err.code){
           default: return this.message.reply("Can't unannounce lobby, because: " + err.message);
@@ -440,7 +441,9 @@ export class lobby_controller extends Controller {
           let create_vals = {
             code: newActivity.party.id, 
             host: newPresence.userId,
-            state: newActivity.state
+            state: newActivity.state,
+            pingtime: Time.now,
+            ongoing: 1
           }
 
           this.model.edit(create_vals, { host: newPresence.userId })
@@ -460,11 +463,11 @@ export class lobby_controller extends Controller {
             this.view.data['host'] = this.client.users.cache.get(newPresence.userId).username;
             this.view.data['code'] = newActivity.party.id;
             this.view.data['server'] = res.server;
-            this.view.data['is_vc_lobby'] = res.is_vc_lobby;
-            this.view.data['is_vanilla'] = res.is_vanilla;
-            this.view.data['notes'] = res.notes;
+            this.view.data['is_vc_lobby'] = (res.voicechat) ? res.voicechat : 'No';
+            this.view.data['is_vanilla'] = (res.is_vanilla) ? 'Yes' : 'No';
+            this.view.data['notes'] = (res.notes) ? res.notes : 'Not really';
             this.view.data['pingtime'] = res.pingtime;
-            this.view.data['pingrole'] = (res.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
+            //this.view.data['pingrole'] = (res.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
 
             this.view.type = "channel";
             this.view.channelid = channels['lob-test'];
