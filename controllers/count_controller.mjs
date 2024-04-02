@@ -124,16 +124,12 @@ export class count_controller extends Controller{
   highscore(args){
     return new Promise((resolve, reject) => {
       let db = Database.getInstance();
-      db.connection.query('SELECT * FROM counting_session', (err, res) => {
+      db.connection.query('SELECT * FROM counting_session ORDER BY score DESC LIMIT 1', (err, res) => {
         if (err){reject(err); return;}
 
         console.log('HIGHSCORE RES: ' + JSON.stringify(res));
 
-        let session = {};
-        let score = 0;
-        for (let i in res){
-          if (res.score > score){session = i;}
-        }
+        let session = res[0];
 
         this.view.template_path = "count/session";
         this.view.data.score = session.score;
