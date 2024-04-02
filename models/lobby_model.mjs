@@ -228,7 +228,6 @@ export class lobby_model extends Model {
       })
       .catch((err) => {reject(err); return;})
     })
-    .catch((err) => {throw err;});
   }
 
   confirm_lobby(args, callback){

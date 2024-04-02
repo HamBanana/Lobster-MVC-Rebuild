@@ -124,6 +124,7 @@ export class Database {
         console.log('set in p_update: ' + JSON.stringify(set));
         let setstring = this.extractJson(set, ', ');
         let wherestring = this.extractJson(where, ' AND ');
+        console.log('UPDATING TABLE WITH STRINGS: ', setstring, wherestring)
         console.log('setstring: ' + setstring);
         console.log('wherestring: ' + wherestring);
         return new Promise((resolve, reject) => {

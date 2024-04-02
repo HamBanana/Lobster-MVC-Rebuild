@@ -209,10 +209,11 @@ export class lobby_controller extends Controller {
   }
 
   edit(args){
-    let { id, code, member_id, voicechat, is_vanilla, notes, server } = this.extractArgs(args, 'code');
-    if (id){
-      this.model.edit(args, 'id')
-    }
+    args = this.extractArgs(args);
+      this.model.edit(args, {host:this.message.author.id})
+      .then(() => {
+        this.message.react('👍');
+      });
   }
 
   register_infohost(){
