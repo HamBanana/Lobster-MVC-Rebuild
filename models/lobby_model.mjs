@@ -196,6 +196,7 @@ export class lobby_model extends Model {
   }
 
   announce(args, callback){
+    args['creationtime'] = Time.now;
     this.db.insert('lobby_active_lobbies', args, (err, res) => {
       return callback(err, res);
     });
