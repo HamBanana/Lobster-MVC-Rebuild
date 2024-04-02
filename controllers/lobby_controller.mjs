@@ -429,8 +429,7 @@ export class lobby_controller extends Controller {
     
       if (oldActivity?.state == 'In Menus' && newActivity?.state == 'In Lobby'){
         /* Check if lobby has been announced */
-        let member_id = newPresence.userId;
-        this.model.getAnnounced({member_id: newPresence.userId}, (err, res) => {
+        this.model.getAnnounced({host: newPresence.userId}, (err, res) => {
           if (err){
             return console.log('Error while getting announced lobbies in lobby_controller.testPresence: ' + err.message);
           }
@@ -440,16 +439,16 @@ export class lobby_controller extends Controller {
 
           let create_vals = {
             code: newActivity.party.id, 
-            host: member_id,
+            host: newPresence.userId,
             state: newActivity.state
           }
 
           this.model.edit(create_vals, { host: newPresence.userId })
           .then((res) => {
             // Unannounce the upcoming lobby, as it has started.
-            this.model.unannounce({member_id}, (err) => {
+            /*this.model.unannounce({newPresence}, (err) => {
               if (err){return console.log('Unannounce failed because: ' + err.message);}
-            });
+            });*/
             
             
             //if (cerr){return console.log('Error creating lobby from testPresence: ' + cerr.message);}

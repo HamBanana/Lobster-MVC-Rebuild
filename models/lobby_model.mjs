@@ -208,8 +208,7 @@ export class lobby_model extends Model {
   }
 
   getAnnounced(args, callback){
-    if (!args.member_id){return console.log('lobby_model.getAnnounced was called without a member_id');}
-    this.db.get('*', 'lobby_active_lobbies', "host = " + args.member_id + ' AND code IS NULL', (err, res) => {
+    this.db.get('*', 'lobby_active_lobbies', "host = " + args.host + ' AND code IS NULL', (err, res) => {
       return callback(err, res);
     });
   }
