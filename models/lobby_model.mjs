@@ -7,23 +7,7 @@ export class lobby_model extends Model {
   static active_lobbies = {};
   static active_players = {};
   static infohosts = [];
-
-  table_infohosts = 
-  'id INT AUTO_INCREMENT NOT NULL, '
-  +'member_id VARCHAR(25) UNIQUE, '
-  +'PRIMARY KEY (id)';
-
-  object_lobby = {
-    
-  }
-
-  table_announced = 
-  'id INT AUTO_INCREMENT, '
-  +'member_id VARCHAR(25) UNIQUE, '
-  +'is_vanilla TINYINT(1), '
-  +'is_vc_lobby TINYINT(1), '
-  +'PRIMARY KEY(id)';
-
+  
   constructor(){
     super();
     console.log('lobby_model constructor');
