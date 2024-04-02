@@ -129,7 +129,12 @@ export class count_controller extends Controller{
 
         console.log('HIGHSCORE RES: ' + JSON.stringify(res));
 
-        let session = res[0];
+        let session = {};
+        let score = 0;
+        for (let i in res){
+          if (res[i].score > score){session = res[i]; score = res[i].score;}
+
+        }
 
         this.view.template_path = "count/session";
         this.view.data.score = session.score;
