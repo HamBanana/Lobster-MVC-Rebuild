@@ -104,7 +104,6 @@ export class count_controller extends Controller{
      // Start new session
      this.makeNewSession();
 
-     this.session.score = 0;
       this.message.react('❌');
     }
     
@@ -112,7 +111,7 @@ export class count_controller extends Controller{
     score = ' + this.session.score + ',\
     last_correct = "' + this.session.last_correct + '",\
     last_incorrect = "' + this.session.last_incorrect + '"\
-    WHERE id = ' + rec.id );
+    WHERE id = ' + rec.id, (err, res) => {this.session.score = 0;});
   });
     
   }
@@ -124,17 +123,12 @@ export class count_controller extends Controller{
   highscore(args){
     return new Promise((resolve, reject) => {
       let db = Database.getInstance();
-      db.connection.query('SELECT * FROM counting_session/* ORDER BY score DESC LIMIT 1*/', (err, res) => {
+      db.connection.query('SELECT * FROM counting_session ORDER BY score DESC LIMIT 1', (err, res) => {
         if (err){reject(err); return;}
 
         console.log('HIGHSCORE RES: ' + JSON.stringify(res));
 
-        let session = {};
-        let score = 0;
-        for (let i in res){
-          if (parseInt(res[i].score) > score){session = res[i]; score = parseInt(res[i].score);}
-
-        }
+        let session = res[i];
 
         this.view.template_path = "count/session";
         this.view.data.score = session.score;
