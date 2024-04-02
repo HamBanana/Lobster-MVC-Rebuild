@@ -127,6 +127,8 @@ export class count_controller extends Controller{
       db.connection.query('SELECT * FROM counting_session', (err, res) => {
         if (err){reject(err); return;}
 
+        console.log('HIGHSCORE RES: ' + JSON.stringify(res));
+
         let session = {};
         let score = 0;
         for (let i in res){
