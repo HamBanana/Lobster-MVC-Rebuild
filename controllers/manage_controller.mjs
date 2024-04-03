@@ -7,6 +7,7 @@ import { once } from 'events';
 import { warn } from '../core/error.mjs';
 import { Database } from '../core/database.mjs';
 import { System } from '../bot/system.mjs';
+import { REST, Routes } from 'discord.js';
 
 //import * as pm2 from 'pm2';
 
@@ -146,6 +147,29 @@ perm = {'users': ['330279218543984641']}
     .catch((err) => {
       this.message.reply('Error: ' + err.message);
     }); 
+  }
+
+  slash(args){
+    let { action } = this.extractArgs(args, 'action');
+    switch(action){
+      case "deploy":
+        return new Promise((resolve, reject) => {
+          let rest = new REST().setToken(process.env.DISCORD_TOKEN);
+          const botId = process.env.LOBSTER_ID;
+          const serverId = process.env.DARKSIDE_ID;
+          return rest.put(Routes.applicationGuildCommands(botId, serverId),{
+          body:[
+              {
+                  name: "ping",
+                  description: "Test if Lobster is alive"
+              }
+          ]
+      });
+        })
+        .then((resultOfPut) => {this.message.react('✅');})
+        .catch((err) => {console.error(err);});
+        break;
+    } 
   }
 
   enable(){

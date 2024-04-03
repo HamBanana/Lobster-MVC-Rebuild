@@ -1,4 +1,6 @@
-import { Client, GatewayIntentBits, Partials } from "discord.js";
+import { Client, GatewayIntentBits, Partials, Collection, Events } from "discord.js";
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 //import {DISCORD_TOKEN} from '../../secret.mjs';
 
 export class Discord {
@@ -16,6 +18,10 @@ export class Discord {
       ], 
       //partials: [Partials.GuildMember, Partials.Channel]
     });
+    Discord.client.commands = new Collection();
+
+    //const foldersPath = path.join(__dirname, 'commands');
+    const foldersPath = process.env.LOBSTER_ROOT + '\\commands'
   }
 
   login() {

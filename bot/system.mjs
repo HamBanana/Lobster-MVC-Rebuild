@@ -165,4 +165,6 @@ root = process.env.LOBSTER_ROOT;
         })
         .catch((err) => {console.log("Can't get boot message, because: " + err.message);});
     }
+
+    
 }
