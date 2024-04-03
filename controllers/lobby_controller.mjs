@@ -25,63 +25,63 @@ export class lobby_controller extends Controller {
     this.model = new lobby_model();
 
     this.controllername = 'lobby';
-    this.functions = {
-      confirm_lobby: {
+    this.functions = [
+      {
+        name: "confirm_lobby",
         alias: 'lobby',
         description: 'Confirm game has entered lobby.',
         arguments: {
           code: 'The code of the lobby.'
         }
       },
-      create: {
+      {
+        name: "create",
         description: 'Creates a new lobby',
         arguments:{
           code:'The code for joining the lobby',
           server: 'The server for joining the lobby'
         }
       },
-      register_infohost: {
-        description: 'Registers yourself as infohost.\nAs infohost, you activity status will be used for tracking active Among Us lobbies.'
-      },
-      unregister_infohost: {
-        description: 'Removes registration as infohost, Lobster will not read your activity status.'
-      },
-
-      delete: {
+      {
+        name: "delete",
         description: 'Deletes a lobby',
         arguments: {
           code: 'The code of the lobby to be deleted.'
         }
       },
-
-      queue:{
+      {
+        name: "queue",
         description: 'Join the queue for a lobby.',
         alias: 'join',
         arguments: {
           code: 'The code of the lobby to join'
         }
       },
-      unqueue:{
+      {
+        name: "unqueue",
         description: 'Leave the queue for a lobby.',
         alias: 'unjoin',
         arguments: {
           code: 'The code of the lobby to unjoin from.'
         }
       },
-      list:{
+      {
+        name: "list",
         description: 'Shows a list of active_lobbies'
       },
-      announce:{
+      {
+        name: "announce",
         description: 'Sets up a trigger that automatically posts the lobby code when you enter a lobby',
         arguments: {
           is_vc_lobby: 'true, if the lobby uses voice chat',
           is_vanilla: 'true, if the lobby is not modded'
         }
       },
-      unannounce: {
+      {
+        name: "unannounce",
         description: 'Removes trigger to post code when you enter a lobby'
       }
-    };
+    ];
   }
 
   index(args){

@@ -204,7 +204,7 @@ export class Controller {
 
   }
 
-  help(args){
+  /*help(args){
 
     //this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs(this)));
     
@@ -226,7 +226,7 @@ export class Controller {
       resolve(this.post());
     });
 
-  }
+  }*/
 
   getAllFuncs(toCheck) {
     const props = [];
