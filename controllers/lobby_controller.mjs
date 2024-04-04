@@ -94,6 +94,11 @@ export class lobby_controller extends Controller {
     new SlashCommandBuilder()
     .setName('test')
     .setDescription('test')
+   // .addStringOption((option) => {
+     // option
+     // .setName('testoption')
+     // .setDescription('This is an option added to the test command')
+   // })
   ];
 
   constructor(msg) {
