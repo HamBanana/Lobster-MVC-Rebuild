@@ -3,6 +3,7 @@ import {Time} from '../tools/time.mjs';
 import { Discord } from '../core/discord.mjs';
 import { PermissionError, warn } from '../core/error.mjs';
 import { EmbedBuilder } from 'discord.js';
+import { messages } from './statics.mjs';
 
 export class Controller {
 
@@ -90,6 +91,12 @@ export class Controller {
               case 'channel':
                 output_message = this.client.channels.cache.get(this.view.channelid).send(content);
                 break;
+              case 'edit':
+                messages.get(this.view.channelId, this.view.messageId)
+                .then((message) => {
+                  output_message = this.message.edit(content);
+                })
+                break;
             }
             return output_message
         })
@@ -97,15 +104,12 @@ export class Controller {
             // Reaction handling..
             let listen = false;
             for (let [r, c] of Object.entries(this.view.reactions)) {
-              msg.react(r);
+              msg = msg.react(r);
               if (c) {
                 listen = true;
               }
             }
-            resolve( {
-              listen,
-              msg
-            } );
+            resolve(msg);
           })
       })
       .then((ret) => {

@@ -5,7 +5,7 @@ import {
   lobby_model
 } from '../models/lobby_model.mjs';
 import {Time} from '../tools/time.mjs';
-import { channels, roles } from '../core/statics.mjs';
+import { channels, messages, roles } from '../core/statics.mjs';
 
 import {Discord} from '../core/discord.mjs';
 import { Database } from '../core/database.mjs';
@@ -503,6 +503,9 @@ export class lobby_controller extends Controller {
   }
   
   testPresence(oldPresence, newPresence){
+
+    let post_channel = channels['lob-test'];
+
     console.log('Infohosts: ' + JSON.stringify(lobby_model.infohosts));
     let oldActivity = oldPresence?.activities[0];
     let newActivity = newPresence?.activities[0];
@@ -520,42 +523,44 @@ export class lobby_controller extends Controller {
           if (res.length < 1){
             return;
           }
+          
+          // Create the view
+          this.view.template_path = 'lobby/autocreate';
+          this.view.data['host'] = this.client.users.cache.get(newPresence.userId).username;
+          this.view.data['code'] = newActivity.party.id;
+          this.view.data['server'] = res.server;
+          this.view.data['is_vc_lobby'] = (res.voicechat) ? res.voicechat : 'No';
+          this.view.data['is_vanilla'] = (res.is_vanilla) ? 'Yes' : 'No';
+          this.view.data['notes'] = (res.notes) ? res.notes : 'Not really';
+          this.view.data['pingtime'] = res.pingtime;
+          this.view.data['playercount_current'] = newActivity.party.size[0];
+          this.view.data['playercount_max'] = newActivity.party.size[1];
+          //this.view.data['pingrole'] = (res.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
 
-          let create_vals = {
-            code: newActivity.party.id, 
-            host: newPresence.userId,
-            state: newActivity.state,
-            pingtime: Time.now,
-            ongoing: 1
+          this.view.type = (res.post_message_id) ? "channel" : "edit";
+          this.view.channelid = res.post_channel_id || post_channel;
+          //this.view.channelid = channels['vanilla-codes'];
+
+              
+          //let p_message = (res.post_message_id) ? this.post() : messages.get()
+
+          if (this.view.type === "edit"){
+            this.view.messageId = res.post_message_id;
           }
 
-          this.model.edit(create_vals, { host: newPresence.userId })
-          .then((res) => {
-            // Unannounce the upcoming lobby, as it has started.
-            /*this.model.unannounce({newPresence}, (err) => {
-              if (err){return console.log('Unannounce failed because: ' + err.message);}
-            });*/
-            
-            
-            //if (cerr){return console.log('Error creating lobby from testPresence: ' + cerr.message);}
-            //else if (!res){console.log('There are somehow no announced lobbies (we have just determined that there is, so this is a coding error.)');}
-            //else {console.log('Created lobby from testPresence: ' + newActivity.party.id);}
-
-            // Create the view
-            this.view.template_path = 'lobby/autocreate';
-            this.view.data['host'] = this.client.users.cache.get(newPresence.userId).username;
-            this.view.data['code'] = newActivity.party.id;
-            this.view.data['server'] = res.server;
-            this.view.data['is_vc_lobby'] = (res.voicechat) ? res.voicechat : 'No';
-            this.view.data['is_vanilla'] = (res.is_vanilla) ? 'Yes' : 'No';
-            this.view.data['notes'] = (res.notes) ? res.notes : 'Not really';
-            this.view.data['pingtime'] = res.pingtime;
-            //this.view.data['pingrole'] = (res.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
-
-            this.view.type = "channel";
-            this.view.channelid = channels['lob-test'];
-            //this.view.channelid = channels['vanilla-codes'];
-            this.post();
+          
+            this.post()
+            .then((message) => {
+              let create_vals = {
+              code: newActivity.party.id, 
+              host: newPresence.userId,
+              state: newActivity.state,
+              pingtime: Time.now,
+              ongoing: 1,
+              post_channel_id: res[0].post_channel_id || post_channel,
+              post_message_id: res[0].post_message_id || message.id
+            }
+              this.model.edit(create_vals, { host: newPresence.userId });
           });
 
         });
@@ -563,7 +568,12 @@ export class lobby_controller extends Controller {
       }
 
       if (oldActivity?.state == "In Lobby" && newActivity?.state == "In Game"){
-        // Code for when a game is started.
+        this.model.getLobby()
+        .then((lobby) => {
+          this.view.template_path = "lobby/game_started"
+          this.view.data = lobby;
+
+        })
         return;
       }
 
@@ -594,8 +604,10 @@ export class lobby_controller extends Controller {
 /*
 oldGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,"details":null,"state":"In Menus",
 "applicationId":"477175586805252107","timestamps":{"start":null,"end":null},"syncId":null,"platform":null,"party":{},"assets":{"largeText":null,"smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":0,"emoji":null,"sessionId":null,"buttons":[],"createdTimestamp":1708285670179}
-newGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,"details":"Hosting a game","state":"In Lobby",
-"applicationId":"477175586805252107","timestamps":{"start":null,"end":null},"syncId":null,"platform":null,"party":{"size":[1,15],"id":"ETSJBF"},"assets":{"largeText":"Ask to play!","smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":2,"emoji":null,"sessionId":"7a3226be744ff891e6d60ca190becd3d","buttons":[],"createdTimestamp":1708285687339}
+newGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,
+"details":"Hosting a game","state":"In Lobby",
+"applicationId":"477175586805252107","timestamps":{"start":null,"end":null},"syncId":null,"platform":null,
+"party":{"size":[1,15],"id":"ETSJBF"},"assets":{"largeText":"Ask to play!","smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":2,"emoji":null,"sessionId":"7a3226be744ff891e6d60ca190becd3d","buttons":[],"createdTimestamp":1708285687339}
 
 */
   }

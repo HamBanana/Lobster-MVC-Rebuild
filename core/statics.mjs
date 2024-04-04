@@ -25,3 +25,12 @@ export const members = {
         return user;
     }
 }
+
+export const messages = {
+    get: (channelId, messageId) => {
+        return new Promise((resolve, reject) => {
+        let channel = Discord.client.channels.cache.get(channelId);
+        channel.messages.fetch(messageId).then((message) => {resolve(message);}).catch((err) => {reject(err);});
+        });
+    }
+}

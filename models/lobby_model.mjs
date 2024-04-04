@@ -63,7 +63,12 @@ export class lobby_model extends Model {
   }
 
   getLobby(code) {
-    return lobby_model.active_lobbies[code] || false;
+    return new Promise((resolve, reject) => {
+      this.db.connection.query("SELECT * FROM lobby_active_lobbies WHERE code='"+code+"'", (err, res) => {
+        if (err){reject(err); return;}
+        resolve(res[0]);
+      })
+    });
   }
 
   delete(args, callback)
