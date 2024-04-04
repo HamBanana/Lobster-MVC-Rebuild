@@ -17,8 +17,9 @@ export class joke_controller extends Controller{
     //this.auth(this.perm);
   }
   
-  index(args){
-  let select = parseInt( (args['select']) ? args['select'] : args['default'][0] );
+  index(){
+  //let select = parseInt( (args['select']) ? args['select'] : args['default'][0] );
+  let select;
     if (!select) {
       select = Math.floor(Math.random() * this.api_urls.length);
     }

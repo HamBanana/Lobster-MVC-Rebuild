@@ -9,6 +9,7 @@ import { channels, roles } from '../core/statics.mjs';
 
 import {Discord} from '../core/discord.mjs';
 import { Database } from '../core/database.mjs';
+import { Application, ApplicationCommandOptionType, SlashCommandBuilder } from 'discord.js';
 
 export class lobby_controller extends Controller {
 
@@ -19,13 +20,89 @@ export class lobby_controller extends Controller {
     ]
   }
 
+  // Commands
+  
+  static commands = [
+    {
+      name: "confirm_lobby",
+      alias: 'lobby',
+      description: 'Confirm game has entered lobby.',
+      options: [
+        {
+          name: "code",
+          description: 'The code of the lobby.',
+          type: ApplicationCommandOptionType.String,
+          required: true
+        }
+      ]
+    },
+    {
+      name: "create",
+      description: 'Creates a new lobby',
+      options:[
+        {
+          name: "code",
+          description: "The code for joining the lobby",
+          type: ApplicationCommandOptionType.String
+        },
+        {
+          name: "server", 
+          description: "The server lobby is hosted on", 
+          type: ApplicationCommandOptionType.String
+        }
+      ]
+    },
+    {
+      name: "delete",
+      description: 'Deletes a lobby',
+      arguments: {
+        code: 'The code of the lobby to be deleted.'
+      }
+    },
+    {
+      name: "queue",
+      description: 'Join the queue for a lobby.',
+      alias: 'join',
+      arguments: {
+        code: 'The code of the lobby to join'
+      }
+    },
+    {
+      name: "unqueue",
+      description: 'Leave the queue for a lobby.',
+      alias: 'unjoin',
+      arguments: {
+        code: 'The code of the lobby to unjoin from.'
+      }
+    },
+    {
+      name: "list",
+      description: 'Shows a list of active_lobbies'
+    },
+    {
+      name: "announce",
+      description: 'Sets up a trigger that automatically posts the lobby code when you enter a lobby',
+      arguments: {
+        is_vc_lobby: 'true, if the lobby uses voice chat',
+        is_vanilla: 'true, if the lobby is not modded'
+      }
+    },
+    {
+      name: "unannounce",
+      description: 'Removes trigger to post code when you enter a lobby'
+    },
+    new SlashCommandBuilder()
+    .setName('test')
+    .setDescription('test')
+  ];
+
   constructor(msg) {
     super(msg);
     this.auth(this.perm);
     this.model = new lobby_model();
 
     this.controllername = 'lobby';
-    this.functions = [
+    this.commands = [
       {
         name: "confirm_lobby",
         alias: 'lobby',

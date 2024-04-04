@@ -12,7 +12,7 @@ export class random_controller extends Controller{
     super(msg);
    // this.auth(this.perm);
   }
-  index(){return this.message.reply(':eyes:');}
+  index(){this.message.reply(':eyes:');}
 
 dice(args){
   let amountofsides = (args['sides']) ? args['sides'] : args['default'][0];

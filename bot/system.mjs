@@ -2,6 +2,10 @@ import { Database } from "../core/database.mjs";
 import * as sub from 'child_process';
 import { Discord } from "../core/discord.mjs";
 import { lobby_controller } from "../controllers/lobby_controller.mjs";
+import * as fs from 'fs';
+import path from "path";
+import { ApplicationCommandOptionType, REST, Routes } from "discord.js";
+import { fileURLToPath } from 'url';
 
 export class System{
     
@@ -166,5 +170,70 @@ root = process.env.LOBSTER_ROOT;
         .catch((err) => {console.log("Can't get boot message, because: " + err.message);});
     }
 
+    registerSlashCommands = async () => {
+        try {
+            const botId = process.env.LOBSTER_ID;
+            const serverId = process.env.DARKSIDE_ID;
+            
+            let __filename = fileURLToPath(import.meta.url);
+            let __dirname = path.dirname(__filename);
+
+            let rest = new REST().setToken(process.env.DISCORD_TOKEN);
+            let ctrldir = __dirname + '/../controllers/';
+
+            let importpromises = [];
+
+            await fs.readdir(ctrldir, async (err, res) => {
+                if (err){return console.error(err);}
+            
+                let commands = [];
+                /*******  Default commands *******/
+               commands.push({
+                    name: "lob",
+                    description: "Run message-based command as slash-command",
+                    options: [
+                        {
+                            name: "controller",
+                            description: "The category of function",
+                            type: ApplicationCommandOptionType.String,
+                            required: true
+                        },
+                        {
+                            name: "function",
+                            description: "The function to call",
+                            type: ApplicationCommandOptionType.String
+                        }
+                    ]
+                });
+
+                for (let i in res){
+                    let filename = res[i]
+                    let commandname = res[i].substring(0, res[i].indexOf('_'));
+                    let controllername = res[i].substring(0, res[i].indexOf('.'));
+                    
+                    importpromises.push(
+                    import('../controllers/'+filename)
+                    .then((module) => {
+                       let ctrlcommands = module[controllername].commands;
+                       if (ctrlcommands){
+                        commands.push(...ctrlcommands);
+                       }
+                    })
+                    .catch((err) => {throw err;})
+                    );
+
+                }
+
+                Promise.all(importpromises)
+                .then(async () => {
+                    await rest.put(Routes.applicationGuildCommands(botId, serverId),{
+                        body: commands
+                    });
+                });
+            });
     
+        } catch (error) {
+            console.error(error);
+        }
+    }
 }

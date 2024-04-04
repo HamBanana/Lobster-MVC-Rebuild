@@ -107,6 +107,7 @@ export class Lobster{
         let sys = new System();
         sys.createTables()
         .then(() => {return sys.loadVars();})
+        .then(() => {return sys.registerSlashCommands();})
         .then(() => {
           console.log('Boot mode is: ' + System.vars.boot_mode);
           if (!System.vars.boot_mode){System.vars.boot_mode = "default";}
@@ -148,7 +149,25 @@ export class Lobster{
     });
 
     client.on(Events.InteractionCreate, async (interaction) => {
+      let parser = new Parser(interaction);
       if (!interaction.isChatInputCommand()) return;
+      if (interaction.commandName === "lob"){
+        let controller = interaction.options.get('controller');
+        let method = interaction.options.get('function');
+
+        console.log('controllername: ' + JSON.stringify(controller));
+        console.log('functionname: ' + JSON.stringify(method));
+        
+        parser.executeCommand({
+          controller: controller.value,
+          method: method?.value || 'index'
+        })
+        .catch((err) => {
+          console.error(err);
+          return interaction.reply('Then this happened: ' + err.message);
+        });
+
+      }
 
       if (interaction.commandName === 'ping'){
         interaction.reply('Yay :eyes:');
