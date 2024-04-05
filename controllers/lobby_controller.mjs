@@ -632,7 +632,7 @@ export class lobby_controller extends Controller {
         this.view.data["playercount_max"] = newActivity.party.size[1];
         //this.view.data['pingrole'] = (res.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
 
-        this.view.type = res.post_message_id ? "channel" : "edit";
+        this.view.type = res.post_message_id ? "edit" : "channel";
         this.view.channelid = res.post_channel_id || post_channel;
         //this.view.channelid = channels['vanilla-codes'];
 

@@ -28,7 +28,7 @@ export class System {
       creationtime: "BIGINT",
       pingtime: "BIGINT",
       voicechat: "VARCHAR(20)",
-      host: "VARCHAR(20)",
+      host: "VARCHAR(20) UNIQUE",
       is_vanilla: "TINYINT(1)",
       notes: "TEXT",
       state: "varchar(8)",
