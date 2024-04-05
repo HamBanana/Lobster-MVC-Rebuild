@@ -298,16 +298,18 @@ export class lobby_model extends Model {
     );
   }
 
-  edit(args, where = {}) {
+  edit(args, where) {
     //if (Object.keys(args).includes(selectBy)){throw new Error({message: 'lobby_model.edit called with invalid selectBy argument'});}
 
     return new Promise((resolve, reject) => {
       return this.db
         .p_update("lobby_active_lobbies", args, where)
         .then((res) => {
+          console.log(JSON.stringify(res));
           return this.db
             .p_get("lobby_active_lobbies", where, "AND")
             .then((row) => {
+              console.log(JSON.stringify(row));
               return resolve(row[0]);
             });
         })

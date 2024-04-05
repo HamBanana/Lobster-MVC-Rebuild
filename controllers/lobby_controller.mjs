@@ -536,7 +536,7 @@ export class lobby_controller extends Controller {
     }
 
     this.model.announce(
-      { host: this.message.author.id, is_vanilla, ongoing: 0 },
+      { host: this.message.author.id, is_vanilla, ongoing: 0, creationtime: Time.now },
       (err, res) => {
         if (err) {
           switch (err.code) {
