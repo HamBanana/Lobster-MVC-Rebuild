@@ -42,7 +42,7 @@ dice(args){
 
     always = parseInt(always);
     if (typeof(always) !== 'number' || isNaN(always)){
-      this.view.content = "What, you can't even cheat right?";
+      this.view.content = JSON.stringify(always) + " is not a number.";
       this.post();
       return;
     }
