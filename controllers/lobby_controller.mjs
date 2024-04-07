@@ -594,7 +594,7 @@ export class lobby_controller extends Controller {
   testPresence(oldPresence, newPresence) {
     let post_channel = channels["lob-test"];
 
-    console.log("Infohosts: " + JSON.stringify(lobby_model.infohosts));
+    console.log("newPresence: " + JSON.stringify(newPresence));
     let oldActivity = oldPresence?.activities[0];
     let newActivity = newPresence?.activities[0];
     //let c = this.client.channels.cache.get('1200927450536890429');
@@ -619,9 +619,7 @@ export class lobby_controller extends Controller {
 
         // Create the view
         this.view.template_path = "lobby/autocreate";
-        this.view.data["host"] = this.client.users.cache.get(
-          newPresence.userId
-        ).username;
+        this.view.data["host"] = this.client.users.cache.get(newPresence.userId).username;
         this.view.data["code"] = newActivity.party.id;
         this.view.data["server"] = res.server;
         this.view.data["is_vc_lobby"] = res.voicechat ? res.voicechat : "No";

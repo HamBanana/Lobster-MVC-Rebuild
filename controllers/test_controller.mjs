@@ -5,6 +5,7 @@ import { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } from 'discord
 import { Database } from '../core/database.mjs';
 import { PermissionError } from '../core/error.mjs';
 import { members } from '../core/statics.mjs';
+import { lobby_controller } from './lobby_controller.mjs';
 
 //import pkg from 'discord.js';
 //const { EmbedBuilder, MessageActionRow, StringSelectMenuBuilder } = pkg;
@@ -20,6 +21,14 @@ export class test_controller extends Controller{
   perm = {
     'users': ['330279218543984641']
   };
+
+  presence_example = (state = "In Lobby") => {
+    return {"userId":"330279218543984641","guild":"817607509984018442","status":"online","activities":[{
+      "name":"Among Us","type":0,"url":null,"details":null,"state":state,"applicationId":"477175586805252107",
+      "timestamps":{"start":1712357154000,"end":null},"party":{"size":[4,15],"id":"LXFUFF"},"syncId":null,
+      "assets":{"largeText":null,"smallText":null,"largeImage":"481347538054545418","smallImage":null},
+      "flags":0,"emoji":null,"buttons":[],"createdTimestamp":1712357155178}],"clientStatus":{"desktop":"online"}}
+  }
   
 constructor(msg){
   super(msg);
@@ -32,6 +41,22 @@ constructor(msg){
     .then((reply) => {
     console.log(reply);
     })
+  }
+
+  presence(args){
+    console.log('Testing presence change: ' + JSON.stringify(args));
+    //let { oldState, newState } = this.extractArgs(args);
+    let oldState = args.oldState || args.default?.[0];
+    let newState = args.newState || args.default?.[1];
+    console.log('oldState:' + oldState);
+    console.log('newState:' + newState);
+    if (!oldState || oldState == "undefined"){oldState = "In Menus";}
+    if (!newState || newState == "undefined"){newState = "In Lobby";}
+    let oldPresence = this.presence_example(oldState);
+    let newPresence = this.presence_example(newState);
+    let lc = new lobby_controller(this.message);
+    lc.testPresence(oldPresence, newPresence);
+    this.message.reply('Simulating state switch from "' + oldState + '" to "'+newState+'"');
   }
 
   getmember(args){
