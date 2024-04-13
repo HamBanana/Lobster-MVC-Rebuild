@@ -37,7 +37,12 @@ export class Parser{
         c = c.replace(parms[0], this.#method_alias[parms[0]]);
       }
 
+      console.log('Parms before split: ' + JSON.stringify(parms));
+      
+      //parms = this.splitStringByQuotes(c);
       parms = this.splitStringBySpaces(c);
+
+      console.log('Parms after split: ' + JSON.stringify(parms));
 
       let command = {
         'controller': parms[0] || 'index',
@@ -46,6 +51,7 @@ export class Parser{
       };
 
       console.log(JSON.stringify('Parms: ' + parms));
+      console.log('Command: ' + JSON.stringify(command));
       
           let args = {'default': []};
           for (let i of command.args){
@@ -111,7 +117,7 @@ export class Parser{
 
   splitStringBySpaces(str) {
     // Regular expression to match segments enclosed in apostrophes
-    const regex = /['"]([^']+)['"]/g;
+    const regex = /['"]([^'"]+)['"]/g;
     
     // Replace segments enclosed in apostrophes with a placeholder
     const replacedStr = str.replace(regex, (match, capture) => {
@@ -130,5 +136,19 @@ export class Parser{
     });
     
     return finalSegments;
+}
+
+splitStringByQuotes(str){
+  let segments = str.split('"');
+  let enclosedsegments = [];
+  for (let i in segments){
+    // i % 2 will be 0, if i is even.
+    if (i % 2 == 0){
+      enclosedsegments.push(segments[i]);
+    } else {
+      enclosedsegments.push(...segments[i].split(' '));
+    }
+  }
+  return enclosedsegments;
 }
 }
