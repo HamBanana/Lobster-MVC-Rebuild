@@ -18,39 +18,38 @@ export class joke_controller extends Controller{
   }
   
   index(){
-  //let select = parseInt( (args['select']) ? args['select'] : args['default'][0] );
-  let select;
+    //let select = parseInt( (args['select']) ? args['select'] : args['default'][0] );
+    let select;
     if (!select) {
       select = Math.floor(Math.random() * this.api_urls.length);
     }
     console.log('select: ' + select);
     console.log(this.api_urls[select]);
     if (Math.random() < 0.01){
-      this.message.reply("THIS FAMILY");
-      return;
+      return this.message.reply("THIS FAMILY");
     }
-    fetch(this.api_urls[select])
-  .then(response => response.json())
-  .then(data => {
-    let joke;
-    console.log('select in then(): '+select);
-    switch (select){
-      case 0: 
-      case 1:joke = data.setup + ' \n ' + data.punchline; break;
-     // case 2: joke = data.joke || (data.setup + ' \n ' + data.delivery); break;
-      //case 2: joke = data; break;
-      //case 2: joke = data.value; break;
-      default: joke = ":eyes:"
-    }
-    
-    //this.view.content = joke; 
-    console.log(joke);
-    this.message.reply(joke);
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    this.message.reply("This function is a joke :eyes:");
-  });
+    return fetch(this.api_urls[select])
+      .then(response => response.json())
+      .then(data => {
+        let joke;
+        console.log('select in then(): '+select);
+        switch (select){
+          case 0: 
+          case 1:joke = data.setup + ' \n ' + data.punchline; break;
+          // case 2: joke = data.joke || (data.setup + ' \n ' + data.delivery); break;
+          //case 2: joke = data; break;
+          //case 2: joke = data.value; break;
+          default: joke = ":eyes:"
+        }
+        
+        //this.view.content = joke; 
+        console.log(joke);
+        return this.message.reply(joke);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        return this.message.reply("This function is a joke :eyes:");
+      });
   }
 
   //return this.message.reply(joke);

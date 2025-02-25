@@ -65,10 +65,7 @@ export class Lobster {
               case "SILENT":
                 return;
               default:
-                if (
-                  err.message ==
-                  "Cannot read properties of undefined (reading 'bind')"
-                ) {
+                if (err.message.includes("is not a valid function of")) {
                   return msg.reply("That function does not exist");
                 }
                 msg.reply("Error because: " + err.message);
@@ -130,7 +127,7 @@ export class Lobster {
           return sys.loadVars();
         })
         .then(() => {
-          return sys.registerSlashCommands();
+          if (process.env.OS == "Linux") return sys.registerSlashCommands();
         })
         .then(() => {
           console.log("Boot mode is: " + System.vars.boot_mode);

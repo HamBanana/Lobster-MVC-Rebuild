@@ -76,14 +76,23 @@ export class Parser{
       let ctrlpath = "../controllers/"+command.controller+"_controller.mjs";
       let __filename = fileURLToPath(import.meta.url);
       let __dirname = path.dirname(__filename);
-      if (fs.statSync(__dirname+'/'+ctrlpath)){
+      try {
+        fs.statSync(path.resolve(__dirname, ctrlpath));
         resolve(ctrlpath);
-      } else {
-        throw new Error({message: 'The controller "'+ command.controller +'" does not exist.'});
+      } catch (error) {
+        error = new Error('The controller "'+ command.controller +'" does not exist.');
+        error.code = 'ERR_MODULE_NOT_FOUND';
+        reject(error);
       }
     })
-    .then((ctrlpath) => { return import(ctrlpath)})
-      .then((module) => {
+    .then((ctrlpath) => { 
+      return import(ctrlpath).catch(error => {
+        error = new Error('The controller "'+ command.controller +'" does not exist.');
+        error.code = 'ERR_MODULE_NOT_FOUND';
+        throw error;
+      });
+    })
+    .then((module) => {
         return new Promise((resolve, reject) => {
           try {
             let cons = eval('module.'+command.controller+'_controller');
@@ -103,15 +112,18 @@ export class Parser{
            let p = func(command.args);
            console.log("Type of p: " + typeof(p));
            console.log("content of p: " + JSON.stringify(p));
-           if (typeof(p) == "object"){
-            p.then((op) => {
-              console.log("Return value from promise after executing function: " + JSON.stringify(op));
-            });
+           if (typeof(p) === "object" && typeof(p.then) === "function") {
+             return p.then((op) => {
+               console.log("Return value from promise after executing function: " + JSON.stringify(op));
+               return op;
+             });
            }
+           return p;
           })
-          /*.catch((err) => {
-            this.message.reply('Error in executeCommand: ' + err.message);
-          });*/
+          .catch((err) => {
+            console.error('Execute command error:', err);
+            throw err; // Re-throw to be handled by lobster.mjs error handling
+          });
 
   }
 
