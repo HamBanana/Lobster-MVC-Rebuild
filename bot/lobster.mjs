@@ -127,7 +127,7 @@ export class Lobster {
           return sys.loadVars();
         })
         .then(() => {
-          if (process.env.OS == "Linux") return sys.registerSlashCommands();
+          //if (process.env.OS == "Linux") return sys.registerSlashCommands();
         })
         .then(() => {
           console.log("Boot mode is: " + System.vars.boot_mode);
