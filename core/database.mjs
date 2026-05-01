@@ -11,9 +11,19 @@ export class Database {
 
     if (!this.connection) {
       warn("Error in creating database connection");
-    } else {
-      warn("Database connection created.");
+      return;
     }
+
+    // Note: we deliberately do NOT call this.connection.connect() here — Bootstrap.load()
+    // owns the handshake (so it can sequence Discord/Lobster startup off the result).
+    // Calling connect() in both places throws PROTOCOL_ENQUEUE_HANDSHAKE_TWICE.
+    //
+    // We do attach a long-lived error handler so post-handshake fatal errors
+    // (server disconnects, etc.) get logged instead of silently flipping the
+    // protocol into the broken state that triggers PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR.
+    this.connection.on("error", (err) => {
+      warn("Database connection error: " + err.code + " - " + err.message);
+    });
   }
 
   static getInstance() {
