@@ -7,22 +7,13 @@ export class Database {
 
   connection = null;
   constructor() {
-    this.connection = Mysql.createConnection(LobsterConfig);
+    // Pool instead of single connection: automatically reconnects after ETIMEDOUT
+    // or any other fatal error, so PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR can't happen.
+    // The query() API is identical to createConnection, so no other code changes needed.
+    this.connection = Mysql.createPool(LobsterConfig);
 
-    if (!this.connection) {
-      warn("Error in creating database connection");
-      return;
-    }
-
-    // Note: we deliberately do NOT call this.connection.connect() here — Bootstrap.load()
-    // owns the handshake (so it can sequence Discord/Lobster startup off the result).
-    // Calling connect() in both places throws PROTOCOL_ENQUEUE_HANDSHAKE_TWICE.
-    //
-    // We do attach a long-lived error handler so post-handshake fatal errors
-    // (server disconnects, etc.) get logged instead of silently flipping the
-    // protocol into the broken state that triggers PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR.
     this.connection.on("error", (err) => {
-      warn("Database connection error: " + err.code + " - " + err.message);
+      warn("Database pool error: " + err.code + " - " + err.message);
     });
   }
 

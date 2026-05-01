@@ -55,25 +55,40 @@ export class lobby_controller extends Controller {
     {
       name: "delete",
       description: "Deletes a lobby",
-      arguments: {
-        code: "The code of the lobby to be deleted.",
-      },
+      options: [
+        {
+          name: "code",
+          description: "The code of the lobby to be deleted.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
     },
     {
       name: "queue",
       description: "Join the queue for a lobby.",
       alias: "join",
-      arguments: {
-        code: "The code of the lobby to join",
-      },
+      options: [
+        {
+          name: "code",
+          description: "The code of the lobby to join",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
     },
     {
       name: "unqueue",
       description: "Leave the queue for a lobby.",
       alias: "unjoin",
-      arguments: {
-        code: "The code of the lobby to unjoin from.",
-      },
+      options: [
+        {
+          name: "code",
+          description: "The code of the lobby to unjoin from.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
     },
     {
       name: "list",
@@ -83,10 +98,18 @@ export class lobby_controller extends Controller {
       name: "announce",
       description:
         "Sets up a trigger that automatically posts the lobby code when you enter a lobby",
-      arguments: {
-        is_vc_lobby: "true, if the lobby uses voice chat",
-        is_vanilla: "true, if the lobby is not modded",
-      },
+      options: [
+        {
+          name: "is_vc_lobby",
+          description: "true, if the lobby uses voice chat",
+          type: ApplicationCommandOptionType.String,
+        },
+        {
+          name: "is_vanilla",
+          description: "true, if the lobby is not modded",
+          type: ApplicationCommandOptionType.String,
+        },
+      ],
     },
     {
       name: "unannounce",
@@ -315,7 +338,7 @@ export class lobby_controller extends Controller {
   edit(args) {
     args = this.extractArgs(args);
     this.model.edit(args, { host: this.message.author.id }).then(() => {
-      this.message.react("👍");
+      this.react("👍");
     });
   }
 
@@ -414,7 +437,7 @@ export class lobby_controller extends Controller {
         }
         return;
       }
-      this.message.react("👍");
+      this.react("👍");
       return;
     });
   }
@@ -428,7 +451,7 @@ export class lobby_controller extends Controller {
         if (err) {
           return this.message.reply("Couldn't unjoin because: " + err.message);
         }
-        return this.message.react("👍");
+        return this.react("👍");
       }
     );
     return false;
@@ -551,7 +574,7 @@ export class lobby_controller extends Controller {
               );
           }
         }
-        this.message.react("👍");
+        this.react("👍");
       }
     );
   }
@@ -569,7 +592,7 @@ export class lobby_controller extends Controller {
       if (res.affectedRows < 1) {
         return this.message.reply("You have no announced lobbies.");
       }
-      this.message.react("👍");
+      this.react("👍");
     });
   }
 

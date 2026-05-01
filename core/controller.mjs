@@ -197,6 +197,13 @@ export class Controller {
     }
   }
 
+  react(emoji) {
+    if (typeof this.message?.react === "function") {
+      return this.message.react(emoji);
+    }
+    return Promise.resolve();
+  }
+
   extractArgs(args, defaults = null) {
     let res = {};
     if (defaults !== null) {

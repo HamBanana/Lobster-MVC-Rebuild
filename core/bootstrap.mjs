@@ -27,18 +27,16 @@ export class Bootstrap {
     
     let db = Database.getInstance();
 
-    db.connection.connect((err) => {
-      if (err){
-        // Pass the actual error through — "Failed to get database connection" by
-        // itself tells you nothing. err.code (e.g. ECONNREFUSED, ER_ACCESS_DENIED_ERROR)
-        // is what you actually need to debug it.
+    // getConnection() tests that the pool can reach the server.
+    // On failure we log and continue — Discord still starts for partial functionality.
+    // With a pool, subsequent queries will retry the connection rather than permanently
+    // dying with PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR.
+    db.connection.getConnection((err, conn) => {
+      if (err) {
         warn('Failed to get database connection: ' + err.code + ' - ' + err.message);
-        // NOTE: deliberately not returning — preserve original behavior of still
-        // starting Discord/Lobster so logs and partial functionality are visible.
-        // (Without a DB, table-creating code paths like System.createTables will
-        // still throw PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR; fix the DB to avoid that.)
       } else {
         warn('Database connection established.');
+        conn.release();
       }
 
       //Bootstrap.loadInitialValues();

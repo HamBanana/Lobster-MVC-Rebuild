@@ -111,10 +111,6 @@ export class Lobster {
       }
     });
 
-    client.on("interactionCreate", (interaction) => {
-      console.log("interaction: " + interaction);
-    });
-
     // When client has logged in
     client.on("ready", (client) => {
       console.log("Logged in as " + client.user.tag);
@@ -186,8 +182,10 @@ export class Lobster {
     });
 
     client.on(Events.InteractionCreate, async (interaction) => {
-      let parser = new Parser(interaction);
       if (!interaction.isChatInputCommand()) return;
+
+      let parser = new Parser(interaction);
+
       if (interaction.commandName === "lob") {
         let controller = interaction.options.get("controller");
         let method = interaction.options.get("function");
@@ -195,10 +193,15 @@ export class Lobster {
         console.log("controllername: " + JSON.stringify(controller));
         console.log("functionname: " + JSON.stringify(method));
 
-        parser
+        if (!controller) {
+          return interaction.reply({ content: "Please specify a controller.", ephemeral: true });
+        }
+
+        return parser
           .executeCommand({
             controller: controller.value,
             method: method?.value || "index",
+            args: { default: [] },
           })
           .catch((err) => {
             console.error(err);
@@ -207,7 +210,29 @@ export class Lobster {
       }
 
       if (interaction.commandName === "ping") {
-        interaction.reply("Yay :eyes:");
+        return interaction.reply("Yay :eyes:");
+      }
+
+      // Route individual controller slash commands
+      const lobbyCommands = [
+        "confirm_lobby", "create", "delete", "queue", "unqueue",
+        "list", "announce", "unannounce",
+      ];
+      if (lobbyCommands.includes(interaction.commandName)) {
+        let args = { default: [] };
+        for (let opt of interaction.options.data) {
+          args[opt.name] = opt.value;
+        }
+        return parser
+          .executeCommand({
+            controller: "lobby",
+            method: interaction.commandName,
+            args,
+          })
+          .catch((err) => {
+            console.error(err);
+            return interaction.reply("Error: " + err.message);
+          });
       }
     });
 
