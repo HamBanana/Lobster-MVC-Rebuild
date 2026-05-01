@@ -75,6 +75,37 @@ perm = {'users': ['330279218543984641']}
     });
   }
 
+  update(){
+    let db = Database.getInstance();
+
+    if (process.env.OS == "Windows") {
+      this.message.reply('Restart Lobster manually.');
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      sub.exec(this.paths.pull, (err, stdout, stderr) => {
+        if (err) { reject('Error while pulling: ' + err.message); return; }
+
+        this.message.reply('<a:loading:1220396138860122162> Pulled, rebooting').then((m) => {
+          let promises = [];
+          promises.push(db.p_insert('system_vars', { name: 'boot_mode', value: 'reboot' }));
+          promises.push(db.p_insert('system_vars', { name: 'boot_channel', value: this.message.channelId }));
+          promises.push(db.p_insert('system_vars', { name: 'boot_message', value: m.id }));
+          Promise.all(promises).then(() => {
+            sub.exec(this.paths.reboot, (err, stdout, stderr) => {
+              if (err) { reject('Error rebooting: ' + err.message); return; }
+              resolve(this.message.react('✅'));
+            });
+          });
+        });
+      });
+    })
+    .catch((err) => {
+      this.message.reply('Error: ' + JSON.stringify(err.message));
+    });
+  }
+
   sql(args){
     let { query } = this.extractArgs(args, 'query');
     let db = Database.getInstance();
