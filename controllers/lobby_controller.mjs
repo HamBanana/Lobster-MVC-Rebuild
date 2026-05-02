@@ -58,6 +58,7 @@ export class lobby_controller extends Controller {
       arguments: { code: "The code of the lobby to unjoin from." },
     },
     { name: "list", description: "Shows a list of active_lobbies" },
+    { name: "testpresence", description: "Shows what Among Us activity the bot currently sees for you" },
     {
       name: "announce",
       description:
@@ -490,7 +491,33 @@ export class lobby_controller extends Controller {
       );
   }
 
-  testPresence(oldPresence, newPresence) {
+  testpresence(args) {
+    const guild = this.client?.guilds?.cache?.first();
+    const member = this.message?.member
+      || (guild?.members?.cache?.get(this.message?.author?.id));
+    const presence = member?.presence;
+
+    if (!presence) {
+      return this._reply("I can't see your presence right now (no presence data).");
+    }
+
+    const activities = presence.activities;
+    if (!activities || activities.length === 0) {
+      return this._reply("You have no activities showing.");
+    }
+
+    const lines = activities.map((a) => {
+      const parts = [a.name];
+      if (a.state) parts.push("state: " + a.state);
+      if (a.details) parts.push("details: " + a.details);
+      if (a.party?.id) parts.push("party: " + a.party.id);
+      return parts.join(" | ");
+    });
+
+    return this._reply("Presence status: " + presence.status + "\n" + lines.join("\n"));
+  }
+
+  handlePresenceUpdate(oldPresence, newPresence) {
     if (oldPresence == null && newPresence == null) return;
 
     const oldActivity = oldPresence?.activities?.[0];

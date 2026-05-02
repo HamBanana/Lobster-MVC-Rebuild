@@ -236,7 +236,7 @@ export class Lobster {
           return;
         }
         const lc = new lobby_controller();
-        lc.testPresence(oldPresence, newPresence);
+        lc.handlePresenceUpdate(oldPresence, newPresence);
       } catch (err) {
         warn(err, { context: { source: "presenceUpdate handler" } });
       }
