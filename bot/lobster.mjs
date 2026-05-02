@@ -93,7 +93,7 @@ export class Lobster {
             .then((module) => new module.end_controller(msg))
             .then((ins) => {
               ins.auth(ins.perm);
-              return ins.test_input(msg.content);
+              //return ins.test_input(msg.content);
             })
             .then(() => {
               try {
@@ -137,6 +137,8 @@ export class Lobster {
         let wm;
         sys
           .createTables()
+          // Add any columns introduced after a table already existed.
+          .then(() => sys.migrate())
           // Hydrate in-memory lobby state from the freshly-ensured tables. This
           // prevents `clearOld` from deleting still-active lobbies after a
           // restart.

@@ -2,8 +2,7 @@ import {EmbedBuilder} from 'discord.js';
 
 export const create =
   '\`\`\`'
-    +'Code: {{code}}\nServer: '
-    +'{{server}}'
+    +'Code: {{code}}'
     +'\nHosted by: {{host}}'
     +'\nVanilla:  {{is_vanilla}}'
     +'\nVoice chat: {{is_vc_lobby}}'
@@ -21,6 +20,7 @@ export const create =
     +'\`\`\`'
     +'<@&{{pingrole}}>'
     +'\nGame entered lobby: <t:{{pingtime}}:R>';
+
   
 export const prompt_server =
   'Code: {{code}}\n'
@@ -35,16 +35,15 @@ export const prompt_server =
 
   export const prompt_lobby =
   "Is this game in lobby now?\n"
-  +"Code: {{code}}, Server: {{server}}";
+  +"Code: {{code}}";
 
   export const prompt_create =
   "Create this lobby?\n"
-  +"Code: {{code}}, Server: {{server}}";
+  +"Code: {{code}}{{mentions}}";
 
   export const confirm_lobby =
   '\`\`\`'
-    +'Code: {{code}}\nServer: '
-    +'{{server}}'
+    +'Code: {{code}}'
     +'\nHosted by: {{host}}'
     +'\nVanilla:  {{is_vanilla}}'
     +'\nVoice chat: {{is_vc_lobby}}'

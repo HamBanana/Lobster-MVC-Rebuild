@@ -19,6 +19,7 @@ export class lobby_model extends Model {
   static active_lobbies = {};
   static active_players = {};
   static infohosts = [];
+  static subscription_queues = {}; // keyed by host_id → [member_id, ...]
 
   constructor() {
     super();
@@ -55,6 +56,17 @@ export class lobby_model extends Model {
     } catch (err) {
       warn(err, { context: { stage: "hydrate lobby_infohosts" } });
     }
+    try {
+      const subQueue = await db.p_get("lobby_subscription_queue");
+      for (const row of subQueue) {
+        if (!lobby_model.subscription_queues[row.host_id]) {
+          lobby_model.subscription_queues[row.host_id] = [];
+        }
+        lobby_model.subscription_queues[row.host_id].push(row.member_id);
+      }
+    } catch (err) {
+      warn(err, { context: { stage: "hydrate lobby_subscription_queue" } });
+    }
   }
 
   // ---------- mutators -------------------------------------------------
@@ -65,7 +77,7 @@ export class lobby_model extends Model {
     }
     const values = {
       code: args.code,
-      server: args.server || "Unknown",
+      server: args.server || null,
       host: args.host,
       creationtime: Time.now,
       pingtime: Time.now,
@@ -305,10 +317,73 @@ export class lobby_model extends Model {
       is_vc_lobby: args.is_vc_lobby ?? 0,
       ongoing: args.ongoing ?? 0,
       creationtime: Time.now,
+      scheduled_time: args.scheduled_time || null,
     };
     this.db.insert("lobby_subscriptions", values, (err, res) =>
       callback(err, res)
     );
+  }
+
+  queue_for_subscription(args, callback) {
+    if (!args || !args.member_id) {
+      return callback(new ValidationError("queue_for_subscription requires member_id"));
+    }
+    this.db.get("*", "lobby_subscriptions", { ongoing: 0 }, (err, rows) => {
+      if (err) return callback(err);
+      if (!rows || rows.length === 0) {
+        const e = new ValidationError("There are no announced games to queue for.");
+        e.code = "NO_SUBSCRIPTION";
+        return callback(e);
+      }
+      const host = rows[0].host;
+      this.db.insert(
+        "lobby_subscription_queue",
+        { member_id: args.member_id, host_id: host, join_request_time: Time.now },
+        (insertErr) => {
+          if (insertErr) return callback(insertErr);
+          if (!lobby_model.subscription_queues[host]) {
+            lobby_model.subscription_queues[host] = [];
+          }
+          if (!lobby_model.subscription_queues[host].includes(args.member_id)) {
+            lobby_model.subscription_queues[host].push(args.member_id);
+          }
+          callback(null);
+        }
+      );
+    });
+  }
+
+  get_subscription_queue(args, callback) {
+    if (!args || !args.host) {
+      return callback(new ValidationError("get_subscription_queue requires host"));
+    }
+    const cached = lobby_model.subscription_queues[args.host];
+    if (cached !== undefined) return callback(null, cached);
+    this.db.get("member_id", "lobby_subscription_queue", { host_id: args.host }, (err, rows) => {
+      if (err) return callback(err);
+      const ids = (rows || []).map((r) => r.member_id);
+      lobby_model.subscription_queues[args.host] = ids;
+      callback(null, ids);
+    });
+  }
+
+  clear_subscription_queue(args, callback) {
+    if (!args || !args.host) {
+      return callback(new ValidationError("clear_subscription_queue requires host"));
+    }
+    this.db.delete("lobby_subscription_queue", { host_id: args.host }, (err) => {
+      if (!err) lobby_model.subscription_queues[args.host] = [];
+      callback(err);
+    });
+  }
+
+  editSubscription(args, where) {
+    return new Promise((resolve, reject) => {
+      this.db
+        .p_update("lobby_subscriptions", args, where)
+        .then(resolve)
+        .catch((err) => reject(toError(err)));
+    });
   }
 
   unannounce(args, callback) {

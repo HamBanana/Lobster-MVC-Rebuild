@@ -8,7 +8,6 @@ export class end_controller extends Controller {
   }
 
   index(args){
-    return this.confirm_lobby(args);
   }
 
   test_input(input) {

@@ -79,9 +79,9 @@ export class Parser {
 
         const args = { default: [] };
         for (const i of command.args) {
-          if (i.includes(":")) {
-            const spl = i.split(":");
-            args[spl[0]] = spl[1];
+          const colonIdx = i.indexOf(":");
+          if (colonIdx !== -1) {
+            args[i.substring(0, colonIdx)] = i.substring(colonIdx + 1);
           } else {
             args.default.push(i);
           }

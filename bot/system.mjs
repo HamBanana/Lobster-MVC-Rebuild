@@ -67,7 +67,16 @@ export class System {
       notes: "TEXT",
       post_channel_id: "VARCHAR(25)",
       post_message_id: "VARCHAR(25)",
+      scheduled_time: "VARCHAR(10)",
       "PRIMARY KEY": "(host)",
+    },
+    lobby_subscription_queue: {
+      id: "INT AUTO_INCREMENT",
+      member_id: "VARCHAR(20)",
+      host_id: "VARCHAR(20)",
+      join_request_time: "BIGINT",
+      "PRIMARY KEY": "(id)",
+      "UNIQUE KEY uniq_sub_member": "(member_id, host_id)",
     },
     lobby_infohosts: {
       member_id: "VARCHAR(20) NOT NULL",
@@ -144,6 +153,56 @@ export class System {
       })
     );
     return Promise.all(promises);
+  }
+
+  /**
+   * Adds columns that were introduced after a table was first created.
+   * Uses INFORMATION_SCHEMA so it's idempotent — safe to run on every boot.
+   * Runs after createTables() so the tables are guaranteed to exist first.
+   */
+  migrate() {
+    const db = Database.getInstance();
+    const additions = [
+      // lobby_active_lobbies columns added after initial table creation
+      { table: "lobby_active_lobbies", column: "is_vc_lobby",      definition: "TINYINT(1) DEFAULT 0" },
+      { table: "lobby_active_lobbies", column: "is_vanilla",        definition: "TINYINT(1) DEFAULT 1" },
+      { table: "lobby_active_lobbies", column: "notes",             definition: "TEXT" },
+      { table: "lobby_active_lobbies", column: "state",             definition: "VARCHAR(8)" },
+      { table: "lobby_active_lobbies", column: "ongoing",           definition: "TINYINT(1) DEFAULT 0" },
+      { table: "lobby_active_lobbies", column: "post_message_id",   definition: "VARCHAR(25)" },
+      { table: "lobby_active_lobbies", column: "post_channel_id",   definition: "VARCHAR(25)" },
+      { table: "lobby_active_lobbies", column: "voicechat",         definition: "VARCHAR(20)" },
+      // lobby_subscriptions columns added after initial table creation
+      { table: "lobby_subscriptions",  column: "scheduled_time",    definition: "VARCHAR(10)" },
+    ];
+    return Promise.all(
+      additions.map(({ table, column, definition }) =>
+        new Promise((resolve) => {
+          db.connection.query(
+            "SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+            [table, column],
+            (checkErr, rows) => {
+              if (checkErr) {
+                warn(checkErr, { context: { stage: "migrate check", table, column } });
+                return resolve();
+              }
+              if (rows && rows[0] && rows[0].cnt > 0) return resolve(); // already exists
+              db.connection.query(
+                "ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition,
+                (alterErr) => {
+                  if (alterErr) {
+                    warn(alterErr, { context: { stage: "migrate alter", table, column } });
+                  } else {
+                    warn("Migration: added column " + column + " to " + table);
+                  }
+                  resolve();
+                }
+              );
+            }
+          );
+        })
+      )
+    );
   }
 
   pull(onData = () => {}) {

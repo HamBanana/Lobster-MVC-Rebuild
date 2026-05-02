@@ -217,17 +217,15 @@ export class Controller {
           }).then((msg) => {
             let listen = false;
             for (const [r, c] of Object.entries(this.view.reactions)) {
-              try {
-                msg = msg.react(r);
-              } catch (rxErr) {
+              Promise.resolve(msg.react(r)).catch((rxErr) =>
                 warn(rxErr, {
                   context: {
                     controller: this.controllername,
                     stage: "post react",
                     emoji: r,
                   },
-                });
-              }
+                })
+              );
               if (c) listen = true;
             }
             return { msg, listen };
