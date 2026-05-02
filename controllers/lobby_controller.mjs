@@ -1,12 +1,10 @@
 import { Controller } from "../core/controller.mjs";
 import { lobby_model } from "../models/lobby_model.mjs";
 import { Time } from "../tools/time.mjs";
-import { channels, messages, roles } from "../core/statics.mjs";
+import { channels } from "../core/statics.mjs";
 
-import { Discord } from "../core/discord.mjs";
 import { Database } from "../core/database.mjs";
 import {
-  Application,
   ApplicationCommandOptionType,
   SlashCommandBuilder,
 } from "discord.js";
@@ -19,8 +17,6 @@ export class lobby_controller extends Controller {
       channels["vanilla-codes"],
     ],
   };
-
-  // Commands
 
   static commands = [
     {
@@ -40,245 +36,116 @@ export class lobby_controller extends Controller {
       name: "create",
       description: "Creates a new lobby",
       options: [
-        {
-          name: "code",
-          description: "The code for joining the lobby",
-          type: ApplicationCommandOptionType.String,
-        },
-        {
-          name: "server",
-          description: "The server lobby is hosted on",
-          type: ApplicationCommandOptionType.String,
-        },
+        { name: "code", description: "The code for joining the lobby", type: ApplicationCommandOptionType.String },
+        { name: "server", description: "The server lobby is hosted on", type: ApplicationCommandOptionType.String },
       ],
     },
     {
       name: "delete",
       description: "Deletes a lobby",
-      options: [
-        {
-          name: "code",
-          description: "The code of the lobby to be deleted.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
+      arguments: { code: "The code of the lobby to be deleted." },
     },
     {
       name: "queue",
       description: "Join the queue for a lobby.",
       alias: "join",
-      options: [
-        {
-          name: "code",
-          description: "The code of the lobby to join",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
+      arguments: { code: "The code of the lobby to join" },
     },
     {
       name: "unqueue",
       description: "Leave the queue for a lobby.",
       alias: "unjoin",
-      options: [
-        {
-          name: "code",
-          description: "The code of the lobby to unjoin from.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
+      arguments: { code: "The code of the lobby to unjoin from." },
     },
-    {
-      name: "list",
-      description: "Shows a list of active_lobbies",
-    },
+    { name: "list", description: "Shows a list of active_lobbies" },
     {
       name: "announce",
       description:
         "Sets up a trigger that automatically posts the lobby code when you enter a lobby",
-      options: [
-        {
-          name: "is_vc_lobby",
-          description: "true, if the lobby uses voice chat",
-          type: ApplicationCommandOptionType.String,
-        },
-        {
-          name: "is_vanilla",
-          description: "true, if the lobby is not modded",
-          type: ApplicationCommandOptionType.String,
-        },
-      ],
+      arguments: {
+        is_vc_lobby: "true, if the lobby uses voice chat",
+        is_vanilla: "true, if the lobby is not modded",
+      },
     },
-    {
-      name: "unannounce",
-      description: "Removes trigger to post code when you enter a lobby",
-    },
+    { name: "unannounce", description: "Removes trigger to post code when you enter a lobby" },
     new SlashCommandBuilder().setName("test").setDescription("test"),
-    // .addStringOption((option) => {
-    // option
-    // .setName('testoption')
-    // .setDescription('This is an option added to the test command')
-    // })
   ];
 
   constructor(msg) {
     super(msg);
     this.auth(this.perm);
     this.model = new lobby_model();
-
     this.controllername = "lobby";
-    this.commands = [
-      {
-        name: "confirm_lobby",
-        alias: "lobby",
-        description: "Confirm game has entered lobby.",
-        arguments: {
-          code: "The code of the lobby.",
-        },
-      },
-      {
-        name: "create",
-        description: "Creates a new lobby",
-        arguments: {
-          code: "The code for joining the lobby",
-          server: "The server for joining the lobby",
-        },
-      },
-      {
-        name: "delete",
-        description: "Deletes a lobby",
-        arguments: {
-          code: "The code of the lobby to be deleted.",
-        },
-      },
-      {
-        name: "queue",
-        description: "Join the queue for a lobby.",
-        alias: "join",
-        arguments: {
-          code: "The code of the lobby to join",
-        },
-      },
-      {
-        name: "unqueue",
-        description: "Leave the queue for a lobby.",
-        alias: "unjoin",
-        arguments: {
-          code: "The code of the lobby to unjoin from.",
-        },
-      },
-      {
-        name: "list",
-        description: "Shows a list of active_lobbies",
-      },
-      {
-        name: "announce",
-        description:
-          "Sets up a trigger that automatically posts the lobby code when you enter a lobby",
-        arguments: {
-          is_vc_lobby: "true, if the lobby uses voice chat",
-          is_vanilla: "true, if the lobby is not modded",
-        },
-      },
-      {
-        name: "unannounce",
-        description: "Removes trigger to post code when you enter a lobby",
-      },
-    ];
   }
 
-  index(args) {}
+  index() {}
 
   test_input(input) {
-    console.log(input);
-
-    if (input.default[0] == "join") {
+    if (input.default[0] === "join") {
       input = input.default.join(" ");
     }
     input = input.toUpperCase();
-    let code = /([^\w]|^)(\w{5}[FQ])([^\w]|$)/.exec(input)?.[2];
-    if (!code) {
-      console.log("Not a code");
-      return;
-    }
-    let match_server =
-      /([^\w]|^)((EU|EUR|EUROPE)|(NA|AMERICA|NORTH\sAMERICA|USA|US)|(ASIA))([^\w]|$)/.exec(
-        input
-      );
-    let server;
-    if (match_server?.[3]) {
-      server = "EUROPE";
-    }
-    if (match_server?.[4]) {
-      server = "NORTH AMERICA";
-    }
-    if (match_server?.[5]) {
-      server = "ASIA";
-    }
+    const code = /([^\w]|^)(\w{5}[FQ])([^\w]|$)/.exec(input)?.[2];
+    if (!code) return;
 
-    if (!code) {
-      return;
-    }
+    const match_server =
+      /([^\w]|^)((EU|EUR|EUROPE)|(NA|AMERICA|NORTH\sAMERICA|USA|US)|(ASIA))([^\w]|$)/.exec(input);
+    let server;
+    if (match_server?.[3]) server = "EUROPE";
+    if (match_server?.[4]) server = "NORTH AMERICA";
+    if (match_server?.[5]) server = "ASIA";
 
     if (!lobby_model.active_lobbies[code]) {
       return server
-        ? this.prompt_create({
-            default: [code, server],
-          })
-        : this.prompt_server({
-            default: [code],
-          });
+        ? this.prompt_create({ default: [code, server] })
+        : this.prompt_server({ default: [code] });
     }
-    let lc = lobby_model.active_lobbies[code];
-    code = lc.code;
-    server = lc.server;
-    return this.prompt_lobby({ code, server });
+    const lc = lobby_model.active_lobbies[code];
+    return this.prompt_lobby({ code: lc.code, server: lc.server });
   }
 
   prompt_lobby(args) {
     const code = args.code || args.default?.[0];
     const server = args.server || args.default?.[1];
-    const host = args.host || args.default?.[2];
-    const pingtime = args.pingtime;
     this.view.data = { code, server };
 
-    this.view.addReaction("✅", (msg) => {
-      console.log(args.code);
-      return this.confirm_lobby({ code: args.code });
-    });
-    this.view.addReaction("❌", (msg) => {
-      return msg.delete();
-    });
+    this.view.addReaction("✅", () => this.confirm_lobby({ code }));
+    this.view.addReaction("❌", (msg) => msg.delete());
 
     this.view.template_path = "lobby/prompt_lobby";
     this.post();
   }
 
   confirm_lobby(args) {
-    let code = (args.code || args.default[0])?.toUpperCase();
-    console.log("code: " + code);
+    const code = (args.code || args.default?.[0])?.toUpperCase();
+    if (!code) {
+      return this.message?.reply("confirm_lobby called with no code.");
+    }
     const conf = lobby_model.active_lobbies[code];
-    const server = conf.server || conf.default?.[1];
+    if (!conf) {
+      return this.message?.reply("That lobby is no longer active.");
+    }
+    const server = conf.server;
     const state = "In Lobby";
-    const host = conf.host || conf.default?.[2];
+    const host = conf.host;
     const pingtime = Time.now;
 
     this.model.confirm_lobby({ code, pingtime, state }, (err, res) => {
       if (err) {
-        return this.message.reply("Couldn't update lobby, because: " + err.message);
+        if (this.message) {
+          this.message.reply("Couldn't update lobby, because: " + err.message);
+        }
+        return;
       }
 
-      // If all went well, post the confirm_lobby.
       this.view.template_path = "lobby/confirm_lobby";
-      let is_vanilla = conf.is_vanilla ? "Yes" : "No";
-      let is_vc_lobby = conf.is_vc_lobby ? "Yes" : "No";
+      const is_vanilla = conf.is_vanilla ? "Yes" : "No";
+      const is_vc_lobby = conf.is_vc_lobby ? "Yes" : "No";
       this.view.data = {
         server,
         state,
         pingtime,
-        host: this.client.users.cache.get(host).username,
+        host: this.client.users.cache.get(host)?.username || "unknown",
         mentions: res.mentions,
         code,
         is_vanilla,
@@ -292,24 +159,21 @@ export class lobby_controller extends Controller {
   }
 
   create(args) {
-    if (!(args.code || args.default[0]) || !(args.server || args.default[1])) {
-      this.message.reply(
-        "create function must follow the format: !lob lobby create {code} {server}"
-      );
+    if (!(args.code || args.default?.[0]) || !(args.server || args.default?.[1])) {
+      this.message.reply("create function must follow the format: !lob lobby create {code} {server}");
       return;
     }
-    let host = args["host"] || this.message.author.id;
-    let code = (args.code || args.default[0]).toUpperCase() || null;
-    let server = (args.server || args.default[1]).toUpperCase() || null;
-    this.view.data["server"] = server;
-    this.view.data["code"] = code;
-    this.view.data["host"] = this.message.author.username;
-    this.view.data["pingtime"] = Time.now;
-    this.view.data["is_vc_lobby"] = args["is_vc_lobby"] || "0";
-    this.view.data["is_vanilla"] = args["is_vanilla"] || "1";
-    let { pingtime, is_vc_lobby, is_vanilla } = this.view.data;
+    const host = args.host || this.message.author.id;
+    const code = (args.code || args.default[0]).toUpperCase();
+    const server = (args.server || args.default[1]).toUpperCase();
+    this.view.data.server = server;
+    this.view.data.code = code;
+    this.view.data.host = this.message.author.username;
+    this.view.data.pingtime = Time.now;
+    this.view.data.is_vc_lobby = args.is_vc_lobby || "0";
+    this.view.data.is_vanilla = args.is_vanilla || "1";
 
-    this.model.create({ code, server, host }, (err, res = null) => {
+    this.model.create({ code, server, host }, (err) => {
       if (err) {
         switch (err.code) {
           case "ER_DUP_ENTRY":
@@ -319,9 +183,7 @@ export class lobby_controller extends Controller {
             this.message.reply('"' + code + '" is too long to be a lobby code');
             break;
           default:
-            this.message.reply(
-              "Could not create lobby because: " + err.message
-            );
+            this.message.reply("Could not create lobby because: " + err.message);
         }
         return;
       }
@@ -334,90 +196,53 @@ export class lobby_controller extends Controller {
   edit(args) {
     args = this.extractArgs(args);
     this.model.edit(args, { host: this.message.author.id }).then(() => {
-      this.react("👍");
+      this.message.react("👍");
     });
   }
 
   register_infohost() {
-    this.model.register_infohost(
-      { member_id: this.message.author.id },
-      (err, res) => {
-        if (err) {
-          return this.message.reply(
-            "Couldn't register you as infohost, because: " + err.message
-          );
-        }
-        return this.message.reply(
-          'Lobster will now use your activity info to ping when lobbies\nYou can use "!lob lobby announce" to automatically ping archetype when lobby starts.'
-        );
+    this.model.register_infohost({ member_id: this.message.author.id }, (err) => {
+      if (err) {
+        return this.message.reply("Couldn't register you as infohost, because: " + err.message);
       }
-    );
+      return this.message.reply(
+        'Lobster will now use your activity info to ping when lobbies\nYou can use "!lob lobby announce" to automatically ping archetype when lobby starts.'
+      );
+    });
   }
 
   unregister_infohost() {
-    this.model.unregister_infohost(
-      { member_id: this.message.author.id },
-      (err, res) => {
-        if (err) {
-          return this.message.reply(
-            "Couldn't unregister you as infohost, because: " + err.message
-          );
-        }
-        return this.message.reply("You are no longer registered as infohost.");
+    this.model.unregister_infohost({ member_id: this.message.author.id }, (err) => {
+      if (err) {
+        return this.message.reply("Couldn't unregister you as infohost, because: " + err.message);
       }
-    );
+      return this.message.reply("You are no longer registered as infohost.");
+    });
   }
 
   delete(args) {
-    //const code = (args.code || args.default?.[0]).toUpperCase();
     const { code } = this.extractArgs(args, "code");
-    if (!code) {
-      return this.message.reply("Delete what?");
-    }
-    //let host = this.model.getLobby(code).host;
-    /*if (host !== this.message.author.username){
-      this.message.reply('Only host can delete the lobby.');
-      return false;
-    }*/
-    this.model.delete({ code: code, user: this.message.author.id }, (err) => {
+    if (!code) return this.message.reply("Delete what?");
+    this.model.delete({ code, user: this.message.author.id }, (err) => {
       if (err) {
-        return this.message.reply(
-          'Error while deleting lobby "' + code + '": ' + err.message
-        );
+        return this.message.reply('Error while deleting lobby "' + code + '": ' + err.message);
       }
       return this.message.reply("Deleted: " + code);
     });
   }
 
-  /*queue(args){
-    let code = (args.code || args.default?.[0]).toUpperCase();
-    if (this.model.queue(this.message.author.id, code)) {return this.message.react('👍');}
-    return false;
-  }*/
-
   queue(args) {
     let code = args.code || args.default?.[0];
-    if (
-      !code ||
-      code == "" ||
-      code == "undefined" ||
-      code == undefined ||
-      typeof code == undefined
-    ) {
-      code = lobby_model.active_lobbies[0].code;
+    if (!code) {
       this.message.reply("You forgot the code :eyes:");
       return;
     }
-
-    let q_args = {
+    const q_args = {
       member_id: this.message.author.id,
       usertag: this.message.author.username,
-      code: code?.toUpperCase(),
+      code: code.toUpperCase(),
     };
-
-    console.log("args in lobby_controller.queue: " + JSON.stringify(q_args));
-
-    this.model.queue(q_args, (err, res) => {
+    this.model.queue(q_args, (err) => {
       if (err) {
         switch (err.code) {
           case "ER_DUP_ENTRY":
@@ -425,152 +250,115 @@ export class lobby_controller extends Controller {
             return;
           default:
             this.message.reply("Couldn't join because: " + err.message);
-            break;
+            return;
         }
-
-        if (err.sql) {
-          this.message.reply("sql: " + err.sql);
-        }
-        return;
       }
-      this.react("👍");
-      return;
+      this.message.react("👍");
     });
   }
 
   unqueue(args) {
-    let code = args.code || args.default?.[0];
-    code = code.toUpperCase();
+    const code = args.code || args.default?.[0];
+    if (!code) return this.message.reply("Unqueue from which lobby?");
     this.model.unqueue(
-      { lobby_code: code, member_id: this.message.author.id },
-      (err, res) => {
-        if (err) {
-          return this.message.reply("Couldn't unjoin because: " + err.message);
-        }
-        return this.react("👍");
+      { lobby_code: code.toUpperCase(), member_id: this.message.author.id },
+      (err) => {
+        if (err) return this.message.reply("Couldn't unjoin because: " + err.message);
+        return this.message.react("👍");
       }
     );
-    return false;
   }
 
   prompt_create(args) {
-    this.view.data["server"] = (args.server || args.default?.[1]).toUpperCase();
-    this.view.data["code"] = (args.code || args.default?.[0]).toUpperCase();
-    this.view.data["host"] = args["host"] || this.message.author.username;
+    this.view.data.server = (args.server || args.default?.[1]).toUpperCase();
+    this.view.data.code = (args.code || args.default?.[0]).toUpperCase();
+    this.view.data.host = args.host || this.message.author.username;
     this.view.template_path = "lobby/prompt_create";
     this.view.reaction_options.time = 15000;
 
     this.view.addReaction("✅", (msg) => {
-      let { code, server, host } = this.view.data;
+      const { code, server, host } = this.view.data;
       msg.delete();
       this.create({ code, server, host });
     });
-    this.view.addReaction("❌", (msg) => {
-      msg.delete();
-    });
+    this.view.addReaction("❌", (msg) => msg.delete());
 
     this.post();
   }
 
   prompt_server(args) {
-    if (!args.code && !args.default[0]) {
-      return;
-    }
-    this.view.data["code"] = (args.code || args.default[0]).toUpperCase();
-    this.view.data["host"] = this.message.author.username;
+    if (!args.code && !args.default[0]) return;
+    this.view.data.code = (args.code || args.default[0]).toUpperCase();
+    this.view.data.host = this.message.author.username;
 
-    Promise.all([
-      this.view.addReaction("🇪🇺", (msg) => {
-        this.view.data["server"] = "EUROPE";
-        msg.delete().then(() => {
-          this.create(this.view.data);
-        });
-      }),
-      this.view.addReaction("🇺🇸", (msg) => {
-        msg.delete();
-        this.view.data["server"] = "NORTH AMERICA";
-        this.create(this.view.data);
-      }),
-      this.view.addReaction("🇯🇵", (msg) => {
-        msg.delete();
-        this.view.data["server"] = "ASIA";
-        this.create(this.view.data);
-      }),
-      this.view.addReaction("❌", (msg) => {
-        this.model.cancel(this.view.data["code"]);
-        this.message.reply("Lobby creation cancelled");
-      }),
-    ]);
+    this.view.addReaction("🇪🇺", (msg) => {
+      this.view.data.server = "EUROPE";
+      msg.delete().then(() => this.create(this.view.data));
+    });
+    this.view.addReaction("🇺🇸", (msg) => {
+      msg.delete();
+      this.view.data.server = "NORTH AMERICA";
+      this.create(this.view.data);
+    });
+    this.view.addReaction("🇯🇵", (msg) => {
+      msg.delete();
+      this.view.data.server = "ASIA";
+      this.create(this.view.data);
+    });
+    this.view.addReaction("❌", () => {
+      this.message.reply("Lobby creation cancelled");
+    });
+
     this.view.template_path = "lobby/prompt_server";
     this.post();
   }
 
-  list(args) {
-    this.view.template_path = "lobby/confirm_lobby";
+  list() {
     if (Object.keys(lobby_model.active_lobbies).length === 0) {
       return this.message.reply("There are no active lobbies :eyes:");
     }
-    for (let [k, v] of Object.entries(lobby_model.active_lobbies)) {
-      new Promise((resolve, reject) => {
-        this.view.data = v;
-        resolve(
-          this.message.reply(
-            "Hosted by: " +
-              v.host +
-              "\n" +
-              v.code +
-              " - " +
-              v.server +
-              "\nLast active: " +
-              Time.getTag(v.pingtime) +
-              '\nWrite "!lob join ' +
-              v.code +
-              '", to join this lobby.'
-          )
-        );
-        //resolve(this.post());
-      }).catch((err) => {
-        console.log("Failed in lobby/list: " + err);
-      });
+    for (const v of Object.values(lobby_model.active_lobbies)) {
+      this.message
+        .reply(
+          "Hosted by: " +
+            v.host +
+            "\n" +
+            v.code +
+            " - " +
+            v.server +
+            "\nLast active: " +
+            Time.getTag(v.pingtime) +
+            '\nWrite "!lob join ' +
+            v.code +
+            '", to join this lobby.'
+        )
+        .catch((err) => console.log("Failed in lobby/list: " + err.message));
     }
   }
 
-  /*getAnnounced(args, callback){
-    if (!args.member_id){return callback({message: "getAnnounced only works with a member_id"});}
-    this.db.get('*', 'lobby_announced', "member_id = " + args.member_id, (err, res) => {
-      return callback(err, res);
-    });
-  }*/
-
   announce(args) {
-    /*if (lobby_model.infohosts.indexOf(this.message.author.id) < 0){
-      return this.message.reply('Please run "!lob lobby register_infohost" register as infohost, before using "announce"');
-    }*/
     this.message.reply(
       'Please ensure that you have enabled "Share your activity status with others" in Activity settings'
     );
     let { is_vanilla } = this.extractArgs(args);
-    if (!is_vanilla) {
-      is_vanilla = 1;
-    }
+    if (!is_vanilla) is_vanilla = 1;
 
     this.model.announce(
-      { host: this.message.author.id, is_vanilla, ongoing: 0, creationtime: Time.now },
-      (err, res) => {
+      {
+        host: this.message.author.id,
+        is_vanilla,
+        ongoing: 0,
+      },
+      (err) => {
         if (err) {
-          switch (err.code) {
-            case "ER_DUP_ENTRY":
-              return this.message.reply(
-                'You have already announced a lobby.\
-          \nTo change lobby settings, run "!lob lobby edit".'
-              );
-            default:
-              return this.message.reply(
-                "Can't announce lobby, because: " + err.message
-              );
+          if (err.code === "ER_DUP_ENTRY") {
+            return this.message.reply(
+              'You have already announced a lobby.\nTo change lobby settings, run "!lob lobby edit".'
+            );
           }
+          return this.message.reply("Can't announce lobby, because: " + err.message);
         }
-        this.react("👍");
+        this.message.react("👍");
       }
     );
   }
@@ -578,148 +366,93 @@ export class lobby_controller extends Controller {
   unannounce() {
     this.model.unannounce({ host: this.message.author.id }, (err, res) => {
       if (err) {
-        switch (err.code) {
-          default:
-            return this.message.reply(
-              "Can't unannounce lobby, because: " + err.message
-            );
-        }
+        return this.message.reply("Can't unannounce lobby, because: " + err.message);
       }
       if (res.affectedRows < 1) {
         return this.message.reply("You have no announced lobbies.");
       }
-      this.react("👍");
+      this.message.react("👍");
     });
   }
 
+  /**
+   * Sweeps stale active lobbies. Runs from system.mjs's setInterval.
+   * Now updates the in-memory `active_lobbies` cache when it deletes from
+   * the DB, so the two stay aligned.
+   */
   static clearOld() {
-    let db = Database.getInstance();
+    const db = Database.getInstance();
     db.p_get("lobby_active_lobbies").then((lobbies) => {
-      for (let i in lobbies) {
-        let lobby = lobbies[i];
+      for (const lobby of lobbies) {
         if (Time.now - lobby.pingtime > 180000) {
-          db.p_delete("lobby_active_lobbies", { code: lobby.code })
-            .then((res) => {
-              if (res) {
-                console.log("Deleted: " + lobby.code);
-              }
-            })
-            .catch((err) => {
-              console.log("clearOld delete error: " + err.message);
-            });
+          db.p_delete("lobby_active_lobbies", { code: lobby.code }).then((res) => {
+            if (res) {
+              delete lobby_model.active_lobbies[lobby.code];
+              console.log("Deleted: " + lobby.code);
+            }
+          });
         }
       }
-    }).catch((err) => {
-      console.log("clearOld fetch error: " + err.message);
     });
   }
 
   testPresence(oldPresence, newPresence) {
-    let post_channel = channels["lob-test"];
+    if (oldPresence == null && newPresence == null) return;
 
-    console.log("newPresence: " + JSON.stringify(newPresence));
-    let oldActivity = oldPresence?.activities[0];
-    let newActivity = newPresence?.activities[0];
-    //let c = this.client.channels.cache.get('1200927450536890429');
+    const oldActivity = oldPresence?.activities?.[0];
+    const newActivity = newPresence?.activities?.[0];
+
     if (oldActivity && newActivity) {
-      if (oldActivity.name !== "Among Us" || newActivity.name !== "Among Us") {
-        return;
-      }
+      if (oldActivity.name !== "Among Us" || newActivity.name !== "Among Us") return;
     }
 
-    if (oldActivity?.state == "In Menus" && newActivity?.state == "In Lobby") {
-      /* Check if lobby has been announced */
-      this.model.getAnnounced({ host: newPresence.userId }, (err, res) => {
+    if (oldActivity?.state === "In Menus" && newActivity?.state === "In Lobby") {
+      this.model.getAnnounced({ host: newPresence.userId }, (err, rows) => {
         if (err) {
-          return console.log(
+          console.log(
             "Error while getting announced lobbies in lobby_controller.testPresence: " +
               err.message
           );
-        }
-        if (res.length < 1) {
           return;
         }
+        if (!rows || rows.length < 1) return;
+        const sub = rows[0]; // BUGFIX: rows is an array; previous code mixed `res.x` and `res[0].y`.
 
-        // Create the view
         this.view.template_path = "lobby/autocreate";
-        this.view.data["host"] = this.client.users.cache.get(newPresence.userId).username;
-        this.view.data["code"] = newActivity.party.id;
-        this.view.data["server"] = res.server;
-        this.view.data["is_vc_lobby"] = res.voicechat ? res.voicechat : "No";
-        this.view.data["is_vanilla"] = res.is_vanilla ? "Yes" : "No";
-        this.view.data["notes"] = res.notes ? res.notes : "Not really";
-        this.view.data["pingtime"] = res.pingtime;
-        this.view.data["playercount_current"] = newActivity.party.size[0];
-        this.view.data["playercount_max"] = newActivity.party.size[1];
-        //this.view.data['pingrole'] = (res.is_vanilla) ? roles['archetype'] : roles['avant-garde'];
+        this.view.data.host =
+          this.client.users.cache.get(newPresence.userId)?.username || "unknown";
+        this.view.data.code = newActivity.party?.id;
+        this.view.data.server = sub.server;
+        this.view.data.is_vc_lobby = sub.is_vc_lobby ? "Yes" : "No";
+        this.view.data.is_vanilla = sub.is_vanilla ? "Yes" : "No";
+        this.view.data.notes = sub.notes || "Not really";
+        this.view.data.pingtime = Time.now;
+        this.view.data.playercount_current = newActivity.party?.size?.[0];
+        this.view.data.playercount_max = newActivity.party?.size?.[1];
 
-        this.view.type = res.post_message_id ? "edit" : "channel";
-        this.view.channelid = res.post_channel_id || post_channel;
-        //this.view.channelid = channels['vanilla-codes'];
-
-        //let p_message = (res.post_message_id) ? this.post() : messages.get()
-
+        this.view.type = sub.post_message_id ? "edit" : "channel";
+        this.view.channelid = sub.post_channel_id || channels["lob-test"];
         if (this.view.type === "edit") {
-          this.view.messageId = res.post_message_id;
+          this.view.messageId = sub.post_message_id;
         }
 
         this.post().then((message) => {
-          let create_vals = {
-            code: newActivity.party.id,
+          const create_vals = {
+            code: newActivity.party?.id,
             host: newPresence.userId,
             state: newActivity.state,
             pingtime: Time.now,
             ongoing: 1,
-            post_channel_id: res[0].post_channel_id || post_channel,
-            post_message_id: res[0].post_message_id || message.id,
+            post_channel_id: sub.post_channel_id || channels["lob-test"],
+            post_message_id: sub.post_message_id || message?.id,
           };
           this.model.edit(create_vals, { host: newPresence.userId });
         });
       });
     }
 
-    if (oldActivity?.state == "In Lobby" && newActivity?.state == "In Game") {
-      this.model.getLobby().then((lobby) => {
-        this.view.template_path = "lobby/game_started";
-        this.view.data = lobby;
-      });
-      return;
-    }
-
-    if (oldActivity?.state == "In Game" && newActivity?.state == "In Lobby") {
-      // When game ends, ping the relevant queue
-      return;
-      let code = newActivity.party.id;
-      if (!lobby_model.active_lobbies[code].infohost == newActivity.userId) {
-        return;
-      }
-      this.confirm_lobby({ code: newActivity.party.id });
-    }
-
-    if (
-      (oldActivity?.state == "In Lobby" || oldActivity?.state == "In Game") &&
-      (newActivity?.state == "In Menus" || newActivity == undefined)
-    ) {
-      // Infohost left a game
-      return;
-      let code = oldActivity.party.id;
-      this.model.assign_infohost(code, (err, res) => {});
-    }
-    /*if (oldActivity?.state == "In Lobby" && newActivity?.state == "In Game"){
-        return c.send('Game "' + oldActivity.party.id + '" started..');
-      }
-      if (oldActivity?.state == "In Game" && newActivity?.state == "In Lobby"){
-        return c.send('Game "' + newActivity.party.id + '" back in lobby.');
-      }*/
-
-    /*
-oldGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,"details":null,"state":"In Menus",
-"applicationId":"477175586805252107","timestamps":{"start":null,"end":null},"syncId":null,"platform":null,"party":{},"assets":{"largeText":null,"smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":0,"emoji":null,"sessionId":null,"buttons":[],"createdTimestamp":1708285670179}
-newGame: {"id":"c2ee28cca9f91a0a","name":"Among Us","type":"PLAYING","url":null,
-"details":"Hosting a game","state":"In Lobby",
-"applicationId":"477175586805252107","timestamps":{"start":null,"end":null},"syncId":null,"platform":null,
-"party":{"size":[1,15],"id":"ETSJBF"},"assets":{"largeText":"Ask to play!","smallText":null,"largeImage":"481347538054545418","smallImage":null},"flags":2,"emoji":null,"sessionId":"7a3226be744ff891e6d60ca190becd3d","buttons":[],"createdTimestamp":1708285687339}
-
-*/
+    // The "In Lobby" → "In Game" and inverse transitions used to live here
+    // but were `return;`-disabled. Removed entirely until the flow is
+    // designed properly.
   }
 }

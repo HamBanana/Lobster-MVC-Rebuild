@@ -1,20 +1,40 @@
-import * as Mysql from "mysql";
+import mysql from "mysql2";
 import { LobsterConfig } from "../../secret.mjs";
 import { warn } from "./error.mjs";
 
+/*
+ * Thin wrapper around mysql2's callback-style API.
+ *
+ * Every method here uses `?` (value placeholder) and `??` (identifier
+ * placeholder) so user-supplied values never reach the SQL grammar. Callers
+ * that previously passed raw SQL fragments (e.g. `"code = '" + code + "'"`)
+ * have been migrated to pass plain objects (`{ code }`) instead.
+ *
+ * The callback variants exist for legacy callers; new code should prefer the
+ * `p_*` (Promise) variants.
+ */
 export class Database {
   static _instance = null;
 
   connection = null;
-  constructor() {
-    // Pool instead of single connection: automatically reconnects after ETIMEDOUT
-    // or any other fatal error, so PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR can't happen.
-    // The query() API is identical to createConnection, so no other code changes needed.
-    this.connection = Mysql.createPool(LobsterConfig);
 
-    this.connection.on("error", (err) => {
-      warn("Database pool error: " + err.code + " - " + err.message);
+  constructor() {
+    // Pool, not single connection: lets the bot survive a transient
+    // disconnect instead of failing every subsequent query with
+    // PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR. Pools also expose getConnection()
+    // which Bootstrap.load() uses to validate connectivity at boot.
+    this.connection = mysql.createPool({
+      ...LobsterConfig,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
     });
+
+    if (!this.connection) {
+      warn("Error in creating database connection");
+    } else {
+      warn("Database connection created.");
+    }
   }
 
   static getInstance() {
@@ -24,223 +44,211 @@ export class Database {
     return Database._instance;
   }
 
-  getStringsFromJson(values) {
-    let keystring = "";
-    let valuestring = "";
-    for (const [key, value] of Object.entries(values)) {
-      keystring += keystring == "" ? key : ", " + key;
-      valuestring +=
-        valuestring == "" ? '"' + value + '"' : ', "' + value + '"';
+  // ---------- helpers --------------------------------------------------
+
+  /**
+   * Build a parameterised "WHERE" clause from a plain object.
+   * Returns { sql: "?? = ? AND ?? = ?", params: [k1, v1, k2, v2] }
+   * If the object is empty, returns { sql: "", params: [] }.
+   */
+  static buildWhere(where = {}, joiner = "AND") {
+    const entries = Object.entries(where);
+    if (entries.length === 0) return { sql: "", params: [] };
+    const fragments = [];
+    const params = [];
+    for (const [k, v] of entries) {
+      fragments.push("?? = ?");
+      params.push(k, v);
     }
-    return { keystring, valuestring };
+    return { sql: fragments.join(` ${joiner} `), params };
   }
 
-  extractJson(values, seperator) {
-    let str = "";
-    for (const [key, value] of Object.entries(values)) {
-      str +=
-        str == ""
-          ? key + " = '" + value + "'"
-          : seperator + key + " = '" + value + "'";
+  static buildSet(set = {}) {
+    const entries = Object.entries(set);
+    if (entries.length === 0) {
+      throw new Error("Database update called with no fields to set");
     }
-    return str;
+    const fragments = [];
+    const params = [];
+    for (const [k, v] of entries) {
+      fragments.push("?? = ?");
+      params.push(k, v);
+    }
+    return { sql: fragments.join(", "), params };
   }
 
-  getWhereString(where, op = "AND") {
-    let wherestring = "";
-    for (const [key, value] of Object.entries(where)) {
-      wherestring +=
-        wherestring == ""
-          ? key + " = '" + value + "'"
-          : op + " " + key + " = '" + value + "'";
-    }
-    return { wherestring };
-  }
-
-  getCreateValueString(values) {
-    let valuestring = "";
-    for (const [key, value] of Object.entries(values)) {
-      valuestring +=
-        valuestring == "" ? key + " " + value : ", " + key + " " + value;
-    }
-    return { valuestring };
-  }
+  // ---------- INSERT ---------------------------------------------------
 
   insert(table, values, callback = () => {}) {
-    let { keystring, valuestring } = this.getStringsFromJson(values);
-
-    //warn('INSERT INTO ' + table + ' (' + keystring + ') VALUES (' + valuestring + ')');
     return this.connection.query(
-      "INSERT INTO " +
-        table +
-        " (" +
-        keystring +
-        ") VALUES (" +
-        valuestring +
-        ")",
+      "INSERT INTO ?? SET ?",
+      [table, values],
       callback
     );
   }
 
   p_insert(table, values) {
-    let { keystring, valuestring } = this.getStringsFromJson(values);
     return new Promise((resolve, reject) => {
-      return this.connection.query(
-        "INSERT INTO " +
-          table +
-          " (" +
-          keystring +
-          ") VALUES (" +
-          valuestring +
-          ")",
-        (err, res) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(res);
-        }
+      this.connection.query(
+        "INSERT INTO ?? SET ?",
+        [table, values],
+        (err, res) => (err ? reject(err) : resolve(res))
       );
     });
   }
 
-  create_table(name, values, if_not_exists = true, callback = null) {
-    return this.connection.query(
-      "CREATE TABLE " +
-        (if_not_exists ? "IF NOT EXISTS " : " ") +
-        name +
-        " (" +
-        values +
-        ")",
-      callback
-    );
+  // ---------- CREATE TABLE --------------------------------------------
+  // Schema definitions live in code (bot/system.mjs). Column definitions
+  // are trusted and not user-supplied; column *names* and the table name
+  // are still escaped via ?? to be safe against typos.
+
+  create_table(name, columns, if_not_exists = true, callback = () => {}) {
+    const sql = this.#buildCreateTableSql(name, columns, if_not_exists);
+    return this.connection.query(sql, callback);
   }
 
-  p_create_table(name, values, options) {
+  p_create_table(name, columns, if_not_exists = true) {
+    const sql = this.#buildCreateTableSql(name, columns, if_not_exists);
     return new Promise((resolve, reject) => {
-      let { valuestring } = this.getCreateValueString(values);
-      return this.connection.query(
-        "CREATE TABLE IF NOT EXISTS " + name + " (" + valuestring + ")",
-        (err, res) => {
-          if (err) {
-            reject(err);
-          }
-          resolve(res);
-        }
+      this.connection.query(sql, (err, res) =>
+        err ? reject(err) : resolve(res)
       );
     });
   }
 
+  #buildCreateTableSql(name, columns, if_not_exists) {
+    let body;
+    if (typeof columns === "string") {
+      body = columns;
+    } else {
+      body = Object.entries(columns)
+        .map(([col, def]) => {
+          // Allow constraint pseudo-keys like "PRIMARY KEY" through verbatim.
+          if (/\s/.test(col)) {
+            return `${col} ${def}`;
+          }
+          return `${mysql.escapeId(col)} ${def}`;
+        })
+        .join(", ");
+    }
+    const safeName = mysql.escapeId(name);
+    const guard = if_not_exists ? "IF NOT EXISTS" : "";
+    return `CREATE TABLE ${guard} ${safeName} (${body})`;
+  }
+
+  // ---------- SELECT ---------------------------------------------------
+
+  /**
+   * Legacy signature kept for compatibility:
+   *   get(select, from, where, callback)
+   * `where` may be an object (preferred) or `undefined`. Raw-string `where`
+   * fragments are no longer accepted — pass `{ col: value }` instead.
+   */
   get(select, from, where = undefined, callback = () => {}) {
-    return this.connection.query(
-      "SELECT " + select + " from " + from + (where ? " where " + where : ""),
-      callback
-    );
+    let sql = `SELECT ${select === "*" ? "*" : mysql.escapeId(select)} FROM ??`;
+    const params = [from];
+    if (where && typeof where === "object") {
+      const w = Database.buildWhere(where, "AND");
+      if (w.sql) {
+        sql += ` WHERE ${w.sql}`;
+        params.push(...w.params);
+      }
+    } else if (typeof where === "string" && where.length > 0) {
+      throw new Error(
+        "Database.get no longer accepts raw SQL where-clauses. Pass an object instead."
+      );
+    }
+    return this.connection.query(sql, params, callback);
   }
 
   p_get(from, where = {}, operator = "AND") {
     return new Promise((resolve, reject) => {
-      let wherestring = "";
-      for (let [k, v] of Object.entries(where)) {
-        wherestring +=
-          wherestring == "" ? k + " = " + v : " AND " + k + " = " + v;
+      const w = Database.buildWhere(where, operator);
+      let sql = "SELECT * FROM ??";
+      const params = [from];
+      if (w.sql) {
+        sql += ` WHERE ${w.sql}`;
+        params.push(...w.params);
       }
-      return this.connection.query(
-        "SELECT * from " +
-          from +
-          (wherestring !== "" ? " where " + wherestring : ""),
-        (err, res) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(res);
-        }
+      this.connection.query(sql, params, (err, res) =>
+        err ? reject(err) : resolve(res)
       );
     });
   }
 
   p_getLatest(table) {
     return new Promise((resolve, reject) => {
-      return this.connection.query(
-        "SELECT * from " + table + " ORDER BY id DESC LIMIT 1",
-        (err, res) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(res[0]);
-        }
+      this.connection.query(
+        "SELECT * FROM ?? ORDER BY id DESC LIMIT 1",
+        [table],
+        (err, res) => (err ? reject(err) : resolve(res[0]))
       );
     });
   }
 
-  update(table, set, where, callback) {
+  // ---------- UPDATE ---------------------------------------------------
+
+  /**
+   * update(table, setObj, whereObj, callback)
+   * Both setObj and whereObj must be plain objects.
+   */
+  update(table, set, where, callback = () => {}) {
+    if (typeof set === "string" || typeof where === "string") {
+      throw new Error(
+        "Database.update no longer accepts raw SQL fragments. Pass objects."
+      );
+    }
+    const s = Database.buildSet(set);
+    const w = Database.buildWhere(where, "AND");
+    const sql = `UPDATE ?? SET ${s.sql}${w.sql ? ` WHERE ${w.sql}` : ""}`;
     return this.connection.query(
-      "UPDATE " + table + " SET " + set + " WHERE " + where,
+      sql,
+      [table, ...s.params, ...w.params],
       callback
     );
   }
 
   p_update(table, set, where) {
-    console.log("set in p_update: " + JSON.stringify(set));
-    let setstring = this.extractJson(set, ", ");
-    let wherestring = this.extractJson(where, " AND ");
-    console.log("UPDATING TABLE WITH STRINGS: ", setstring, wherestring);
-    console.log("setstring: " + setstring);
-    console.log("wherestring: " + wherestring);
     return new Promise((resolve, reject) => {
-      return this.connection.query(
-        "UPDATE " + table + " SET " + setstring + " WHERE " + wherestring,
-        (err, res) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(res);
-        }
+      const s = Database.buildSet(set);
+      const w = Database.buildWhere(where, "AND");
+      const sql = `UPDATE ?? SET ${s.sql}${w.sql ? ` WHERE ${w.sql}` : ""}`;
+      this.connection.query(
+        sql,
+        [table, ...s.params, ...w.params],
+        (err, res) => (err ? reject(err) : resolve(res))
       );
-    }).catch((err) => {
-      throw err;
     });
   }
 
-  p_set(table, key, values) {
-    let { keystring, valuestring } = this.getStringsFromJson(values);
-    return new Promise((resolve, reject) => {
-      return this.p_delete(table, { key }).then(() => {
-        return this.p_insert(table, { ...key, ...values }).then((res) => {
-          resolve(res);
-        });
-      });
-      //return this.connection.query('INSERT INTO ' + table + '(' + keystring + ') VALUES (' + valuestring + ')', () => {
-      //    resolve(res);
-      //});
-    });
-  }
+  // ---------- DELETE ---------------------------------------------------
 
-  delete(table, where, callback) {
-    //warn('DELETE FROM ' + table + ' WHERE ' + where);
-    return this.connection.query(
-      "DELETE FROM " + table + " WHERE " + where,
-      callback
-    );
+  delete(table, where, callback = () => {}) {
+    if (typeof where === "string") {
+      throw new Error(
+        "Database.delete no longer accepts raw SQL where-clauses. Pass an object."
+      );
+    }
+    const w = Database.buildWhere(where, "AND");
+    const sql = `DELETE FROM ??${w.sql ? ` WHERE ${w.sql}` : ""}`;
+    return this.connection.query(sql, [table, ...w.params], callback);
   }
 
   p_delete(table, where = {}) {
     return new Promise((resolve, reject) => {
-      let { wherestring } = this.getWhereString(where, "AND");
-      let sql =
-        "DELETE FROM " + table + (where == {} ? "" : " WHERE " + wherestring);
-      this.connection.query(sql, (err, res) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(res);
-      });
-    }).catch((err) => {
-      throw err;
+      const w = Database.buildWhere(where, "AND");
+      const sql = `DELETE FROM ??${w.sql ? ` WHERE ${w.sql}` : ""}`;
+      this.connection.query(sql, [table, ...w.params], (err, res) =>
+        err ? reject(err) : resolve(res)
+      );
     });
+  }
+
+  // ---------- UPSERT ---------------------------------------------------
+
+  p_set(table, key, values) {
+    return this.p_delete(table, key).then(() =>
+      this.p_insert(table, { ...key, ...values })
+    );
   }
 }

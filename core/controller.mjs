@@ -1,8 +1,5 @@
-//import {View} from './view.mjs';
-import { Time } from "../tools/time.mjs";
 import { Discord } from "../core/discord.mjs";
 import { PermissionError, warn } from "../core/error.mjs";
-import { EmbedBuilder } from "discord.js";
 import { messages } from "./statics.mjs";
 
 export class Controller {
@@ -14,7 +11,6 @@ export class Controller {
 
   constructor(msg) {
     this.client = Discord.client;
-
     this.allowed = true;
 
     this.view = {
@@ -22,12 +18,18 @@ export class Controller {
       content: "",
       type: "reply",
       channelid: "",
+      // Both spellings exist in legacy code; alias them so neither path
+      // silently no-ops if a controller sets the wrong one.
+      get channelId() {
+        return this.channelid;
+      },
+      set channelId(v) {
+        this.channelid = v;
+      },
       data: {},
       reactions: {},
       reaction_options: {
-        filter: (reaction, user) => {
-          return user.id === this.message.author.id;
-        },
+        filter: (reaction, user) => user.id === this.message.author.id,
         max: 1,
         time: 30000,
         errors: ["time"],
@@ -45,101 +47,80 @@ export class Controller {
   }
 
   post(content) {
-    let view = this.view;
     let template_path = this.view.template_path;
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if (template_path) {
         template_path = template_path.toLowerCase();
-        var spl = template_path.split("/");
+        const spl = template_path.split("/");
         return import("../views/" + spl[0] + ".mjs").then((template_module) => {
-          let template = template_module[spl[1]];
+          const template = template_module[spl[1]];
           resolve(template);
         });
-      } else {
-        resolve();
       }
+      resolve();
     })
-      .then((template) => {
-        return new Promise((resolve, reject) => {
-          if (this.view.template_type === "embed") {
-            content = this.applyTemplate(
-              JSON.stringify(template),
-              this.view.data
-            );
-            content = JSON.parse(content);
-            content = { embeds: [content] };
-            //content = template;
-          } else {
-            if (!content) {
-              content = this.view.content;
+      .then(
+        (template) =>
+          new Promise((resolve) => {
+            if (this.view.template_type === "embed") {
+              content = this.applyTemplate(JSON.stringify(template), this.view.data);
+              content = JSON.parse(content);
+              content = { embeds: [content] };
+            } else {
+              if (!content) content = this.view.content;
+              if (typeof content === "string" && template) {
+                content = this.applyTemplate(template, this.view.data);
+              }
+              if (this.view.embeds.length > 0 || this.view.components.length > 0) {
+                content = {
+                  embeds: this.view.embeds,
+                  components: this.view.components,
+                };
+              }
             }
-            if (typeof content === "string" && template) {
-              content = this.applyTemplate(template, this.view.data);
+            let output_message;
+            if (JSON.stringify(content) === '{"default":[]}') {
+              const e = new Error("silent");
+              e.code = "SILENT";
+              throw e;
             }
-            if (
-              this.view.embeds.length > 0 ||
-              this.view.components.length > 0
-            ) {
-              content = {
-                embeds: this.view.embeds,
-                components: this.view.components,
-              };
-            }
-          }
-          let output_message;
-          if (JSON.stringify(content) == '{"default":[]}') {
-            throw new Error({ code: "SILENT" });
-          }
-          switch (this.view.type) {
-            case "reply":
-              output_message = this.message.reply(content);
-              break;
-            case "channel":
-              output_message = this.client.channels.cache
-                .get(this.view.channelid)
-                .send(content);
-              break;
-            case "edit":
-              messages
-                .get(this.view.channelId, this.view.messageId)
-                .then((message) => {
-                  output_message = this.message.edit(content);
+            const channelId = this.view.channelid;
+            switch (this.view.type) {
+              case "reply":
+                output_message = this.message.reply(content);
+                break;
+              case "channel":
+                output_message = this.client.channels.cache.get(channelId).send(content);
+                break;
+              case "edit":
+                messages.get(channelId, this.view.messageId).then((existing) => {
+                  output_message = existing.edit(content);
                 });
-              break;
-          }
-          return output_message;
-        }).then((msg) => {
-          // Reaction handling..
-          let listen = false;
-          for (let [r, c] of Object.entries(this.view.reactions)) {
-            msg = msg.react(r);
-            if (c) {
-              listen = true;
+                break;
             }
-          }
-          resolve(msg);
-        });
-      })
+            resolve(output_message);
+          }).then((msg) => {
+            let listen = false;
+            for (const [r, c] of Object.entries(this.view.reactions)) {
+              msg = msg.react(r);
+              if (c) listen = true;
+            }
+            return { msg, listen };
+          })
+      )
       .then((ret) => {
         if (ret.listen) {
-          /*const filter = (reaction, user) => {
-            return user.id === this.message.author.id
-          };*/
           ret.msg
             .awaitReactions(this.view.reaction_options)
             .then((collected) => {
-              if (!collected) {
-                return;
-              }
-              let reaction = collected.first();
-              for (let [r, c] of Object.entries(this.view.reactions)) {
-                if (reaction.emoji.name === r) {
-                  c(ret.msg);
-                }
+              if (!collected) return;
+              const reaction = collected.first();
+              for (const [r, c] of Object.entries(this.view.reactions)) {
+                if (reaction.emoji.name === r) c(ret.msg);
               }
             })
-            .catch((err) => {
+            .catch(() => {
               warn("Reaction timeout hit!");
               ret.msg.delete();
             });
@@ -147,107 +128,47 @@ export class Controller {
         return ret.msg;
       })
       .catch((err) => {
-        return;
+        if (err?.code !== "SILENT") console.log("post() error: " + err?.message);
       });
   }
 
   applyTemplate(template, properties) {
-    var returnValue = "";
-
-    var templateFragments = template.split("{{");
-
+    let returnValue = "";
+    const templateFragments = template.split("{{");
     returnValue += templateFragments[0];
-
-    for (var i = 1; i < templateFragments.length; i++) {
-      var fragmentSections = templateFragments[i].split("}}", 2);
+    for (let i = 1; i < templateFragments.length; i++) {
+      const fragmentSections = templateFragments[i].split("}}", 2);
       returnValue += properties[fragmentSections[0]];
       returnValue += fragmentSections[1];
     }
-
     return returnValue;
   }
 
   auth(permissions) {
-    if (typeof permissions == "undefined") {
-      return;
-    }
-    if (!this.message) {
-      warn("Controller doesn't know about the message object.");
-      return;
-    }
-    for (let [k, v] of Object.entries(permissions)) {
-      for (let i of v) {
-        if (k === "channels") {
-          if (!v.includes(this.message.channelId)) {
-            warn("Controller auth failed: channel denied");
-            this.allowed = false;
-          }
-        }
-        if (k === "users") {
-          if (!v.includes(this.message.author.id)) {
-            warn("Controller auth failed: user denied");
-            this.allowed = false;
-          }
-        }
-      }
-      if (!this.allowed) {
+    if (!permissions || !this.message) return;
+    for (const [scope, allowed] of Object.entries(permissions)) {
+      let value;
+      if (scope === "channels") value = this.message.channelId;
+      else if (scope === "users") value = this.message.author.id;
+      else continue;
+      if (!allowed.includes(value)) {
+        warn("Controller auth failed: " + scope + " denied");
+        this.allowed = false;
         throw new PermissionError();
       }
-      return;
     }
-  }
-
-  react(emoji) {
-    if (typeof this.message?.react === "function") {
-      return this.message.react(emoji);
-    }
-    return Promise.resolve();
   }
 
   extractArgs(args, defaults = null) {
-    let res = {};
+    const res = {};
     if (defaults !== null) {
-      if (typeof defaults === "string") {
-        defaults = [defaults];
-      }
-
-      for (let i in defaults) {
-        res[defaults[i]] = args.default[i];
-      }
+      if (typeof defaults === "string") defaults = [defaults];
+      for (const i in defaults) res[defaults[i]] = args.default[i];
     }
-
     delete args.default;
-
-    for (let [k, v] of Object.entries(args)) {
-      res[k] = v;
-    }
-
+    for (const [k, v] of Object.entries(args)) res[k] = v;
     return res;
   }
-
-  /*help(args){
-
-    //this.message.reply("Idk if it's helpful, but " + JSON.stringify(this.getAllFuncs(this)));
-    
-    return new Promise((resolve, reject) => {
-      if (!this.controllername){resolve(this.message.reply('```No help here yet```')); return;}
-      let {fun} = this.extractArgs(args, 'fun');
-      let e = new EmbedBuilder();
-      //this.view.embeds[0] = new EmbedBuilder()
-      e.setTitle('Help for ' + this.controllername);
-      for (let [k, v] of Object.entries(this.functions)){
-        let a = v.arguments;
-        e.addFields({
-          name: k + ((a) ? ' ('+Object.keys(a).join(', ')+')' : '') 
-          + ((k == "index") ? ' (Default function)' : ''
-          + ((v.alias) ? ' (Same as !lob ' + v.alias + ')' : '')), 
-          value: v.description});
-      }
-      this.view.embeds[0] = e;
-      resolve(this.post());
-    });
-
-  }*/
 
   getAllFuncs(toCheck) {
     const props = [];
@@ -255,9 +176,9 @@ export class Controller {
     do {
       props.push(...Object.getOwnPropertyNames(obj));
     } while ((obj = Object.getPrototypeOf(obj)));
-
     return props.sort().filter((e, i, arr) => {
-      if (e != arr[i + 1] && typeof toCheck[e] == "function") return true;
+      if (e !== arr[i + 1] && typeof toCheck[e] === "function") return true;
+      return false;
     });
   }
 }

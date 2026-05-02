@@ -1,93 +1,57 @@
-import * as https from 'https';
-import * as html from 'node-html-parser';
+import * as https from "https";
+import * as http from "http"; // BUGFIX: previously referenced but never imported.
+import * as html from "node-html-parser";
 
-export function get(url, format=ReturnFormat.HTML){
-  let call;
-  
-  if (typeof(url) !== 'string'){
-    call = https.request;
+export class ReturnFormat {
+  static RAW = new ReturnFormat("raw");
+  static JSON = new ReturnFormat("json");
+  static HTML = new ReturnFormat("html");
+
+  constructor(format) {
+    this.format = format;
   }
-  else if (url.startsWith('https')){
-   call = https.get;
- } else {
-   call = http.get;
- }
+}
+
+function pickClient(url) {
+  if (typeof url !== "string") return https.request;
+  return url.startsWith("https") ? https.get : http.get;
+}
+
+export function get(url, format = ReturnFormat.HTML) {
+  const call = pickClient(url);
   return new Promise((resolve, reject) => {
     call(url, (res) => {
-      res.setEncoding('utf8');
+      res.setEncoding("utf8");
       let rawData = "";
-
       res.on("data", (d) => {
         rawData += d;
       });
-
       res.on("end", () => {
         let result;
-        switch(format){
+        switch (format) {
           case ReturnFormat.RAW:
-          result = rawData;
-          break;
+            result = rawData;
+            break;
           case ReturnFormat.JSON:
-          result = JSON.parse(rawData);
-          break;
+            result = JSON.parse(rawData);
+            break;
           case ReturnFormat.HTML:
-          result = html.parse(rawData);
-          break;
+            result = html.parse(rawData);
+            break;
           default:
-          console.log('webrequest.get was somehow called without a valid return format');
-          exit(1);
-          break;
+            reject(new Error("webrequest.get called without a valid return format"));
+            return;
         }
-        if (result["status"] === "failure"){reject('Promise for the url "'+url+'" was rejected. (Result status = failure)');}
-        else {
+        if (result && result.status === "failure") {
+          reject(new Error('Promise for the url "' + url + '" was rejected. (Result status = failure)'));
+        } else {
           resolve(result);
         }
       });
-    });
+    }).on("error", reject);
   });
 }
 
-export function getJson(url){
-  let call;
-
-  if (typeof(url) !== 'string'){
-    call = https.request;
-  }
-  else if (url.startsWith('https')){
-   call = https.get;
- } else {
-   call = http.get;
- }
-
- return new Promise((resolve, reject) => {
-   call(url, (res) => {
-     res.setEncoding('utf8');
-     let rawData = "";
-
-     res.on("data", (d) => {
-       rawData += d;
-     });
-
-     res.on("end", () => {
-       let result = JSON.parse(rawData);
-       if (result["status"] === "failure"){reject('Promise for the url "'+url+'" was rejected. (Result status = failure)');}
-       else {
-         resolve(result);
-       }
-     });
-   });
- });
-
-}
-
-export class ReturnFormat{
-  static RAW = new ReturnFormat('raw');
-  static JSON = new ReturnFormat('json');
-  static HTML = new ReturnFormat('html');
-
-  constructor(format){
-    //this.#format = format;
-    this.format = format;
-    //Object.defineProperty(this, 'format', {value: format});
-  }
+export function getJson(url) {
+  return get(url, ReturnFormat.JSON);
 }

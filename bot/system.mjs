@@ -8,18 +8,14 @@ import { ApplicationCommandOptionType, REST, Routes } from "discord.js";
 import { fileURLToPath } from "url";
 
 export class System {
-  os = process.env.OS;
+  os = process.platform;
   root = process.env.LOBSTER_ROOT;
 
   static vars = { boot_mode: "default" };
-  /* Not using these yet
-    static boot_flags = [];
-    static BootFlag = Object.freeze({
-        NPM_INSTALL: 1,
-        GIT_PULL: 2
-    });
-    */
 
+  // Schema for tables we own. Column definitions are trusted (they live in
+  // code); only the column *names* and table name are routed through ?? in
+  // Database#create_table.
   tables = {
     lobby_active_lobbies: {
       id: "INT AUTO_INCREMENT NOT NULL",
@@ -28,21 +24,48 @@ export class System {
       creationtime: "BIGINT",
       pingtime: "BIGINT",
       voicechat: "VARCHAR(20)",
-      host: "VARCHAR(20) UNIQUE",
+      // BUGFIX: previously UNIQUE on host, which prevented hosts from
+      // ever creating a second lobby (and conflated with the announce
+      // table). Drop the UNIQUE constraint here.
+      host: "VARCHAR(20)",
+      is_vc_lobby: "TINYINT(1)",
       is_vanilla: "TINYINT(1)",
       notes: "TEXT",
-      state: "varchar(8)",
-      ongoing: "tinyint(1)",
-      post_message_id: "varchar(25)",
-      post_channel_id: "varchar(25)",
+      state: "VARCHAR(8)",
+      ongoing: "TINYINT(1)",
+      post_message_id: "VARCHAR(25)",
+      post_channel_id: "VARCHAR(25)",
       "PRIMARY KEY": "(id)",
     },
+    // BUGFIX: lobby_queue.member_id was UNIQUE — meant a user could be in
+    // exactly one queue across all lobbies. Composite uniqueness is what
+    // we actually want.
     lobby_queue: {
       id: "INT AUTO_INCREMENT",
-      member_id: "VARCHAR(20) UNIQUE",
+      member_id: "VARCHAR(20)",
       join_request_time: "BIGINT",
       lobby_code: "VARCHAR(6)",
+      is_infohost: "TINYINT(1)",
       "PRIMARY KEY": "(id)",
+      "UNIQUE KEY uniq_member_lobby": "(member_id, lobby_code)",
+    },
+    // New table — split out of lobby_active_lobbies. Stores per-host
+    // preferences for auto-announcing on lobby state changes.
+    lobby_subscriptions: {
+      host: "VARCHAR(20) NOT NULL",
+      is_vanilla: "TINYINT(1) DEFAULT 1",
+      is_vc_lobby: "TINYINT(1) DEFAULT 0",
+      ongoing: "TINYINT(1) DEFAULT 0",
+      creationtime: "BIGINT",
+      server: "VARCHAR(20)",
+      notes: "TEXT",
+      post_channel_id: "VARCHAR(25)",
+      post_message_id: "VARCHAR(25)",
+      "PRIMARY KEY": "(host)",
+    },
+    lobby_infohosts: {
+      member_id: "VARCHAR(20) NOT NULL",
+      "PRIMARY KEY": "(member_id)",
     },
     system_vars: {
       name: "VARCHAR(32) UNIQUE",
@@ -52,6 +75,25 @@ export class System {
       flag: "INT UNIQUE",
       "PRIMARY KEY": "(flag)",
     },
+    // The tables previously created from inside the controllers' constructors
+    // are bootstrapped here too, so each controller doesn't need to issue
+    // CREATE TABLE on every Discord message.
+    counting_session: {
+      id: "INT AUTO_INCREMENT",
+      score: "INT",
+      last_correct: "VARCHAR(21)",
+      last_incorrect: "VARCHAR(21)",
+      most_active: "VARCHAR(21)",
+      "PRIMARY KEY": "(id)",
+    },
+    members: {
+      id: "INT AUTO_INCREMENT",
+      preferred_name: "VARCHAR(64)",
+      username: "VARCHAR(64)",
+      userid: "VARCHAR(21) UNIQUE",
+      prefix: "VARCHAR(21)",
+      "PRIMARY KEY": "(id)",
+    },
   };
 
   constructor() {
@@ -60,168 +102,94 @@ export class System {
   }
 
   static setVar(name, value) {
-    let db = Database.getInstance();
-    return new Promise((resolve, reject) => {
-      return db
-        .p_set("system_vars", { name, value })
-        .then((res) => {
-          resolve(res);
-        })
-        .catch((err) => {
-          reject();
-        });
-    });
+    const db = Database.getInstance();
+    return db.p_set("system_vars", { name }, { name, value });
   }
 
   static getVar(name) {
     return System.vars[name];
   }
 
-  createTables(onData = () => {}) {
+  createTables() {
     return new Promise((resolve, reject) => {
-      let db = Database.getInstance();
-      let createpromises = [];
-      for (let [k, v] of Object.entries(this.tables)) {
-        let p = db.p_create_table(k, v).then((res) => {
-          onData(res);
-        });
-        createpromises.push(p);
-      }
-      Promise.all(createpromises)
-        .then(() => {
-          resolve();
-        })
-        .catch((err) => {
-          reject(err);
-        });
+      const db = Database.getInstance();
+      const promises = Object.entries(this.tables).map(([k, v]) =>
+        db.p_create_table(k, v)
+      );
+      Promise.all(promises).then(() => resolve()).catch(reject);
     });
   }
 
   pull(onData = () => {}) {
-    let w = process.env.OS == "Windows";
-    let path = w
+    const onWindows = process.platform === "win32";
+    const exe = onWindows
       ? process.env.LOBSTER_ROOT + "\\utils\\win_pull.bat"
       : process.env.LOBSTER_ROOT + "/utils/pull";
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      // BUGFIX: the previous version called resolve() inside the if-branch
+      // but did not return, so `sub.spawn(exe)` ran anyway.
       if (process.env.NO_GIT_PULL) {
         resolve();
+        return;
       }
-      let child = sub.spawn(path);
-      //child.stderr.on('data', (data) => {reject(data);});
-      child.stdout.on("data", (data) => {
-        onData(data);
-      });
-      child.on("exit", () => {
-        resolve();
-      });
-    }).catch((err) => {
-      throw err;
+      const child = sub.spawn(exe);
+      child.stdout.on("data", (data) => onData(data));
+      child.on("exit", () => resolve());
     });
   }
 
   prepareUtils() {
     return new Promise((resolve, reject) => {
-      if (process.env.OS == "Windows") {
+      // BUGFIX: same shape as pull() — early resolve without return
+      // continued executing chmod afterwards.
+      if (process.platform === "win32") {
         resolve();
+        return;
       }
       sub.exec(
         "chmod +x " + process.env.LOBSTER_ROOT + "/utils/*",
         (err, stdout, stderr) => {
           if (err || stderr) {
-            reject(err);
+            reject(err || new Error(stderr));
             return;
           }
           resolve(stdout);
         }
       );
-    }).catch((err) => {
-      throw err;
     });
   }
 
   npm(onData = () => {}) {
     return new Promise((resolve, reject) => {
-      let child = sub.spawn("npm install");
-      child.stderr.on("data", (data) => {
-        reject(data);
-      });
-      child.stdout.on("data", (data) => {
-        onData(data);
-      });
-      child.on("exit", () => {
-        resolve();
-      });
-    }).catch((err) => {
-      throw err;
+      const child = sub.spawn("npm install");
+      child.stderr.on("data", (data) => reject(data));
+      child.stdout.on("data", (data) => onData(data));
+      child.on("exit", () => resolve());
     });
   }
 
   loadVars() {
-    return new Promise((resolve, reject) => {
-      let db = Database.getInstance();
-      db.p_get("system_vars")
-        .then((res) => {
-          for (let i in res) {
-            System.vars[res[i].name] = res[i].value;
-          }
-          resolve(res);
-        })
-        .catch((err) => {
-          throw err;
-        });
+    const db = Database.getInstance();
+    return db.p_get("system_vars").then((res) => {
+      for (const row of res) System.vars[row.name] = row.value;
+      return res;
     });
   }
 
-  resetBootmode(onData = (data) => {}) {
-    return new Promise((resolve, reject) => {
-      let db = Database.getInstance();
-      console.log("resetBootmode is running");
-      let promises = [];
-      promises.push(
-        db.p_delete("system_vars", { name: "boot_mode" }).then((res) => {
-          console.log("Boot_mode deleted");
-          // onData('Boot_mode deleted');
-        })
-      );
-      promises.push(
-        db.p_delete("system_vars", { name: "boot_channel" }).then((res) => {
-          console.log("Boot_channel deleted");
-          // onData('Boot_channel deleted');
-        })
-      );
-      promises.push(
-        db.p_delete("system_vars", { name: "boot_message" }).then((res) => {
-          console.log("Boot_message deleted");
-          // onData('Boot_message deleted');
-        })
-      );
-
-      Promise.all(promises)
-        .then(() => {
-          // onData('Bootmode is reset');
-          db.p_get("system_vars").then((res) => {
-            console.log("Vars after delete: " + JSON.stringify(res));
-          });
-          resolve();
-        })
-        .catch((err) => {
-          throw new Error(
-            "Promise.all in resetBootmode failed because: " + err.message
-          );
-        });
-    });
+  resetBootmode() {
+    const db = Database.getInstance();
+    const names = ["boot_mode", "boot_channel", "boot_message"];
+    return Promise.all(names.map((name) => db.p_delete("system_vars", { name })));
   }
 
   static getBootMessage() {
     return new Promise((resolve, reject) => {
       if (!System.vars.boot_channel || !System.vars.boot_message) {
-        reject("Cannot get boot message");
+        reject(new Error("Cannot get boot message"));
+        return;
       }
-      let channel = Discord.client.channels.cache.get(System.vars.boot_channel);
-      channel.messages.fetch(System.vars.boot_message).then((m) => {
-        console.log("Boot message:\n" + JSON.stringify(m));
-        resolve(m);
-      });
+      const channel = Discord.client.channels.cache.get(System.vars.boot_channel);
+      channel.messages.fetch(System.vars.boot_message).then(resolve).catch(reject);
     }).catch((err) => {
       console.log("Can't get boot message, because: " + err.message);
     });
@@ -232,22 +200,17 @@ export class System {
       const botId = process.env.LOBSTER_ID;
       const serverId = process.env.DARKSIDE_ID;
 
-      let __filename = fileURLToPath(import.meta.url);
-      let __dirname = path.dirname(__filename);
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
 
-      let rest = new REST().setToken(process.env.DISCORD_TOKEN);
-      let ctrldir = __dirname + "/../controllers/";
+      const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+      const ctrldir = __dirname + "/../controllers/";
 
-      let importpromises = [];
-
-      await fs.readdir(ctrldir, async (err, res) => {
-        if (err) {
-          return console.error(err);
-        }
-
-        let commands = [];
-        /*******  Default commands *******/
-        commands.push({
+      // BUGFIX: previous code used callback-style fs.readdir with `await`
+      // wrapping it, which never blocked. Use the promise variant.
+      const files = await fs.promises.readdir(ctrldir);
+      const commands = [
+        {
           name: "lob",
           description: "Run message-based command as slash-command",
           options: [
@@ -263,32 +226,18 @@ export class System {
               type: ApplicationCommandOptionType.String,
             },
           ],
-        });
+        },
+      ];
 
-        for (let i in res) {
-          let filename = res[i];
-          let commandname = res[i].substring(0, res[i].indexOf("_"));
-          let controllername = res[i].substring(0, res[i].indexOf("."));
-
-          importpromises.push(
-            import("../controllers/" + filename)
-              .then((module) => {
-                let ctrlcommands = module[controllername].commands;
-                if (ctrlcommands) {
-                  commands.push(...ctrlcommands);
-                }
-              })
-              .catch((err) => {
-                throw err;
-              })
-          );
-        }
-
-        Promise.all(importpromises).then(async () => {
-          await rest.put(Routes.applicationGuildCommands(botId, serverId), {
-            body: commands,
-          });
-        });
+      const importPromises = files.map(async (filename) => {
+        const controllername = filename.substring(0, filename.indexOf("."));
+        const module = await import("../controllers/" + filename);
+        const ctrlcommands = module[controllername]?.commands;
+        if (ctrlcommands) commands.push(...ctrlcommands);
+      });
+      await Promise.all(importPromises);
+      await rest.put(Routes.applicationGuildCommands(botId, serverId), {
+        body: commands,
       });
     } catch (error) {
       console.error(error);

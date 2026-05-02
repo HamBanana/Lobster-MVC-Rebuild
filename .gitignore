@@ -1,5 +1,8 @@
-# .vs
-.vs
+# Editor / IDE state
+.vs/
+.vscode/
+.idea/
+.upm/
 # Logs
 logs
 *.log

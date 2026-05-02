@@ -1,9 +1,20 @@
 {
+  "name": "lobster",
+  "version": "0.1.0",
+  "description": "Discord bot that tracks ongoing Among Us lobbies and notifies #vanilla-game-chat when a game enters lobby.",
+  "type": "module",
+  "main": "index.mjs",
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "deploy:slash": "node slash-deploy.cjs"
+  },
   "dependencies": {
     "discord.js": "^14.14.1",
-    "mysql": "^2.18.1",
-    "nano": "^10.1.3",
-    "nosql": "^6.1.0",
-    "pm2": "^5.3.1"
+    "mysql2": "^3.9.7",
+    "node-fetch": "^3.3.2",
+    "node-html-parser": "^6.1.13"
   }
 }
