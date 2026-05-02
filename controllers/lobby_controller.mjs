@@ -59,6 +59,7 @@ export class lobby_controller extends Controller {
     },
     { name: "list", description: "Shows a list of active_lobbies" },
     { name: "testpresence", description: "Shows what Among Us activity the bot currently sees for you" },
+    { name: "state", description: "Dumps active_lobbies cache and DB rows (debug)" },
     {
       name: "announce",
       description:
@@ -142,7 +143,8 @@ export class lobby_controller extends Controller {
         is_vc_lobby,
       };
       this.view.type = "channel";
-      this.view.channelid = channels["vanilla-game-chat"];
+      this.view.channelid = channels["lobtest"];
+      //this.view.channelid = channels["vanilla-game-chat"];
       lobby_model.active_lobbies[code].queue = [];
       this.post();
     });
@@ -160,7 +162,7 @@ export class lobby_controller extends Controller {
       const activity = member?.presence?.activities?.find(
         (a) => a.name === "Among Us"
       );
-      code = activity?.party?.id;
+      code = activity?.party?.id?.toUpperCase();
       if (!code) {
         return this._reply(
           "No code provided and you don't appear to be in an Among Us lobby."
@@ -175,7 +177,7 @@ export class lobby_controller extends Controller {
           warn(err, { context: { stage: "create confirm delete" } })
         );
       }
-      this.model.create({ code, host }, (err) => {
+      this.model.create({ code, host }, (err, res) => {
         if (err) {
           switch (err.code) {
             case "ER_DUP_ENTRY":
@@ -189,12 +191,17 @@ export class lobby_controller extends Controller {
         this.view.data = {
           code,
           host: this.client.users.cache.get(host)?.username || "unknown",
+          is_vanilla: res.is_vanilla ? "Yes" : "No",
+          is_vc_lobby: res.is_vc_lobby ? "Yes" : "No",
+          notes: res.notes || "",
+          pingtime: res.pingtime,
           mentions: "",
         };
         this.view.reactions = {};
-        this.view.template_path = "lobby/prompt_create";
+        this.view.template_path = "lobby/confirm_lobby";
         this.view.type = "channel";
-        this.view.channelid = channels["vanilla-codes"];
+        this.view.channelid = channels["lobtest"];
+        //this.view.channelid = channels["vanilla-codes"];
         this.post();
       });
     };
@@ -256,8 +263,9 @@ export class lobby_controller extends Controller {
   }
 
   delete(args) {
-    const { code } = this.extractArgs(args, "code");
-    if (!code) return this._reply("Delete what?");
+    const { code: rawCode } = this.extractArgs(args, "code");
+    if (!rawCode) return this._reply("Delete what?");
+    const code = rawCode.toUpperCase();
     this.model.delete({ code, user: this.message.author.id }, (err) => {
       if (err) {
         return this.reportError(err, { stage: "lobby/delete", code });
@@ -489,6 +497,23 @@ export class lobby_controller extends Controller {
       .catch((err) =>
         warn(err, { context: { stage: "clearOld select" } })
       );
+  }
+
+  state() {
+    const cached = Object.keys(lobby_model.active_lobbies);
+    const cacheStr = cached.length
+      ? cached.map((k) => `${k} (host: ${lobby_model.active_lobbies[k].host})`).join(", ")
+      : "(empty)";
+
+    const db = this.model.db;
+    db.connection.query("SELECT code, host FROM `lobby_active_lobbies`", (err, rows) => {
+      const dbStr = err
+        ? "DB error: " + err.message
+        : rows.length
+          ? rows.map((r) => `"${r.code}" (host: ${r.host})`).join(", ")
+          : "(empty)";
+      this._reply("Cache: " + cacheStr + "\nDB: " + dbStr);
+    });
   }
 
   testpresence(args) {

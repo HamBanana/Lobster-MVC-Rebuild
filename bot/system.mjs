@@ -175,7 +175,7 @@ export class System {
       // lobby_subscriptions columns added after initial table creation
       { table: "lobby_subscriptions",  column: "scheduled_time",    definition: "VARCHAR(10)" },
     ];
-    return Promise.all(
+    const addColumns = Promise.all(
       additions.map(({ table, column, definition }) =>
         new Promise((resolve) => {
           db.connection.query(
@@ -186,7 +186,7 @@ export class System {
                 warn(checkErr, { context: { stage: "migrate check", table, column } });
                 return resolve();
               }
-              if (rows && rows[0] && rows[0].cnt > 0) return resolve(); // already exists
+              if (rows && rows[0] && rows[0].cnt > 0) return resolve();
               db.connection.query(
                 "ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition,
                 (alterErr) => {
@@ -203,6 +203,8 @@ export class System {
         })
       )
     );
+
+    return addColumns;
   }
 
   pull(onData = () => {}) {

@@ -10,6 +10,7 @@ export const channels = {
   "serious-topics": "992089336109617283",
   brainstuff: "1094311608815190038",
   venting: "1007147411552096376",
+  lobtest: "1200927450536890429",
   get: (id) => {
     if (!Discord.client) return null;
     return Discord.client.channels.cache.get(id);

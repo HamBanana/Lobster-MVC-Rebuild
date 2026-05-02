@@ -148,38 +148,30 @@ export class lobby_model extends Model {
     }
     const code = args.code;
     const user = args.user;
-    this.db.get(
-      "*",
-      "lobby_active_lobbies",
-      { host: user, code },
+    this.db.connection.query(
+      "SELECT * FROM `lobby_active_lobbies` WHERE UPPER(`code`) = ?",
+      [code.toUpperCase()],
       (err, res) => {
-        if (err) return callback(err);
-        if (res.length === 0) {
-          return callback(
-            new ValidationError(
-              'Can\'t delete "' +
-                code +
-                "\": the lobby doesn't exist, or you are not host."
-            )
-          );
+        if (err) return callback(toError(err));
+        if (!res || res.length === 0) {
+          return callback(new ValidationError('Lobby "' + code + '" doesn\'t exist.'));
         }
-        this.db.delete("lobby_active_lobbies", { code }, (delErr) => {
+        if (res[0].host !== user) {
+          return callback(new ValidationError('You are not the host of "' + code + '".'));
+        }
+        const storedCode = res[0].code;
+        this.db.delete("lobby_active_lobbies", { code: storedCode }, (delErr) => {
           if (delErr) return callback(delErr);
-          this.db.delete(
-            "lobby_queue",
-            { lobby_code: code },
-            (queueDelErr) => {
-              if (queueDelErr) {
-                // Log but don't fail — the lobby itself is gone, the
-                // queue entries are now orphans we can clean up later.
-                warn(queueDelErr, {
-                  context: { stage: "delete orphan queue rows", code },
-                });
-              }
-              delete lobby_model.active_lobbies[code];
-              return callback(null);
+          this.db.delete("lobby_queue", { lobby_code: storedCode }, (queueDelErr) => {
+            if (queueDelErr) {
+              warn(queueDelErr, {
+                context: { stage: "delete orphan queue rows", code: storedCode },
+              });
             }
-          );
+            delete lobby_model.active_lobbies[storedCode];
+            delete lobby_model.active_lobbies[code];
+            return callback(null);
+          });
         });
       }
     );
