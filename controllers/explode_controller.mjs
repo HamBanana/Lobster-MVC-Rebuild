@@ -1,10 +1,9 @@
-import {Controller} from '../core/controller.mjs';
+import { Controller } from '../core/controller.mjs';
+import { ValidationError } from '../core/error.mjs';
 
 export class explode_controller extends Controller{
 
-  //perm = {'channels': ['949274005511229520']};
-
-explosions = ['https://media3.giphy.com/media/xUA7aQ21bruxszHmRW/giphy.gif?cid=790b7611b10e319b9ab4f20fd92314894260115ccb10c443&rid=giphy.gif&ct=g'
+  explosions = ['https://media3.giphy.com/media/xUA7aQ21bruxszHmRW/giphy.gif?cid=790b7611b10e319b9ab4f20fd92314894260115ccb10c443&rid=giphy.gif&ct=g'
              ,'https://media2.giphy.com/media/fVzdQ7TK7hO5ViB2Pp/giphy.gif?cid=790b76110fc516b8b63d743fbacd53e3fdc766ae8eeb7993&rid=giphy.gif&ct=g'
              ,'https://api.time.com/wp-content/uploads/2016/03/kepler-exploding-star-nasa.gif?w=1024&h=512&crop=1'
              ,'https://media2.giphy.com/media/XhbiNR25N4VW5P2bk8/giphy.gif?cid=790b7611e550971630c716c7a07b3e2669e4014a109e30dd&rid=giphy.gif&ct=g'
@@ -48,8 +47,16 @@ explosions = ['https://media3.giphy.com/media/xUA7aQ21bruxszHmRW/giphy.gif?cid=7
   }
 
   index(){
-    this.view.content = {files: [this.explosions[Math.floor(Math.random() * this.explosions.length)]]};
-    console.log(this.view.content.files[0])
-    this.post();
+    if (!Array.isArray(this.explosions) || this.explosions.length === 0) {
+      // Defensive — should never happen, but if the list ever becomes
+      // empty we'd otherwise post `undefined` and confuse everyone.
+      return this.reportError(
+        new ValidationError('No explosion images configured.'),
+        { stage: 'explode/index' }
+      );
+    }
+    const pick = this.explosions[Math.floor(Math.random() * this.explosions.length)];
+    this.view.content = { files: [pick] };
+    return this.post();
   }
 }

@@ -1,16 +1,17 @@
-export function dice(amountofsides = 6){
-  console.log('dice function hit!');
-  if (String(amountofsides) === "NaN"){
-    return String(amountofsides+" is not a number :eyes:");
-    return;
+export function dice(amountofsides = 6) {
+  const sidesNum = Number(amountofsides);
+  if (Number.isNaN(sidesNum)) {
+    return amountofsides + ' is not a number :eyes:';
   }
-  else if (String(amountofsides) === 'Infinity'){
-    return 'That\'s basically just a marble, isn\'t it?';
+  if (!Number.isFinite(sidesNum)) {
+    return "That's basically just a marble, isn't it?";
   }
-
-  return String((Math.floor(Math.random() * amountofsides))+1);
+  if (sidesNum < 1) {
+    return "A die needs at least one side :eyes:";
+  }
+  return String(Math.floor(Math.random() * sidesNum) + 1);
 }
 
-export function coin(){
-  return (Math.round(Math.random()) == 0) ? 'Heads' : 'Tails';
+export function coin() {
+  return (Math.round(Math.random()) === 0) ? 'Heads' : 'Tails';
 }

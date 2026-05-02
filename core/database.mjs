@@ -1,6 +1,11 @@
 import mysql from "mysql2";
 import { LobsterConfig } from "../../secret.mjs";
-import { warn } from "./error.mjs";
+import {
+  DatabaseError,
+  ValidationError,
+  warn,
+  toError,
+} from "./error.mjs";
 
 /*
  * Thin wrapper around mysql2's callback-style API.
@@ -12,6 +17,16 @@ import { warn } from "./error.mjs";
  *
  * The callback variants exist for legacy callers; new code should prefer the
  * `p_*` (Promise) variants.
+ *
+ * Error handling:
+ *   - Driver errors are wrapped in DatabaseError so callers can branch on
+ *     err.code (e.g. ER_DUP_ENTRY) and operators get a single line in the
+ *     log with operation + table + sqlMessage.
+ *   - Programmer errors (missing table name, bad arg shapes) throw a
+ *     ValidationError synchronously so they show up at the call site
+ *     instead of as a generic mysql syntax error.
+ *   - Pool-level 'error' events are forwarded to warn() so a connection
+ *     dying mid-flight ends up in the log instead of vanishing.
  */
 export class Database {
   static _instance = null;
@@ -23,18 +38,46 @@ export class Database {
     // disconnect instead of failing every subsequent query with
     // PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR. Pools also expose getConnection()
     // which Bootstrap.load() uses to validate connectivity at boot.
-    this.connection = mysql.createPool({
-      ...LobsterConfig,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-    });
+    try {
+      this.connection = mysql.createPool({
+        ...LobsterConfig,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+    } catch (err) {
+      // createPool throws synchronously on bad config (missing host, etc.)
+      const wrapped = new DatabaseError(
+        "Failed to construct database pool: " +
+          (err && err.message ? err.message : String(err)),
+        { code: err && err.code, cause: err, operation: "createPool" }
+      );
+      warn(wrapped);
+      throw wrapped;
+    }
 
     if (!this.connection) {
-      warn("Error in creating database connection");
-    } else {
-      warn("Database connection created.");
+      const err = new DatabaseError(
+        "mysql.createPool returned no pool instance.",
+        { operation: "createPool" }
+      );
+      warn(err);
+      throw err;
     }
+
+    // Surface driver-level errors that aren't tied to a specific query
+    // (e.g. a connection dropping while idle).
+    this.connection.on("error", (err) => {
+      warn(
+        new DatabaseError("Database pool error.", {
+          code: err && err.code,
+          cause: err,
+          operation: "pool.error",
+        })
+      );
+    });
+
+    warn("Database connection pool created.");
   }
 
   static getInstance() {
@@ -45,6 +88,14 @@ export class Database {
   }
 
   // ---------- helpers --------------------------------------------------
+
+  static #requireTable(table, operation) {
+    if (typeof table !== "string" || table.trim().length === 0) {
+      throw new ValidationError(
+        "Database." + operation + " called with invalid table name: " + JSON.stringify(table)
+      );
+    }
+  }
 
   /**
    * Build a parameterised "WHERE" clause from a plain object.
@@ -57,6 +108,11 @@ export class Database {
    * silently match zero rows forever.
    */
   static buildWhere(where = {}, joiner = "AND") {
+    if (where === null || typeof where !== "object") {
+      throw new ValidationError(
+        "Database where-clause must be an object, got " + typeof where
+      );
+    }
     const entries = Object.entries(where);
     if (entries.length === 0) return { sql: "", params: [] };
     const fragments = [];
@@ -74,9 +130,14 @@ export class Database {
   }
 
   static buildSet(set = {}) {
+    if (set === null || typeof set !== "object") {
+      throw new ValidationError(
+        "Database set-clause must be an object, got " + typeof set
+      );
+    }
     const entries = Object.entries(set);
     if (entries.length === 0) {
-      throw new Error("Database update called with no fields to set");
+      throw new ValidationError("Database update called with no fields to set");
     }
     const fragments = [];
     const params = [];
@@ -87,22 +148,51 @@ export class Database {
     return { sql: fragments.join(", "), params };
   }
 
+  // Wrap a raw mysql2 error with operation/table context. Always returns a
+  // DatabaseError that preserves the driver code so callers can keep
+  // matching on ER_DUP_ENTRY etc.
+  static #wrapDriverError(err, operation, table) {
+    if (!err) return null;
+    if (err instanceof DatabaseError) return err;
+    const e = toError(err);
+    return new DatabaseError(
+      e.sqlMessage || e.message || "Database operation failed",
+      { code: e.code, cause: err, operation, table }
+    );
+  }
+
   // ---------- INSERT ---------------------------------------------------
 
   insert(table, values, callback = () => {}) {
+    try {
+      Database.#requireTable(table, "insert");
+    } catch (err) {
+      // Synchronously bad calls still flow through callback so legacy
+      // callers don't get a thrown exception they don't expect.
+      callback(err);
+      return;
+    }
     return this.connection.query(
       "INSERT INTO ?? SET ?",
       [table, values],
-      callback
+      (err, res) => callback(Database.#wrapDriverError(err, "insert", table), res)
     );
   }
 
   p_insert(table, values) {
     return new Promise((resolve, reject) => {
+      try {
+        Database.#requireTable(table, "p_insert");
+      } catch (err) {
+        return reject(err);
+      }
       this.connection.query(
         "INSERT INTO ?? SET ?",
         [table, values],
-        (err, res) => (err ? reject(err) : resolve(res))
+        (err, res) => {
+          if (err) return reject(Database.#wrapDriverError(err, "p_insert", table));
+          resolve(res);
+        }
       );
     });
   }
@@ -113,16 +203,32 @@ export class Database {
   // are still escaped via ?? to be safe against typos.
 
   create_table(name, columns, if_not_exists = true, callback = () => {}) {
-    const sql = this.#buildCreateTableSql(name, columns, if_not_exists);
-    return this.connection.query(sql, callback);
+    let sql;
+    try {
+      Database.#requireTable(name, "create_table");
+      sql = this.#buildCreateTableSql(name, columns, if_not_exists);
+    } catch (err) {
+      callback(err);
+      return;
+    }
+    return this.connection.query(sql, (err, res) =>
+      callback(Database.#wrapDriverError(err, "create_table", name), res)
+    );
   }
 
   p_create_table(name, columns, if_not_exists = true) {
-    const sql = this.#buildCreateTableSql(name, columns, if_not_exists);
     return new Promise((resolve, reject) => {
-      this.connection.query(sql, (err, res) =>
-        err ? reject(err) : resolve(res)
-      );
+      let sql;
+      try {
+        Database.#requireTable(name, "p_create_table");
+        sql = this.#buildCreateTableSql(name, columns, if_not_exists);
+      } catch (err) {
+        return reject(err);
+      }
+      this.connection.query(sql, (err, res) => {
+        if (err) return reject(Database.#wrapDriverError(err, "p_create_table", name));
+        resolve(res);
+      });
     });
   }
 
@@ -130,7 +236,7 @@ export class Database {
     let body;
     if (typeof columns === "string") {
       body = columns;
-    } else {
+    } else if (columns && typeof columns === "object") {
       body = Object.entries(columns)
         .map(([col, def]) => {
           // Allow constraint pseudo-keys like "PRIMARY KEY" through verbatim.
@@ -140,6 +246,10 @@ export class Database {
           return `${mysql.escapeId(col)} ${def}`;
         })
         .join(", ");
+    } else {
+      throw new ValidationError(
+        "create_table called with invalid columns spec: " + typeof columns
+      );
     }
     const safeName = mysql.escapeId(name);
     const guard = if_not_exists ? "IF NOT EXISTS" : "";
@@ -155,43 +265,69 @@ export class Database {
    * fragments are no longer accepted — pass `{ col: value }` instead.
    */
   get(select, from, where = undefined, callback = () => {}) {
-    let sql = `SELECT ${select === "*" ? "*" : mysql.escapeId(select)} FROM ??`;
-    const params = [from];
-    if (where && typeof where === "object") {
-      const w = Database.buildWhere(where, "AND");
-      if (w.sql) {
-        sql += ` WHERE ${w.sql}`;
-        params.push(...w.params);
+    let sql;
+    let params;
+    try {
+      Database.#requireTable(from, "get");
+      sql = `SELECT ${select === "*" ? "*" : mysql.escapeId(select)} FROM ??`;
+      params = [from];
+      if (where && typeof where === "object") {
+        const w = Database.buildWhere(where, "AND");
+        if (w.sql) {
+          sql += ` WHERE ${w.sql}`;
+          params.push(...w.params);
+        }
+      } else if (typeof where === "string" && where.length > 0) {
+        throw new ValidationError(
+          "Database.get no longer accepts raw SQL where-clauses. Pass an object instead."
+        );
       }
-    } else if (typeof where === "string" && where.length > 0) {
-      throw new Error(
-        "Database.get no longer accepts raw SQL where-clauses. Pass an object instead."
-      );
+    } catch (err) {
+      callback(err);
+      return;
     }
-    return this.connection.query(sql, params, callback);
+    return this.connection.query(sql, params, (err, res) =>
+      callback(Database.#wrapDriverError(err, "get", from), res)
+    );
   }
 
   p_get(from, where = {}, operator = "AND") {
     return new Promise((resolve, reject) => {
-      const w = Database.buildWhere(where, operator);
-      let sql = "SELECT * FROM ??";
-      const params = [from];
-      if (w.sql) {
-        sql += ` WHERE ${w.sql}`;
-        params.push(...w.params);
+      let sql;
+      let params;
+      try {
+        Database.#requireTable(from, "p_get");
+        const w = Database.buildWhere(where, operator);
+        sql = "SELECT * FROM ??";
+        params = [from];
+        if (w.sql) {
+          sql += ` WHERE ${w.sql}`;
+          params.push(...w.params);
+        }
+      } catch (err) {
+        return reject(err);
       }
-      this.connection.query(sql, params, (err, res) =>
-        err ? reject(err) : resolve(res)
-      );
+      this.connection.query(sql, params, (err, res) => {
+        if (err) return reject(Database.#wrapDriverError(err, "p_get", from));
+        resolve(res);
+      });
     });
   }
 
   p_getLatest(table) {
     return new Promise((resolve, reject) => {
+      try {
+        Database.#requireTable(table, "p_getLatest");
+      } catch (err) {
+        return reject(err);
+      }
       this.connection.query(
         "SELECT * FROM ?? ORDER BY id DESC LIMIT 1",
         [table],
-        (err, res) => (err ? reject(err) : resolve(res[0]))
+        (err, res) => {
+          if (err) return reject(Database.#wrapDriverError(err, "p_getLatest", table));
+          resolve(res[0]);
+        }
       );
     });
   }
@@ -203,54 +339,88 @@ export class Database {
    * Both setObj and whereObj must be plain objects.
    */
   update(table, set, where, callback = () => {}) {
-    if (typeof set === "string" || typeof where === "string") {
-      throw new Error(
-        "Database.update no longer accepts raw SQL fragments. Pass objects."
-      );
+    let sql;
+    let params;
+    try {
+      Database.#requireTable(table, "update");
+      if (typeof set === "string" || typeof where === "string") {
+        throw new ValidationError(
+          "Database.update no longer accepts raw SQL fragments. Pass objects."
+        );
+      }
+      const s = Database.buildSet(set);
+      const w = Database.buildWhere(where, "AND");
+      sql = `UPDATE ?? SET ${s.sql}${w.sql ? ` WHERE ${w.sql}` : ""}`;
+      params = [table, ...s.params, ...w.params];
+    } catch (err) {
+      callback(err);
+      return;
     }
-    const s = Database.buildSet(set);
-    const w = Database.buildWhere(where, "AND");
-    const sql = `UPDATE ?? SET ${s.sql}${w.sql ? ` WHERE ${w.sql}` : ""}`;
-    return this.connection.query(
-      sql,
-      [table, ...s.params, ...w.params],
-      callback
+    return this.connection.query(sql, params, (err, res) =>
+      callback(Database.#wrapDriverError(err, "update", table), res)
     );
   }
 
   p_update(table, set, where) {
     return new Promise((resolve, reject) => {
-      const s = Database.buildSet(set);
-      const w = Database.buildWhere(where, "AND");
-      const sql = `UPDATE ?? SET ${s.sql}${w.sql ? ` WHERE ${w.sql}` : ""}`;
-      this.connection.query(
-        sql,
-        [table, ...s.params, ...w.params],
-        (err, res) => (err ? reject(err) : resolve(res))
-      );
+      let sql;
+      let params;
+      try {
+        Database.#requireTable(table, "p_update");
+        const s = Database.buildSet(set);
+        const w = Database.buildWhere(where, "AND");
+        sql = `UPDATE ?? SET ${s.sql}${w.sql ? ` WHERE ${w.sql}` : ""}`;
+        params = [table, ...s.params, ...w.params];
+      } catch (err) {
+        return reject(err);
+      }
+      this.connection.query(sql, params, (err, res) => {
+        if (err) return reject(Database.#wrapDriverError(err, "p_update", table));
+        resolve(res);
+      });
     });
   }
 
   // ---------- DELETE ---------------------------------------------------
 
   delete(table, where, callback = () => {}) {
-    if (typeof where === "string") {
-      throw new Error(
-        "Database.delete no longer accepts raw SQL where-clauses. Pass an object."
-      );
+    let sql;
+    let params;
+    try {
+      Database.#requireTable(table, "delete");
+      if (typeof where === "string") {
+        throw new ValidationError(
+          "Database.delete no longer accepts raw SQL where-clauses. Pass an object."
+        );
+      }
+      const w = Database.buildWhere(where, "AND");
+      sql = `DELETE FROM ??${w.sql ? ` WHERE ${w.sql}` : ""}`;
+      params = [table, ...w.params];
+    } catch (err) {
+      callback(err);
+      return;
     }
-    const w = Database.buildWhere(where, "AND");
-    const sql = `DELETE FROM ??${w.sql ? ` WHERE ${w.sql}` : ""}`;
-    return this.connection.query(sql, [table, ...w.params], callback);
+    return this.connection.query(sql, params, (err, res) =>
+      callback(Database.#wrapDriverError(err, "delete", table), res)
+    );
   }
 
   p_delete(table, where = {}) {
     return new Promise((resolve, reject) => {
-      const w = Database.buildWhere(where, "AND");
-      const sql = `DELETE FROM ??${w.sql ? ` WHERE ${w.sql}` : ""}`;
-      this.connection.query(sql, [table, ...w.params], (err, res) =>
-        err ? reject(err) : resolve(res)
-      );
+      let sql;
+      let params;
+      try {
+        Database.#requireTable(table, "p_delete");
+        const w = Database.buildWhere(where, "AND");
+        sql = `DELETE FROM ??${w.sql ? ` WHERE ${w.sql}` : ""}`;
+        params = [table, ...w.params];
+      } catch (err) {
+        return reject(err);
+      }
+      this.connection.query(sql, params, (err, res) => {
+        if (err) return reject(Database.#wrapDriverError(err, "p_delete", table));
+        resolve(res);
+      });
     });
   }
 

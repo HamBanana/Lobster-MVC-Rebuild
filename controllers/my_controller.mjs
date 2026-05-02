@@ -1,6 +1,7 @@
 import { Controller } from "../core/controller.mjs";
 import { Database } from "../core/database.mjs";
 import { Discord } from "../core/discord.mjs";
+import { warn } from "../core/error.mjs";
 
 export class my_controller extends Controller {
   // Default values for in-memory state. The schema lives in bot/system.mjs
@@ -15,19 +16,17 @@ export class my_controller extends Controller {
 
   constructor(msg) {
     super(msg);
+    this.controllername = "my";
   }
 
   index() {
     return new Promise((resolve, reject) => {
       const db = Database.getInstance();
       db.get("*", "members", { userid: this.message.author.id }, (err, res) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+        if (err) return reject(err);
         const row = res[0];
         if (!row) {
-          resolve("No record found. Run \"!lob my create\" first.");
+          resolve('No record found. Run "!lob my create" first.');
           return;
         }
         const summary =
@@ -41,9 +40,13 @@ export class my_controller extends Controller {
           "```";
         resolve(summary);
       });
-    }).then((user) => {
-      this.message.reply("Your config: \n" + user);
-    });
+    })
+      .then((user) =>
+        Promise.resolve(this.message.reply("Your config: \n" + user)).catch(
+          (err) => warn(err, { context: { stage: "my/index reply" } })
+        )
+      )
+      .catch((err) => this.reportError(err, { stage: "my/index" }));
   }
 
   create(args) {
@@ -54,16 +57,16 @@ export class my_controller extends Controller {
       "members",
       {
         preferred_name: name || "you",
-        username: client.users.cache.get(this.message.author.id)?.username || "unknown",
+        username:
+          client.users.cache.get(this.message.author.id)?.username || "unknown",
         userid: this.message.author.id,
         prefix: "!lob",
       },
       (err) => {
-        if (err) {
-          this.message.reply("Couldn't add row: " + err.message);
-          return;
-        }
-        this.message.react("✅");
+        if (err) return this.reportError(err, { stage: "my/create" });
+        Promise.resolve(this.message.react("✅")).catch((rErr) =>
+          warn(rErr, { context: { stage: "my/create react" } })
+        );
       }
     );
   }
@@ -71,23 +74,26 @@ export class my_controller extends Controller {
   forget() {
     const db = Database.getInstance();
     db.delete("members", { userid: this.message.author.id }, (err) => {
-      if (err) {
-        this.message.reply("Couldn't forget: " + err.message);
-        return;
-      }
-      this.message.react("✅");
+      if (err) return this.reportError(err, { stage: "my/forget" });
+      Promise.resolve(this.message.react("✅")).catch((rErr) =>
+        warn(rErr, { context: { stage: "my/forget react" } })
+      );
     });
   }
 
   prefix() {
     const db = Database.getInstance();
-    db.get("prefix", "members", { userid: this.message.author.id }, (err, res) => {
-      if (err) {
-        this.message.reply("Couldn't read prefix: " + err.message);
-        return;
+    db.get(
+      "prefix",
+      "members",
+      { userid: this.message.author.id },
+      (err, res) => {
+        if (err) return this.reportError(err, { stage: "my/prefix" });
+        const value = res?.[0]?.prefix || this.user.prefix;
+        Promise.resolve(this.message.reply("Your prefix is: " + value)).catch(
+          (rErr) => warn(rErr, { context: { stage: "my/prefix reply" } })
+        );
       }
-      const value = res?.[0]?.prefix || this.user.prefix;
-      this.message.reply("Your prefix is: " + value);
-    });
+    );
   }
 }

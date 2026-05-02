@@ -6,6 +6,12 @@ import * as fs from "fs";
 import path from "path";
 import { ApplicationCommandOptionType, REST, Routes } from "discord.js";
 import { fileURLToPath } from "url";
+import {
+  ConfigError,
+  DiscordError,
+  ValidationError,
+  warn,
+} from "../core/error.mjs";
 
 export class System {
   os = process.platform;
@@ -98,10 +104,27 @@ export class System {
 
   constructor() {
     this.db = Database.getInstance();
-    setInterval(lobby_controller.clearOld, 10000);
+    setInterval(() => {
+      // Wrap so a thrown error doesn't kill the timer.
+      try {
+        const ret = lobby_controller.clearOld();
+        if (ret && typeof ret.catch === "function") {
+          ret.catch((err) =>
+            warn(err, { context: { source: "lobby_controller.clearOld" } })
+          );
+        }
+      } catch (err) {
+        warn(err, { context: { source: "lobby_controller.clearOld" } });
+      }
+    }, 10000);
   }
 
   static setVar(name, value) {
+    if (typeof name !== "string" || name.length === 0) {
+      return Promise.reject(
+        new ValidationError("setVar requires a non-empty name")
+      );
+    }
     const db = Database.getInstance();
     return db.p_set("system_vars", { name }, { name, value });
   }
@@ -111,30 +134,68 @@ export class System {
   }
 
   createTables() {
-    return new Promise((resolve, reject) => {
-      const db = Database.getInstance();
-      const promises = Object.entries(this.tables).map(([k, v]) =>
-        db.p_create_table(k, v)
-      );
-      Promise.all(promises).then(() => resolve()).catch(reject);
-    });
+    const db = Database.getInstance();
+    const promises = Object.entries(this.tables).map(([k, v]) =>
+      db.p_create_table(k, v).catch((err) => {
+        // Annotate with the table name and rethrow so Promise.all rejects
+        // with a useful message instead of just the first failure's text.
+        err.message = "createTables failed for " + k + ": " + err.message;
+        throw err;
+      })
+    );
+    return Promise.all(promises);
   }
 
   pull(onData = () => {}) {
     const onWindows = process.platform === "win32";
+    const root = process.env.LOBSTER_ROOT;
+    if (!root) {
+      return Promise.reject(
+        new ConfigError("LOBSTER_ROOT is not set; cannot resolve pull script.")
+      );
+    }
     const exe = onWindows
-      ? process.env.LOBSTER_ROOT + "\\utils\\win_pull.bat"
-      : process.env.LOBSTER_ROOT + "/utils/pull";
-    return new Promise((resolve) => {
+      ? root + "\\utils\\win_pull.bat"
+      : root + "/utils/pull";
+    return new Promise((resolve, reject) => {
       // BUGFIX: the previous version called resolve() inside the if-branch
       // but did not return, so `sub.spawn(exe)` ran anyway.
       if (process.env.NO_GIT_PULL) {
         resolve();
         return;
       }
-      const child = sub.spawn(exe);
-      child.stdout.on("data", (data) => onData(data));
-      child.on("exit", () => resolve());
+      let child;
+      try {
+        child = sub.spawn(exe);
+      } catch (err) {
+        return reject(
+          new ConfigError("Failed to spawn pull script: " + err.message, {
+            cause: err,
+          })
+        );
+      }
+      child.on("error", (err) => {
+        reject(
+          new ConfigError("Pull script error: " + err.message, { cause: err })
+        );
+      });
+      child.stdout.on("data", (data) => {
+        try {
+          onData(data);
+        } catch (err) {
+          warn(err, { context: { source: "pull onData callback" } });
+        }
+      });
+      child.stderr.on("data", (data) => {
+        warn("Pull stderr: " + String(data).trim());
+      });
+      child.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error("Pull script exited with code " + code));
+        } else {
+          resolve();
+        }
+      });
     });
   }
 
@@ -146,12 +207,28 @@ export class System {
         resolve();
         return;
       }
+      const root = process.env.LOBSTER_ROOT;
+      if (!root) {
+        return reject(
+          new ConfigError(
+            "LOBSTER_ROOT is not set; cannot chmod utils directory."
+          )
+        );
+      }
       sub.exec(
-        "chmod +x " + process.env.LOBSTER_ROOT + "/utils/*",
+        "chmod +x " + root + "/utils/*",
         (err, stdout, stderr) => {
-          if (err || stderr) {
-            reject(err || new Error(stderr));
-            return;
+          if (err) {
+            return reject(
+              new Error(
+                "Failed to chmod utils: " + err.message + (stderr ? " (" + stderr + ")" : "")
+              )
+            );
+          }
+          if (stderr) {
+            // chmod printing to stderr is unusual but not always fatal; log
+            // the stderr content but resolve so boot can proceed.
+            warn("prepareUtils stderr: " + stderr);
           }
           resolve(stdout);
         }
@@ -161,10 +238,37 @@ export class System {
 
   npm(onData = () => {}) {
     return new Promise((resolve, reject) => {
-      const child = sub.spawn("npm install");
-      child.stderr.on("data", (data) => reject(data));
-      child.stdout.on("data", (data) => onData(data));
-      child.on("exit", () => resolve());
+      let child;
+      try {
+        child = sub.spawn("npm install");
+      } catch (err) {
+        return reject(
+          new Error("Failed to spawn npm: " + err.message, { cause: err })
+        );
+      }
+      child.on("error", (err) => {
+        reject(new Error("npm error: " + err.message, { cause: err }));
+      });
+      child.stderr.on("data", (data) => {
+        // npm warnings come through stderr — only reject on non-empty data
+        // and let the operator see the raw text in the log too.
+        warn("npm stderr: " + String(data).trim());
+        reject(new Error("npm reported: " + String(data).trim()));
+      });
+      child.stdout.on("data", (data) => {
+        try {
+          onData(data);
+        } catch (err) {
+          warn(err, { context: { source: "npm onData callback" } });
+        }
+      });
+      child.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error("npm exited with code " + code));
+        } else {
+          resolve();
+        }
+      });
     });
   }
 
@@ -179,19 +283,49 @@ export class System {
   resetBootmode() {
     const db = Database.getInstance();
     const names = ["boot_mode", "boot_channel", "boot_message"];
-    return Promise.all(names.map((name) => db.p_delete("system_vars", { name })));
+    return Promise.all(
+      names.map((name) =>
+        db.p_delete("system_vars", { name }).catch((err) => {
+          warn(err, {
+            context: { stage: "resetBootmode", name },
+          });
+          // Don't fail the whole boot for a single delete error.
+          return null;
+        })
+      )
+    );
   }
 
   static getBootMessage() {
     return new Promise((resolve, reject) => {
       if (!System.vars.boot_channel || !System.vars.boot_message) {
-        reject(new Error("Cannot get boot message"));
-        return;
+        return reject(
+          new Error("Cannot get boot message: missing boot_channel or boot_message")
+        );
       }
       const channel = Discord.client.channels.cache.get(System.vars.boot_channel);
-      channel.messages.fetch(System.vars.boot_message).then(resolve).catch(reject);
+      if (!channel) {
+        return reject(
+          new DiscordError(
+            'Boot channel "' + System.vars.boot_channel + '" not in cache.',
+            { code: "CHANNEL_NOT_FOUND" }
+          )
+        );
+      }
+      channel.messages
+        .fetch(System.vars.boot_message)
+        .then(resolve)
+        .catch((err) =>
+          reject(
+            new DiscordError(
+              "Couldn't fetch boot message: " + err.message,
+              { code: err.code, cause: err }
+            )
+          )
+        );
     }).catch((err) => {
-      console.log("Can't get boot message, because: " + err.message);
+      warn(err, { context: { stage: "getBootMessage" } });
+      return null;
     });
   }
 
@@ -199,11 +333,17 @@ export class System {
     try {
       const botId = process.env.LOBSTER_ID;
       const serverId = process.env.DARKSIDE_ID;
+      const token = process.env.DISCORD_TOKEN;
+      if (!botId || !serverId || !token) {
+        throw new ConfigError(
+          "registerSlashCommands requires LOBSTER_ID, DARKSIDE_ID and DISCORD_TOKEN."
+        );
+      }
 
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
 
-      const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+      const rest = new REST().setToken(token);
       const ctrldir = __dirname + "/../controllers/";
 
       // BUGFIX: previous code used callback-style fs.readdir with `await`
@@ -230,17 +370,27 @@ export class System {
       ];
 
       const importPromises = files.map(async (filename) => {
-        const controllername = filename.substring(0, filename.indexOf("."));
-        const module = await import("../controllers/" + filename);
-        const ctrlcommands = module[controllername]?.commands;
-        if (ctrlcommands) commands.push(...ctrlcommands);
+        try {
+          const controllername = filename.substring(0, filename.indexOf("."));
+          const module = await import("../controllers/" + filename);
+          const ctrlcommands = module[controllername]?.commands;
+          if (ctrlcommands) commands.push(...ctrlcommands);
+        } catch (err) {
+          warn(err, {
+            context: {
+              source: "registerSlashCommands import",
+              filename,
+            },
+          });
+        }
       });
       await Promise.all(importPromises);
       await rest.put(Routes.applicationGuildCommands(botId, serverId), {
         body: commands,
       });
     } catch (error) {
-      console.error(error);
+      warn(error, { context: { stage: "registerSlashCommands" } });
+      throw error;
     }
   };
 }

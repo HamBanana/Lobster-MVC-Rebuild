@@ -1,6 +1,7 @@
 import { Database } from "../core/database.mjs";
 import { Model } from "../core/model.mjs";
 import { Time } from "../tools/time.mjs";
+import { ValidationError, toError, warn } from "../core/error.mjs";
 
 /*
  * In-memory caches.
@@ -9,6 +10,10 @@ import { Time } from "../tools/time.mjs";
  * boot (see `lobby_model.hydrate`) and kept in sync with the DB by every
  * mutator below — no caller should reach into MySQL directly without also
  * updating the cache, otherwise `clearOld` will drift.
+ *
+ * Error contract for callback methods: if a callback gets a non-null first
+ * argument, it is *always* an Error instance (not a bare object) so the
+ * caller can rely on err.code, err.message, and err.stack.
  */
 export class lobby_model extends Model {
   static active_lobbies = {};
@@ -23,9 +28,15 @@ export class lobby_model extends Model {
 
   static async hydrate() {
     const db = Database.getInstance();
-    const lobbies = await db.p_get("lobby_active_lobbies");
-    for (const row of lobbies) {
-      lobby_model.active_lobbies[row.code] = { ...row, queue: [] };
+    try {
+      const lobbies = await db.p_get("lobby_active_lobbies");
+      for (const row of lobbies) {
+        lobby_model.active_lobbies[row.code] = { ...row, queue: [] };
+      }
+    } catch (err) {
+      // Hydrating active lobbies is important — if it fails, log loudly
+      // but don't kill boot.
+      warn(err, { context: { stage: "hydrate active_lobbies" } });
     }
     try {
       const queues = await db.p_get("lobby_queue");
@@ -34,7 +45,7 @@ export class lobby_model extends Model {
         if (lobby) lobby.queue.push(row.member_id);
       }
     } catch (err) {
-      console.log("hydrate: lobby_queue not ready yet:", err.message);
+      warn(err, { context: { stage: "hydrate lobby_queue" } });
     }
     try {
       const infohosts = await db.p_get("lobby_infohosts");
@@ -42,13 +53,16 @@ export class lobby_model extends Model {
         lobby_model.infohosts.push(row.member_id);
       }
     } catch (err) {
-      console.log("hydrate: lobby_infohosts not ready yet:", err.message);
+      warn(err, { context: { stage: "hydrate lobby_infohosts" } });
     }
   }
 
   // ---------- mutators -------------------------------------------------
 
   create(args, callback) {
+    if (!args || !args.code) {
+      return callback(new ValidationError("create requires a lobby code"));
+    }
     const values = {
       code: args.code,
       server: args.server || "Unknown",
@@ -61,44 +75,55 @@ export class lobby_model extends Model {
     };
     this.db.insert("lobby_active_lobbies", values, (err, res) => {
       if (err) {
-        console.log("Error while inserting new active lobby: " + err.message);
+        // Don't double-log here — the DB layer already wrapped it; the
+        // controller will log via reportError.
         return callback(err, res);
       }
       lobby_model.active_lobbies[args.code] = { ...values, queue: [] };
-      return callback(err, values);
+      return callback(null, values);
     });
   }
 
   setLobbyState(args, callback) {
-    if (!args.code) {
-      return callback({ message: "Tried to update lobby, without a code" });
+    if (!args || !args.code) {
+      return callback(
+        new ValidationError("Tried to update lobby without a code")
+      );
     }
     const { code, ...set } = args;
     this.db.update("lobby_active_lobbies", set, { code }, (err, res) => {
       if (err) return callback(err);
       const cached = lobby_model.active_lobbies[code];
       if (cached) Object.assign(cached, set);
-      return callback(err, res);
+      return callback(null, res);
     });
   }
 
   getInfohosts(args, callback) {
-    this.db.get("*", "lobby_infohosts", { member_id: args.member_id }, (err, res) => {
-      if (err) return callback(err);
-      return callback(err, res);
-    });
+    if (!args || !args.member_id) {
+      return callback(new ValidationError("getInfohosts requires member_id"));
+    }
+    this.db.get(
+      "*",
+      "lobby_infohosts",
+      { member_id: args.member_id },
+      (err, res) => {
+        if (err) return callback(err);
+        return callback(null, res);
+      }
+    );
   }
 
   getLobby(code) {
     return new Promise((resolve, reject) => {
+      if (!code) {
+        return reject(new ValidationError("getLobby requires a code"));
+      }
       this.db.connection.query(
         "SELECT * FROM lobby_active_lobbies WHERE code = ?",
         [code],
         (err, res) => {
-          if (err) {
-            reject(err);
-            return;
-          }
+          if (err) return reject(toError(err));
           resolve(res[0]);
         }
       );
@@ -106,24 +131,46 @@ export class lobby_model extends Model {
   }
 
   delete(args, callback) {
+    if (!args || !args.code) {
+      return callback(new ValidationError("delete requires a code"));
+    }
     const code = args.code;
     const user = args.user;
-    this.db.get("*", "lobby_active_lobbies", { host: user, code }, (err, res) => {
-      if (err) return callback(err);
-      if (res.length === 0) {
-        return callback({
-          message:
-            'Can\'t delete "' + code + '": the lobby doesn\'t exist, or you are not host.',
+    this.db.get(
+      "*",
+      "lobby_active_lobbies",
+      { host: user, code },
+      (err, res) => {
+        if (err) return callback(err);
+        if (res.length === 0) {
+          return callback(
+            new ValidationError(
+              'Can\'t delete "' +
+                code +
+                "\": the lobby doesn't exist, or you are not host."
+            )
+          );
+        }
+        this.db.delete("lobby_active_lobbies", { code }, (delErr) => {
+          if (delErr) return callback(delErr);
+          this.db.delete(
+            "lobby_queue",
+            { lobby_code: code },
+            (queueDelErr) => {
+              if (queueDelErr) {
+                // Log but don't fail — the lobby itself is gone, the
+                // queue entries are now orphans we can clean up later.
+                warn(queueDelErr, {
+                  context: { stage: "delete orphan queue rows", code },
+                });
+              }
+              delete lobby_model.active_lobbies[code];
+              return callback(null);
+            }
+          );
         });
       }
-      this.db.delete("lobby_active_lobbies", { code }, (delErr) => {
-        if (delErr) return callback(delErr);
-        this.db.delete("lobby_queue", { lobby_code: code }, () => {
-          delete lobby_model.active_lobbies[code];
-          return callback();
-        });
-      });
-    });
+    );
   }
 
   updateLobby(code, values) {
@@ -135,10 +182,13 @@ export class lobby_model extends Model {
   }
 
   queue(args, callback) {
+    if (!args || !args.code) {
+      return callback(new ValidationError("queue requires a code"));
+    }
     if (!lobby_model.active_lobbies[args.code]) {
-      return callback({
-        message: 'The lobby "' + args.code + '" does not exist.',
-      });
+      return callback(
+        new ValidationError('The lobby "' + args.code + '" does not exist.')
+      );
     }
     if (!lobby_model.active_lobbies[args.code].queue) {
       lobby_model.active_lobbies[args.code].queue = [];
@@ -154,14 +204,24 @@ export class lobby_model extends Model {
       (err, res) => {
         if (err) return callback(err, res);
         lobby_model.active_lobbies[args.code]?.queue.push(args.member_id);
-        callback(err, res);
+        callback(null, res);
       }
     );
   }
 
   unqueue(args, callback) {
+    if (!args || !args.member_id) {
+      return callback(new ValidationError("unqueue requires a member_id"));
+    }
     if (!args.lobby_code) {
       args.lobby_code = lobby_model.active_players[args.member_id]?.lobby_code;
+    }
+    if (!args.lobby_code) {
+      return callback(
+        new ValidationError(
+          "unqueue: no lobby_code given and the member is not in any active lobby."
+        )
+      );
     }
     this.db.delete(
       "lobby_queue",
@@ -169,15 +229,19 @@ export class lobby_model extends Model {
       (err, res) => {
         if (err) return callback(err, res);
         if (!res || res.affectedRows < 1) {
-          return callback({
-            message: "You're not in the lobby \"" + args.lobby_code + '"',
-          });
+          return callback(
+            new ValidationError(
+              "You're not in the lobby \"" + args.lobby_code + '"'
+            )
+          );
         }
         const arr = lobby_model.active_lobbies[args.lobby_code]?.queue;
         if (!arr) {
-          return callback({
-            message: 'The lobby "' + args.lobby_code + "\" doesn't exist.",
-          });
+          return callback(
+            new ValidationError(
+              'The lobby "' + args.lobby_code + "\" doesn't exist."
+            )
+          );
         }
         const idx = arr.indexOf(args.member_id);
         if (idx >= 0) arr.splice(idx, 1);
@@ -188,8 +252,13 @@ export class lobby_model extends Model {
   }
 
   register_infohost(args, callback) {
+    if (!args || !args.member_id) {
+      return callback(
+        new ValidationError("register_infohost requires member_id")
+      );
+    }
     if (lobby_model.infohosts.includes(args.member_id)) {
-      return callback({ message: "You are already infohost." });
+      return callback(new ValidationError("You are already infohost."));
     }
     this.db.insert("lobby_infohosts", args, (err, res) => {
       if (!err) lobby_model.infohosts.push(args.member_id);
@@ -198,8 +267,13 @@ export class lobby_model extends Model {
   }
 
   unregister_infohost(args, callback) {
+    if (!args || !args.member_id) {
+      return callback(
+        new ValidationError("unregister_infohost requires member_id")
+      );
+    }
     if (!lobby_model.infohosts.includes(args.member_id)) {
-      return callback({ message: "You are not infohost." });
+      return callback(new ValidationError("You are not infohost."));
     }
     this.db.delete(
       "lobby_infohosts",
@@ -222,6 +296,9 @@ export class lobby_model extends Model {
   // lobby AND a subscription to auto-announce future lobbies.
 
   announce(args, callback) {
+    if (!args || !args.host) {
+      return callback(new ValidationError("announce requires a host"));
+    }
     const values = {
       host: args.host,
       is_vanilla: args.is_vanilla ?? 1,
@@ -235,6 +312,9 @@ export class lobby_model extends Model {
   }
 
   unannounce(args, callback) {
+    if (!args || !args.host) {
+      return callback(new ValidationError("unannounce requires a host"));
+    }
     this.db.delete(
       "lobby_subscriptions",
       { host: args.host },
@@ -243,6 +323,9 @@ export class lobby_model extends Model {
   }
 
   getAnnounced(args, callback) {
+    if (!args || !args.host) {
+      return callback(new ValidationError("getAnnounced requires a host"));
+    }
     this.db.get(
       "*",
       "lobby_subscriptions",
@@ -264,36 +347,52 @@ export class lobby_model extends Model {
           }
           resolve(rows && rows[0]);
         })
-        .catch(reject);
+        .catch((err) => reject(toError(err)));
     });
   }
 
   confirm_lobby(args, callback) {
-    if (!args.code) {
-      return callback({
-        message: "You need to include the lobby code, for now at least.",
-      });
+    if (!args || !args.code) {
+      return callback(
+        new ValidationError(
+          "You need to include the lobby code, for now at least."
+        )
+      );
     }
     const lobby = lobby_model.active_lobbies[args.code];
     if (!lobby) {
-      return callback({
-        message: 'No active lobby with code "' + args.code + '"',
-      });
+      return callback(
+        new ValidationError('No active lobby with code "' + args.code + '"')
+      );
     }
     lobby.state = args.state;
     let mentions = "";
     for (const mention of lobby.queue || []) {
       mentions += "<@" + mention + "> ";
-      this.db.delete("lobby_queue", { member_id: mention, lobby_code: args.code });
+      this.db.delete(
+        "lobby_queue",
+        { member_id: mention, lobby_code: args.code },
+        (err) => {
+          if (err) {
+            warn(err, {
+              context: {
+                stage: "confirm_lobby queue cleanup",
+                code: args.code,
+                member_id: mention,
+              },
+            });
+          }
+        }
+      );
     }
     return callback(null, { mentions });
   }
 
   assign_infohost(args, callback) {
-    if (!args.code) {
-      return callback({
-        message: "assign_infohost was called with no lobby code",
-      });
+    if (!args || !args.code) {
+      return callback(
+        new ValidationError("assign_infohost was called with no lobby code")
+      );
     }
     this.db.get(
       "*",
@@ -302,7 +401,7 @@ export class lobby_model extends Model {
       (err, res) => {
         if (err) return callback(err, res);
         if (res.length < 1) {
-          return callback({ message: "No infohosts are available" });
+          return callback(new ValidationError("No infohosts are available"));
         }
         const lobby = lobby_model.active_lobbies[args.code];
         if (lobby) lobby.infohost = res[0].member_id;

@@ -2,7 +2,11 @@ import { Controller } from "../core/controller.mjs";
 import { Discord } from "../core/discord.mjs";
 import { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } from "discord.js";
 import { Database } from "../core/database.mjs";
-import { PermissionError } from "../core/error.mjs";
+import {
+  DiscordError,
+  PermissionError,
+  warn,
+} from "../core/error.mjs";
 import { members } from "../core/statics.mjs";
 import { lobby_controller } from "./lobby_controller.mjs";
 
@@ -46,12 +50,15 @@ export class test_controller extends Controller {
 
   constructor(msg) {
     super(msg);
+    this.controllername = "test";
     this.auth(this.perm);
   }
 
   index() {
     this.view.content = "Update test";
-    this.post().then((reply) => console.log(reply));
+    return Promise.resolve(this.post())
+      .then((reply) => warn("test/index reply: " + (reply && reply.id)))
+      .catch((err) => this.reportError(err, { stage: "test/index" }));
   }
 
   presence(args) {
@@ -63,57 +70,65 @@ export class test_controller extends Controller {
     const newPresence = this.presence_example(newState);
     const lc = new lobby_controller(this.message);
     lc.testPresence(oldPresence, newPresence);
-    this.message.reply('Simulating state switch from "' + oldState + '" to "' + newState + '"');
+    return Promise.resolve(
+      this.message.reply(
+        'Simulating state switch from "' + oldState + '" to "' + newState + '"'
+      )
+    ).catch((err) =>
+      warn(err, { context: { controller: "test", stage: "presence reply" } })
+    );
   }
 
   getmember(args) {
     const { id } = this.extractArgs(args, "id");
     const member = members.get(id);
-    console.log("From test_controller: " + JSON.stringify(member));
+    warn("test/getmember: " + JSON.stringify(member));
   }
 
   helpexample() {
-    return new Promise((resolve) => {
-      const helpMenu = new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId("help_menu")
-          .setPlaceholder("Help Menu")
-          .setMinValues(1)
-          .setMaxValues(1)
-          .addOptions([
-            { label: "Settings", description: "Change the bot settings", value: "settings", emoji: "🛠" },
-            { label: "Activities", description: "Access the new Discord Activities Feature", value: "activities", emoji: "🎮" },
-            { label: "Fun", description: "Shows all the fun commands", value: "fun", emoji: "🎲" },
-          ])
-      );
+    return new Promise((resolve, reject) => {
+      try {
+        const helpMenu = new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId("help_menu")
+            .setPlaceholder("Help Menu")
+            .setMinValues(1)
+            .setMaxValues(1)
+            .addOptions([
+              { label: "Settings", description: "Change the bot settings", value: "settings", emoji: "🛠" },
+              { label: "Activities", description: "Access the new Discord Activities Feature", value: "activities", emoji: "🎮" },
+              { label: "Fun", description: "Shows all the fun commands", value: "fun", emoji: "🎲" },
+            ])
+        );
 
-      const editEmbed = new EmbedBuilder()
-        .setTitle("Help Menu")
-        .setDescription("Choose an option from the menu below!")
-        .setColor("Green");
+        const editEmbed = new EmbedBuilder()
+          .setTitle("Help Menu")
+          .setDescription("Choose an option from the menu below!")
+          .setColor("Green");
 
-      this.view.embeds.push(editEmbed);
-      this.view.components.push(helpMenu);
-      this.post();
-      resolve();
-    }).catch((e) => {
-      this.message.reply("That didn't work, because: " + e.message);
-    });
+        this.view.embeds.push(editEmbed);
+        this.view.components.push(helpMenu);
+        resolve(this.post());
+      } catch (err) {
+        reject(err);
+      }
+    }).catch((e) => this.reportError(e, { stage: "test/helpexample" }));
   }
 
   promise() {
-    return new Promise((resolve) => {
-      this.message.reply("Outer");
-      resolve(
-        new Promise((iresolve) => {
-          iresolve("Inner");
-        }).then(() => {
-          console.log("Inner then");
+    return new Promise((resolve, reject) => {
+      Promise.resolve(this.message.reply("Outer"))
+        .then(() => {
+          resolve(
+            new Promise((iresolve) => {
+              iresolve("Inner");
+            }).then(() => warn("Inner then"))
+          );
         })
-      );
-    }).then(() => {
-      console.log("Outer then");
-    });
+        .catch(reject);
+    })
+      .then(() => warn("Outer then"))
+      .catch((err) => this.reportError(err, { stage: "test/promise" }));
   }
 
   say(args) {
@@ -127,39 +142,52 @@ export class test_controller extends Controller {
       this.view.type = "channel";
     }
     this.view.embeds[0] = new EmbedBuilder().setTitle(word);
-    this.post();
+    return this.post();
   }
 
   async getpresence() {
-    // Lazy lookup — the client is now guaranteed to exist by the time a
-    // user can run this command.
-    const guild = await Discord.client.guilds.fetch("817607509984018442");
-    const member = await guild.members.fetch({
-      user: "330279218543984641",
-      withPresences: true,
-      force: true,
-    });
-    this.message.reply(member.presence?.activities?.[0]?.state || "no presence");
+    try {
+      // Lazy lookup — the client is now guaranteed to exist by the time a
+      // user can run this command.
+      const guild = await Discord.client.guilds.fetch("817607509984018442");
+      const member = await guild.members.fetch({
+        user: "330279218543984641",
+        withPresences: true,
+        force: true,
+      });
+      return await this.message.reply(
+        member.presence?.activities?.[0]?.state || "no presence"
+      );
+    } catch (err) {
+      return this.reportError(
+        new DiscordError("Couldn't fetch presence: " + err.message, {
+          code: err.code,
+          cause: err,
+        }),
+        { stage: "test/getpresence" }
+      );
+    }
   }
 
   count() {
-    return new Promise((resolve, reject) => {
-      const db = Database.getInstance();
-      db.p_getLatest("counting")
-        .then((result) => {
-          this.message.reply("Result: " + result.count);
-          resolve(result.count);
-        })
-        .catch((err) => {
-          this.message.reply("Error: " + err.message);
-          reject(err);
-        });
-    });
+    const db = Database.getInstance();
+    return db
+      .p_getLatest("counting")
+      .then((result) => {
+        if (!result) {
+          throw new Error("No counting rows yet.");
+        }
+        return Promise.resolve(this.message.reply("Result: " + result.count))
+          .then(() => result.count);
+      })
+      .catch((err) => this.reportError(err, { stage: "test/count" }));
   }
 
   create() {
     const db = Database.getInstance();
-    db.create_table("test", { id: "INT" }, true);
+    return db.p_create_table("test", { id: "INT" }, true).catch((err) =>
+      this.reportError(err, { stage: "test/create" })
+    );
   }
 
   fail(args) {

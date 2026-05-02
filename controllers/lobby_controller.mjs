@@ -2,6 +2,7 @@ import { Controller } from "../core/controller.mjs";
 import { lobby_model } from "../models/lobby_model.mjs";
 import { Time } from "../tools/time.mjs";
 import { channels } from "../core/statics.mjs";
+import { warn } from "../core/error.mjs";
 
 import { Database } from "../core/database.mjs";
 import {
@@ -110,7 +111,11 @@ export class lobby_controller extends Controller {
     this.view.data = { code, server };
 
     this.view.addReaction("✅", () => this.confirm_lobby({ code }));
-    this.view.addReaction("❌", (msg) => msg.delete());
+    this.view.addReaction("❌", (msg) =>
+      Promise.resolve(msg.delete()).catch((err) =>
+        warn(err, { context: { stage: "prompt_lobby cancel delete" } })
+      )
+    );
 
     this.view.template_path = "lobby/prompt_lobby";
     this.post();
@@ -119,11 +124,11 @@ export class lobby_controller extends Controller {
   confirm_lobby(args) {
     const code = (args.code || args.default?.[0])?.toUpperCase();
     if (!code) {
-      return this.message?.reply("confirm_lobby called with no code.");
+      return this._reply("confirm_lobby called with no code.");
     }
     const conf = lobby_model.active_lobbies[code];
     if (!conf) {
-      return this.message?.reply("That lobby is no longer active.");
+      return this._reply("That lobby is no longer active.");
     }
     const server = conf.server;
     const state = "In Lobby";
@@ -132,10 +137,7 @@ export class lobby_controller extends Controller {
 
     this.model.confirm_lobby({ code, pingtime, state }, (err, res) => {
       if (err) {
-        if (this.message) {
-          this.message.reply("Couldn't update lobby, because: " + err.message);
-        }
-        return;
+        return this.reportError(err, { stage: "lobby/confirm_lobby", code });
       }
 
       this.view.template_path = "lobby/confirm_lobby";
@@ -160,8 +162,9 @@ export class lobby_controller extends Controller {
 
   create(args) {
     if (!(args.code || args.default?.[0]) || !(args.server || args.default?.[1])) {
-      this.message.reply("create function must follow the format: !lob lobby create {code} {server}");
-      return;
+      return this._reply(
+        "create function must follow the format: !lob lobby create {code} {server}"
+      );
     }
     const host = args.host || this.message.author.id;
     const code = (args.code || args.default[0]).toUpperCase();
@@ -175,17 +178,17 @@ export class lobby_controller extends Controller {
 
     this.model.create({ code, server, host }, (err) => {
       if (err) {
+        // Specific cases get their own friendly message; everything else
+        // funnels through reportError so the operator sees the full error
+        // and the user sees a clean translation.
         switch (err.code) {
           case "ER_DUP_ENTRY":
-            this.message.reply('Lobby "' + code + '" already exists.');
-            break;
+            return this._reply('Lobby "' + code + '" already exists.');
           case "ER_DATA_TOO_LONG":
-            this.message.reply('"' + code + '" is too long to be a lobby code');
-            break;
+            return this._reply('"' + code + '" is too long to be a lobby code');
           default:
-            this.message.reply("Could not create lobby because: " + err.message);
+            return this.reportError(err, { stage: "lobby/create", code });
         }
-        return;
       }
       this.view.reactions = {};
       this.view.template_path = "lobby/create";
@@ -195,47 +198,53 @@ export class lobby_controller extends Controller {
 
   edit(args) {
     args = this.extractArgs(args);
-    this.model.edit(args, { host: this.message.author.id }).then(() => {
-      this.message.react("👍");
-    });
+    this.model
+      .edit(args, { host: this.message.author.id })
+      .then(() => this._react("👍"))
+      .catch((err) => this.reportError(err, { stage: "lobby/edit" }));
   }
 
   register_infohost() {
-    this.model.register_infohost({ member_id: this.message.author.id }, (err) => {
-      if (err) {
-        return this.message.reply("Couldn't register you as infohost, because: " + err.message);
+    this.model.register_infohost(
+      { member_id: this.message.author.id },
+      (err) => {
+        if (err) {
+          return this.reportError(err, { stage: "lobby/register_infohost" });
+        }
+        return this._reply(
+          'Lobster will now use your activity info to ping when lobbies\nYou can use "!lob lobby announce" to automatically ping archetype when lobby starts.'
+        );
       }
-      return this.message.reply(
-        'Lobster will now use your activity info to ping when lobbies\nYou can use "!lob lobby announce" to automatically ping archetype when lobby starts.'
-      );
-    });
+    );
   }
 
   unregister_infohost() {
-    this.model.unregister_infohost({ member_id: this.message.author.id }, (err) => {
-      if (err) {
-        return this.message.reply("Couldn't unregister you as infohost, because: " + err.message);
+    this.model.unregister_infohost(
+      { member_id: this.message.author.id },
+      (err) => {
+        if (err) {
+          return this.reportError(err, { stage: "lobby/unregister_infohost" });
+        }
+        return this._reply("You are no longer registered as infohost.");
       }
-      return this.message.reply("You are no longer registered as infohost.");
-    });
+    );
   }
 
   delete(args) {
     const { code } = this.extractArgs(args, "code");
-    if (!code) return this.message.reply("Delete what?");
+    if (!code) return this._reply("Delete what?");
     this.model.delete({ code, user: this.message.author.id }, (err) => {
       if (err) {
-        return this.message.reply('Error while deleting lobby "' + code + '": ' + err.message);
+        return this.reportError(err, { stage: "lobby/delete", code });
       }
-      return this.message.reply("Deleted: " + code);
+      return this._reply("Deleted: " + code);
     });
   }
 
   queue(args) {
     let code = args.code || args.default?.[0];
     if (!code) {
-      this.message.reply("You forgot the code :eyes:");
-      return;
+      return this._reply("You forgot the code :eyes:");
     }
     const q_args = {
       member_id: this.message.author.id,
@@ -246,25 +255,25 @@ export class lobby_controller extends Controller {
       if (err) {
         switch (err.code) {
           case "ER_DUP_ENTRY":
-            this.message.reply("You are already in the queue.");
-            return;
+            return this._reply("You are already in the queue.");
           default:
-            this.message.reply("Couldn't join because: " + err.message);
-            return;
+            return this.reportError(err, { stage: "lobby/queue", code });
         }
       }
-      this.message.react("👍");
+      this._react("👍");
     });
   }
 
   unqueue(args) {
     const code = args.code || args.default?.[0];
-    if (!code) return this.message.reply("Unqueue from which lobby?");
+    if (!code) return this._reply("Unqueue from which lobby?");
     this.model.unqueue(
       { lobby_code: code.toUpperCase(), member_id: this.message.author.id },
       (err) => {
-        if (err) return this.message.reply("Couldn't unjoin because: " + err.message);
-        return this.message.react("👍");
+        if (err) {
+          return this.reportError(err, { stage: "lobby/unqueue", code });
+        }
+        return this._react("👍");
       }
     );
   }
@@ -278,10 +287,17 @@ export class lobby_controller extends Controller {
 
     this.view.addReaction("✅", (msg) => {
       const { code, server, host } = this.view.data;
-      msg.delete();
-      this.create({ code, server, host });
+      Promise.resolve(msg.delete())
+        .catch((err) =>
+          warn(err, { context: { stage: "prompt_create accept delete" } })
+        )
+        .then(() => this.create({ code, server, host }));
     });
-    this.view.addReaction("❌", (msg) => msg.delete());
+    this.view.addReaction("❌", (msg) =>
+      Promise.resolve(msg.delete()).catch((err) =>
+        warn(err, { context: { stage: "prompt_create cancel delete" } })
+      )
+    );
 
     this.post();
   }
@@ -291,23 +307,19 @@ export class lobby_controller extends Controller {
     this.view.data.code = (args.code || args.default[0]).toUpperCase();
     this.view.data.host = this.message.author.username;
 
-    this.view.addReaction("🇪🇺", (msg) => {
-      this.view.data.server = "EUROPE";
-      msg.delete().then(() => this.create(this.view.data));
-    });
-    this.view.addReaction("🇺🇸", (msg) => {
-      msg.delete();
-      this.view.data.server = "NORTH AMERICA";
-      this.create(this.view.data);
-    });
-    this.view.addReaction("🇯🇵", (msg) => {
-      msg.delete();
-      this.view.data.server = "ASIA";
-      this.create(this.view.data);
-    });
-    this.view.addReaction("❌", () => {
-      this.message.reply("Lobby creation cancelled");
-    });
+    const setServerAndCreate = (msg, server) => {
+      this.view.data.server = server;
+      Promise.resolve(msg.delete())
+        .catch((err) =>
+          warn(err, { context: { stage: "prompt_server " + server + " delete" } })
+        )
+        .then(() => this.create(this.view.data));
+    };
+
+    this.view.addReaction("🇪🇺", (msg) => setServerAndCreate(msg, "EUROPE"));
+    this.view.addReaction("🇺🇸", (msg) => setServerAndCreate(msg, "NORTH AMERICA"));
+    this.view.addReaction("🇯🇵", (msg) => setServerAndCreate(msg, "ASIA"));
+    this.view.addReaction("❌", () => this._reply("Lobby creation cancelled"));
 
     this.view.template_path = "lobby/prompt_server";
     this.post();
@@ -315,11 +327,11 @@ export class lobby_controller extends Controller {
 
   list() {
     if (Object.keys(lobby_model.active_lobbies).length === 0) {
-      return this.message.reply("There are no active lobbies :eyes:");
+      return this._reply("There are no active lobbies :eyes:");
     }
     for (const v of Object.values(lobby_model.active_lobbies)) {
-      this.message
-        .reply(
+      Promise.resolve(
+        this.message.reply(
           "Hosted by: " +
             v.host +
             "\n" +
@@ -332,12 +344,14 @@ export class lobby_controller extends Controller {
             v.code +
             '", to join this lobby.'
         )
-        .catch((err) => console.log("Failed in lobby/list: " + err.message));
+      ).catch((err) =>
+        warn(err, { context: { stage: "lobby/list reply", code: v.code } })
+      );
     }
   }
 
   announce(args) {
-    this.message.reply(
+    this._reply(
       'Please ensure that you have enabled "Share your activity status with others" in Activity settings'
     );
     let { is_vanilla } = this.extractArgs(args);
@@ -352,13 +366,13 @@ export class lobby_controller extends Controller {
       (err) => {
         if (err) {
           if (err.code === "ER_DUP_ENTRY") {
-            return this.message.reply(
+            return this._reply(
               'You have already announced a lobby.\nTo change lobby settings, run "!lob lobby edit".'
             );
           }
-          return this.message.reply("Can't announce lobby, because: " + err.message);
+          return this.reportError(err, { stage: "lobby/announce" });
         }
-        this.message.react("👍");
+        this._react("👍");
       }
     );
   }
@@ -366,12 +380,12 @@ export class lobby_controller extends Controller {
   unannounce() {
     this.model.unannounce({ host: this.message.author.id }, (err, res) => {
       if (err) {
-        return this.message.reply("Can't unannounce lobby, because: " + err.message);
+        return this.reportError(err, { stage: "lobby/unannounce" });
       }
-      if (res.affectedRows < 1) {
-        return this.message.reply("You have no announced lobbies.");
+      if (!res || res.affectedRows < 1) {
+        return this._reply("You have no announced lobbies.");
       }
-      this.message.react("👍");
+      this._react("👍");
     });
   }
 
@@ -379,21 +393,41 @@ export class lobby_controller extends Controller {
    * Sweeps stale active lobbies. Runs from system.mjs's setInterval.
    * Now updates the in-memory `active_lobbies` cache when it deletes from
    * the DB, so the two stay aligned.
+   *
+   * Returns the promise so the caller can attach a single error handler;
+   * we also catch ourselves so a transient DB blip never bubbles up as an
+   * unhandled rejection.
    */
   static clearOld() {
     const db = Database.getInstance();
-    db.p_get("lobby_active_lobbies").then((lobbies) => {
-      for (const lobby of lobbies) {
-        if (Time.now - lobby.pingtime > 180000) {
-          db.p_delete("lobby_active_lobbies", { code: lobby.code }).then((res) => {
-            if (res) {
-              delete lobby_model.active_lobbies[lobby.code];
-              console.log("Deleted: " + lobby.code);
-            }
-          });
+    return db
+      .p_get("lobby_active_lobbies")
+      .then((lobbies) => {
+        const work = [];
+        for (const lobby of lobbies) {
+          if (Time.now - lobby.pingtime > 180000) {
+            work.push(
+              db
+                .p_delete("lobby_active_lobbies", { code: lobby.code })
+                .then((res) => {
+                  if (res) {
+                    delete lobby_model.active_lobbies[lobby.code];
+                    warn("Deleted stale lobby: " + lobby.code);
+                  }
+                })
+                .catch((err) =>
+                  warn(err, {
+                    context: { stage: "clearOld delete", code: lobby.code },
+                  })
+                )
+            );
+          }
         }
-      }
-    });
+        return Promise.all(work);
+      })
+      .catch((err) =>
+        warn(err, { context: { stage: "clearOld select" } })
+      );
   }
 
   testPresence(oldPresence, newPresence) {
@@ -409,10 +443,9 @@ export class lobby_controller extends Controller {
     if (oldActivity?.state === "In Menus" && newActivity?.state === "In Lobby") {
       this.model.getAnnounced({ host: newPresence.userId }, (err, rows) => {
         if (err) {
-          console.log(
-            "Error while getting announced lobbies in lobby_controller.testPresence: " +
-              err.message
-          );
+          warn(err, {
+            context: { stage: "testPresence getAnnounced", host: newPresence.userId },
+          });
           return;
         }
         if (!rows || rows.length < 1) return;
@@ -436,23 +469,42 @@ export class lobby_controller extends Controller {
           this.view.messageId = sub.post_message_id;
         }
 
-        this.post().then((message) => {
-          const create_vals = {
-            code: newActivity.party?.id,
-            host: newPresence.userId,
-            state: newActivity.state,
-            pingtime: Time.now,
-            ongoing: 1,
-            post_channel_id: sub.post_channel_id || channels["lob-test"],
-            post_message_id: sub.post_message_id || message?.id,
-          };
-          this.model.edit(create_vals, { host: newPresence.userId });
-        });
+        Promise.resolve(this.post())
+          .then((message) => {
+            const create_vals = {
+              code: newActivity.party?.id,
+              host: newPresence.userId,
+              state: newActivity.state,
+              pingtime: Time.now,
+              ongoing: 1,
+              post_channel_id: sub.post_channel_id || channels["lob-test"],
+              post_message_id: sub.post_message_id || message?.id,
+            };
+            return this.model.edit(create_vals, { host: newPresence.userId });
+          })
+          .catch((err) =>
+            warn(err, { context: { stage: "testPresence post+edit" } })
+          );
       });
     }
 
     // The "In Lobby" → "In Game" and inverse transitions used to live here
     // but were `return;`-disabled. Removed entirely until the flow is
     // designed properly.
+  }
+
+  // ---------- helpers --------------------------------------------------
+  _reply(text) {
+    if (!this.message || typeof this.message.reply !== "function") return;
+    return Promise.resolve(this.message.reply(text)).catch((err) =>
+      warn(err, { context: { controller: "lobby", stage: "_reply" } })
+    );
+  }
+
+  _react(emoji) {
+    if (!this.message || typeof this.message.react !== "function") return;
+    return Promise.resolve(this.message.react(emoji)).catch((err) =>
+      warn(err, { context: { controller: "lobby", stage: "_react", emoji } })
+    );
   }
 }

@@ -1,4 +1,5 @@
 import { Discord } from "./discord.mjs";
+import { DiscordError, warn } from "./error.mjs";
 
 export const channels = {
   "lob-test": "1200927450536890429",
@@ -10,6 +11,7 @@ export const channels = {
   brainstuff: "1094311608815190038",
   venting: "1007147411552096376",
   get: (id) => {
+    if (!Discord.client) return null;
     return Discord.client.channels.cache.get(id);
   },
 };
@@ -22,8 +24,11 @@ export const roles = {
 export const members = {
   Ham: "330279218543984641",
   get: (id) => {
-    let user = Discord.client.users.cache.get(id);
-    console.log('Getting member with id "' + id + '": ' + JSON.stringify(user));
+    if (!Discord.client) return null;
+    const user = Discord.client.users.cache.get(id);
+    if (!user) {
+      warn('members.get: user "' + id + '" is not in cache');
+    }
     return user;
   },
 };
@@ -31,15 +36,46 @@ export const members = {
 export const messages = {
   get: (channelId, messageId) => {
     return new Promise((resolve, reject) => {
-      let channel = Discord.client.channels.cache.get(channelId);
+      if (!Discord.client) {
+        return reject(
+          new DiscordError("messages.get called before Discord client was ready", {
+            code: "CLIENT_NOT_READY",
+          })
+        );
+      }
+      const channel = Discord.client.channels.cache.get(channelId);
+      if (!channel) {
+        return reject(
+          new DiscordError(
+            'messages.get: channel "' + channelId + '" is not in cache.',
+            { code: "CHANNEL_NOT_FOUND" }
+          )
+        );
+      }
+      if (!channel.messages || typeof channel.messages.fetch !== "function") {
+        return reject(
+          new DiscordError(
+            'messages.get: channel "' + channelId + '" does not support messages.fetch.',
+            { code: "CHANNEL_NO_MESSAGES" }
+          )
+        );
+      }
       channel.messages
         .fetch(messageId)
-        .then((message) => {
-          resolve(message);
-        })
-        .catch((err) => {
-          reject(err);
-        });
+        .then((message) => resolve(message))
+        .catch((err) =>
+          reject(
+            new DiscordError(
+              'messages.get: failed to fetch message "' +
+                messageId +
+                '" from channel "' +
+                channelId +
+                '": ' +
+                err.message,
+              { code: err.code, cause: err }
+            )
+          )
+        );
     });
   },
 };

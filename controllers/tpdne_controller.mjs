@@ -6,12 +6,13 @@ export class tpdne_controller extends Controller{
   };
   constructor(msg){
     super(msg);
+    this.controllername = 'tpdne';
     this.allowed = false;
     this.auth(this.perm);
   }
-  
+
   index(){
     this.view.content = {files:['https://thispersondoesnotexist.com/image']};
-  this.post();
+    return this.post();
   }
 }

@@ -1,33 +1,40 @@
 import {Controller} from '../core/controller.mjs';
-import {LobbyManager} from '../among_us/lobbymanager.mjs';
-import { embed_example } from '../views/lobby.mjs';
-import { EmbedBuilder } from 'discord.js';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { warn } from '../core/error.mjs';
 
 export class index_controller extends Controller{
+  constructor(msg){
+    super(msg);
+    this.controllername = 'index';
+  }
+
   index(){
     return new Promise((resolve, reject) => {
-      let __filename = fileURLToPath(import.meta.url);
-      let __dirname = path.dirname(__filename);
-      this.view.content = {files: [__dirname + '/../res/img/idiot.png']};
-      //this.view.template_type = 'embed';
-      //this.view.template_path = 'lobby/embed_example_json';
-      //this.view.data['title'] = "A better title";
-      //this.view.data['description'] = "A better description";
-  
-      //this.view.embeds[0] = new EmbedBuilder().setTitle('Yay').addFields([{name:'Yay', value:'An embed with a field'}]); 
-      //this.post({embeds:[embed_example]});
-      //this.message.reply({embeds:[embed_example]});
-      resolve(this.post());
-    });
+      try {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        this.view.content = {files: [__dirname + '/../res/img/idiot.png']};
+        resolve(this.post());
+      } catch (err) {
+        reject(err);
+      }
+    }).catch((err) => this.reportError(err, { stage: 'index/index' }));
   }
 
   info(){
-    this.message.reply("https://www.youtube.com/watch?v=n0XaSvhTYd4");
+    return Promise.resolve(
+      this.message.reply("https://www.youtube.com/watch?v=n0XaSvhTYd4")
+    ).catch((err) =>
+      warn(err, { context: { controller: 'index', stage: 'info' } })
+    );
   }
 
   moreinfo(){
-    this.message.reply("https://www.youtube.com/watch?v=FZUcpVmEHuk");
+    return Promise.resolve(
+      this.message.reply("https://www.youtube.com/watch?v=FZUcpVmEHuk")
+    ).catch((err) =>
+      warn(err, { context: { controller: 'index', stage: 'moreinfo' } })
+    );
   }
 }

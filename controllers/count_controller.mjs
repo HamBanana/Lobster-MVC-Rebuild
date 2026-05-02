@@ -2,6 +2,7 @@ import { Controller } from "../core/controller.mjs";
 import { Database } from "../core/database.mjs";
 import { channels, members } from "../core/statics.mjs";
 import { Discord } from "../core/discord.mjs";
+import { warn, userMessage } from "../core/error.mjs";
 
 export class count_controller extends Controller {
   perm = { channels: [channels.counting] };
@@ -19,6 +20,7 @@ export class count_controller extends Controller {
   constructor(msg) {
     super(msg);
     this.auth(this.perm);
+    this.controllername = "count";
 
     this.client = Discord.client;
     this.db = Database.getInstance();
@@ -29,7 +31,14 @@ export class count_controller extends Controller {
       "SELECT * FROM counting_session ORDER BY id DESC LIMIT 1",
       (err, res) => {
         if (err) {
-          if (this.message) this.message.reply("Error getting latest record: " + err.message);
+          warn(err, { context: { stage: "count_controller load latest" } });
+          if (this.message) {
+            Promise.resolve(
+              this.message.reply("Couldn't load counting session: " + userMessage(err))
+            ).catch((rErr) =>
+              warn(rErr, { context: { stage: "count load reply" } })
+            );
+          }
           return;
         }
         if (res && res[0]) {
@@ -59,7 +68,8 @@ export class count_controller extends Controller {
       "SELECT * FROM counting_session ORDER BY id DESC LIMIT 1",
       (err, res) => {
         if (err) {
-          this.message.reply("Failed getting current value: " + err.message);
+          warn(err, { context: { stage: "count test_string select" } });
+          this.reportError(err, { stage: "test_string" });
           return;
         }
 
@@ -77,11 +87,11 @@ export class count_controller extends Controller {
         if (strtonum === count + 1) {
           this.session.score = strtonum;
           this.session.last_correct = this.message.author.id;
-          this.message.react("✅");
+          this.safeReact("✅");
         } else {
           if (!this.session.last_correct || !this.session.last_incorrect) return;
           this.session.last_incorrect = this.message.author.id;
-          this.message.reply(
+          this.safeReply(
             "Result:\nScore: " +
               this.session.score +
               "\nLast correct number by: " +
@@ -90,7 +100,7 @@ export class count_controller extends Controller {
               (this.client.users.cache.get(this.session.last_incorrect)?.username || "Noone")
           );
           this.makeNewSession();
-          this.message.react("❌");
+          this.safeReact("❌");
         }
 
         this.db.update(
@@ -101,7 +111,11 @@ export class count_controller extends Controller {
             last_incorrect: this.session.last_incorrect,
           },
           { id: rec.id },
-          () => {
+          (uErr) => {
+            if (uErr) {
+              warn(uErr, { context: { stage: "count test_string update" } });
+              return;
+            }
             this.session.score = 0;
           }
         );
@@ -110,7 +124,7 @@ export class count_controller extends Controller {
   }
 
   test() {
-    console.log(
+    warn(
       "TEST: " +
         JSON.stringify(this.client.users.cache.get("330279218543984641")?.username)
     );
@@ -122,9 +136,9 @@ export class count_controller extends Controller {
       db.connection.query(
         "SELECT * FROM counting_session ORDER BY score DESC LIMIT 1",
         (err, res) => {
-          if (err) {
-            reject(err);
-            return;
+          if (err) return reject(err);
+          if (!res || !res[0]) {
+            return reject(new Error("No counting sessions exist yet."));
           }
           const session = res[0];
           this.view.template_path = "count/session";
@@ -140,46 +154,71 @@ export class count_controller extends Controller {
         }
       );
     }).catch((err) => {
-      console.error(err);
+      this.reportError(err, { stage: "highscore" });
     });
   }
 
   set(args) {
     return new Promise((resolve, reject) => {
       const number = args["number"] ? args["number"] : args["default"][0];
-      if (this.message.author.id !== "330279218543984641") return;
+      if (this.message.author.id !== "330279218543984641") {
+        return reject(new Error("Only Ham can set the count."));
+      }
+      const parsed = parseInt(number, 10);
+      if (Number.isNaN(parsed)) {
+        return reject(new Error('"' + number + '" is not a number.'));
+      }
 
       this.db.connection.query(
         "SELECT * FROM counting_session ORDER BY id DESC LIMIT 1",
         (err, res) => {
-          if (err) {
-            this.message.reply("No, because: " + err.message);
-            reject("No, because: " + err.message);
-            return;
+          if (err) return reject(err);
+          if (!res || !res[0]) {
+            return reject(new Error("No counting session exists yet."));
           }
           this.db.update(
             "counting_session",
-            { score: parseInt(number, 10) },
+            { score: parsed },
             { id: res[0].id },
             (uErr) => {
-              if (uErr) {
-                this.message.reply("Can't update session, because: " + uErr.message);
-                reject(uErr.message);
-                return;
-              }
-              count_controller.last_number = parseInt(number, 10);
-              this.message.react("✅");
+              if (uErr) return reject(uErr);
+              count_controller.last_number = parsed;
+              this.safeReact("✅");
               resolve();
             }
           );
         }
       );
+    }).catch((err) => {
+      this.reportError(err, { stage: "set" });
     });
   }
 
   makeNewSession() {
     this.db.connection.query(
-      "INSERT INTO counting_session VALUES (NULL, 0, NULL, NULL, NULL)"
+      "INSERT INTO counting_session VALUES (NULL, 0, NULL, NULL, NULL)",
+      (err) => {
+        if (err) {
+          warn(err, { context: { stage: "makeNewSession insert" } });
+        }
+      }
+    );
+  }
+
+  // Helpers used above. Reactions/replies fail silently to the user
+  // (with a log entry) so a missing-permissions error doesn't cascade
+  // into a second user-facing error.
+  safeReact(emoji) {
+    if (!this.message || typeof this.message.react !== "function") return;
+    Promise.resolve(this.message.react(emoji)).catch((err) =>
+      warn(err, { context: { stage: "count safeReact", emoji } })
+    );
+  }
+
+  safeReply(text) {
+    if (!this.message || typeof this.message.reply !== "function") return;
+    Promise.resolve(this.message.reply(text)).catch((err) =>
+      warn(err, { context: { stage: "count safeReply" } })
     );
   }
 }
