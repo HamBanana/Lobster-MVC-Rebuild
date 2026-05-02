@@ -267,11 +267,7 @@ export class lobby_controller extends Controller {
 
     this.model.confirm_lobby({ code, pingtime, state }, (err, res) => {
       if (err) {
-        if (this.message) {
-          this.message.reply("Couldn't update lobby, because: " + err.message);
-        } else {
-          this.message.reply("Couldn't update lobby, because: " + err.message);
-        }
+        return this.message.reply("Couldn't update lobby, because: " + err.message);
       }
 
       // If all went well, post the confirm_lobby.

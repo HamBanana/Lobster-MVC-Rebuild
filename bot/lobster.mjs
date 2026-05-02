@@ -184,55 +184,71 @@ export class Lobster {
     client.on(Events.InteractionCreate, async (interaction) => {
       if (!interaction.isChatInputCommand()) return;
 
+      const safeReply = (content) => {
+        if (interaction.replied || interaction.deferred) {
+          return interaction.followUp({ content, ephemeral: true });
+        }
+        return interaction.reply({ content, ephemeral: true });
+      };
+
       let parser = new Parser(interaction);
 
-      if (interaction.commandName === "lob") {
-        let controller = interaction.options.get("controller");
-        let method = interaction.options.get("function");
+      try {
+        if (interaction.commandName === "lob") {
+          let controller = interaction.options.get("controller");
+          let method = interaction.options.get("function");
 
-        console.log("controllername: " + JSON.stringify(controller));
-        console.log("functionname: " + JSON.stringify(method));
+          console.log("controllername: " + JSON.stringify(controller));
+          console.log("functionname: " + JSON.stringify(method));
 
-        if (!controller) {
-          return interaction.reply({ content: "Please specify a controller.", ephemeral: true });
+          if (!controller) {
+            return interaction.reply({ content: "Please specify a controller.", ephemeral: true });
+          }
+
+          return await parser
+            .executeCommand({
+              controller: controller.value,
+              method: method?.value || "index",
+              args: { default: [] },
+            })
+            .catch((err) => {
+              console.error(err);
+              return safeReply("Then this happened: " + err.message);
+            });
         }
 
-        return parser
-          .executeCommand({
-            controller: controller.value,
-            method: method?.value || "index",
-            args: { default: [] },
-          })
-          .catch((err) => {
-            console.error(err);
-            return interaction.reply("Then this happened: " + err.message);
-          });
-      }
-
-      if (interaction.commandName === "ping") {
-        return interaction.reply("Yay :eyes:");
-      }
-
-      // Route individual controller slash commands
-      const lobbyCommands = [
-        "confirm_lobby", "create", "delete", "queue", "unqueue",
-        "list", "announce", "unannounce",
-      ];
-      if (lobbyCommands.includes(interaction.commandName)) {
-        let args = { default: [] };
-        for (let opt of interaction.options.data) {
-          args[opt.name] = opt.value;
+        if (interaction.commandName === "ping") {
+          return interaction.reply("Yay :eyes:");
         }
-        return parser
-          .executeCommand({
-            controller: "lobby",
-            method: interaction.commandName,
-            args,
-          })
-          .catch((err) => {
-            console.error(err);
-            return interaction.reply("Error: " + err.message);
-          });
+
+        // Route individual controller slash commands
+        const lobbyCommands = [
+          "confirm_lobby", "create", "delete", "queue", "unqueue",
+          "list", "announce", "unannounce",
+        ];
+        if (lobbyCommands.includes(interaction.commandName)) {
+          let args = { default: [] };
+          for (let opt of interaction.options.data) {
+            args[opt.name] = opt.value;
+          }
+          return await parser
+            .executeCommand({
+              controller: "lobby",
+              method: interaction.commandName,
+              args,
+            })
+            .catch((err) => {
+              console.error(err);
+              return safeReply("Error: " + err.message);
+            });
+        }
+
+        if (!interaction.replied) {
+          return interaction.reply({ content: "Unknown command.", ephemeral: true });
+        }
+      } catch (err) {
+        console.error("InteractionCreate handler error:", err);
+        safeReply("Something went wrong: " + err.message).catch(console.error);
       }
     });
 
