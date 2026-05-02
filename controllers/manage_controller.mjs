@@ -232,7 +232,7 @@ perm = {'users': ['330279218543984641']}
   }
 
   gitlog(){
-    sub.exec(process.env.LOBSTER_ROOT + ' git log | head -5', (error, stdout, stderr) => {
+    sub.exec('git -C ' + process.env.LOBSTER_ROOT + ' log -1', (error, stdout, stderr) => {
       if (error){
         this.message.reply('Error in exec:' + error.message);
         return;
@@ -244,8 +244,6 @@ perm = {'users': ['330279218543984641']}
       let o = stdout || 'Nothing here.';
       this.message.reply(o);
     });
-    return;
-    
   }
 
   ppull(){

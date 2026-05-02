@@ -168,8 +168,7 @@ export class Lobster {
           });
         })
         .catch((err) => {
-          //let e_stack = "🥞";
-          return m.edit(
+          console.log(
             "Something went wrong during boot: " +
               "\nMessage: " +
               err.message +

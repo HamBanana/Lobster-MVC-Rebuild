@@ -92,10 +92,8 @@ export class System {
           resolve();
         })
         .catch((err) => {
-          throw err;
+          reject(err);
         });
-    }).catch((err) => {
-      throw err;
     });
   }
 
