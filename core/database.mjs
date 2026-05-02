@@ -50,6 +50,11 @@ export class Database {
    * Build a parameterised "WHERE" clause from a plain object.
    * Returns { sql: "?? = ? AND ?? = ?", params: [k1, v1, k2, v2] }
    * If the object is empty, returns { sql: "", params: [] }.
+   *
+   * Null/undefined values translate to `?? IS NULL` rather than `?? = ?`,
+   * because in SQL `col = NULL` is never true — it has to be `col IS NULL`.
+   * Without this, callers like clearOld() that pass `{ code: null }` would
+   * silently match zero rows forever.
    */
   static buildWhere(where = {}, joiner = "AND") {
     const entries = Object.entries(where);
@@ -57,8 +62,13 @@ export class Database {
     const fragments = [];
     const params = [];
     for (const [k, v] of entries) {
-      fragments.push("?? = ?");
-      params.push(k, v);
+      if (v === null || v === undefined) {
+        fragments.push("?? IS NULL");
+        params.push(k);
+      } else {
+        fragments.push("?? = ?");
+        params.push(k, v);
+      }
     }
     return { sql: fragments.join(` ${joiner} `), params };
   }
