@@ -143,7 +143,7 @@ export class lobby_controller extends Controller {
         is_vc_lobby,
       };
       this.view.type = "channel";
-      this.view.channelid = channels["lobtest"];
+      this.view.channelid = channels["vanilla-game-chat"];
       //this.view.channelid = channels["vanilla-game-chat"];
       lobby_model.active_lobbies[code].queue = [];
       this.post();
@@ -200,8 +200,8 @@ export class lobby_controller extends Controller {
         this.view.reactions = {};
         this.view.template_path = "lobby/confirm_lobby";
         this.view.type = "channel";
-        this.view.channelid = channels["lobtest"];
-        //this.view.channelid = channels["vanilla-codes"];
+        //this.view.channelid = channels["lobtest"];
+        this.view.channelid = channels["vanilla-codes"];
         this.post();
       });
     };
@@ -545,6 +545,30 @@ export class lobby_controller extends Controller {
   handlePresenceUpdate(oldPresence, newPresence) {
     if (oldPresence == null && newPresence == null) return;
 
+    // Find the Among Us activity in either presence — it isn't necessarily
+    // activities[0] when the user has Spotify or another rich-presence app
+    // running alongside the game.
+    const oldAmongUs = oldPresence?.activities?.find((a) => a.name === "Among Us");
+    const newAmongUs = newPresence?.activities?.find((a) => a.name === "Among Us");
+
+    // When the host of an active lobby transitions into "In Lobby" from
+    // anything else (no activity, "In Menus", "In Game", another app, etc.),
+    // automatically run confirm_lobby so everyone in the queue gets pinged.
+    // Gate on the queue actually having members so we don't spam the channel
+    // on every re-entry to lobby between rounds.
+    if (newAmongUs?.state === "In Lobby" && oldAmongUs?.state !== "In Lobby") {
+      const hostId = newPresence?.userId;
+      if (hostId) {
+        for (const lobby of Object.values(lobby_model.active_lobbies)) {
+          if (lobby.host !== hostId) continue;
+          if (!lobby.queue || lobby.queue.length === 0) continue;
+          this.confirm_lobby({ code: lobby.code });
+        }
+      }
+    }
+
+    // The remainder of this method handles the announce-subscription flow,
+    // which only cares about Among-Us-to-Among-Us activity transitions.
     const oldActivity = oldPresence?.activities?.[0];
     const newActivity = newPresence?.activities?.[0];
 
