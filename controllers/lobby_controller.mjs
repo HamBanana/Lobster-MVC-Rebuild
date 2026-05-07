@@ -278,6 +278,12 @@ export class lobby_controller extends Controller {
     const code = (args.code || args.default?.[0])?.toUpperCase();
 
     const queueFor = (lobbyCode) => {
+      const userId = this.message.author.id;
+      const alreadyIn = Object.values(lobby_model.active_lobbies)
+        .find(lob => lob.queue?.includes(userId));
+      if (alreadyIn) {
+        return this._reply("You are already in the queue for lobby " + alreadyIn.code + ".");
+      }
       this.model.queue(
         { member_id: this.message.author.id, usertag: this.message.author.username, code: lobbyCode },
         (err) => {
