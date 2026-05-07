@@ -24,14 +24,14 @@ import { Time } from '../tools/time.mjs';
  */
 
 function resolveLogPath() {
+    if (os.platform() !== 'win32') {
+        return path.join(os.homedir(), 'codespace', 'log_lobster');
+    }
     const root = process.env.LOBSTER_ROOT;
     if (!root) {
-        // Fall back to a writable location next to cwd so we never silently lose logs.
         return path.join(process.cwd(), 'log_lobster');
     }
-    return os.platform() === 'win32'
-        ? path.join(root, '..', 'log_lobster')
-        : path.join(root, '..', 'log_lobster');
+    return path.join(root, '..', 'log_lobster');
 }
 
 export const logpath = resolveLogPath();
