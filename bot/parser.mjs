@@ -65,6 +65,16 @@ export class Parser {
         }
         let parms = c.split(" ");
 
+        // Numeric shortcut: a bare integer as the first token is rewritten
+        // to `count submit <n>`. This is what makes `!!1`, `!!2`, … work
+        // on the local test bot (and `!lob 1` work in #counting on prod);
+        // it routes the digit through the explicit counting entrypoint
+        // instead of trying to load a controller called "1".
+        if (parms[0] && /^\d+$/.test(parms[0])) {
+          c = "count submit " + c;
+          parms = c.split(" ");
+        }
+
         if (parms[0] in this.#method_alias) {
           c = c.replace(parms[0], this.#method_alias[parms[0]]);
         }

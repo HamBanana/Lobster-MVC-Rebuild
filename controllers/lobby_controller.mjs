@@ -474,7 +474,7 @@ export class lobby_controller extends Controller {
       .then((lobbies) => {
         const work = [];
         for (const lobby of lobbies) {
-          if (Time.now - lobby.pingtime > 180000) {
+          if (Time.now - lobby.pingtime > 18000) {
             work.push(
               db
                 .p_delete("lobby_active_lobbies", { code: lobby.code })
@@ -482,8 +482,10 @@ export class lobby_controller extends Controller {
                   if (res) {
                     delete lobby_model.active_lobbies[lobby.code];
                     warn("Deleted stale lobby: " + lobby.code);
+                    return db.p_delete("lobby_queue", { lobby_code: lobby.code });
                   }
                 })
+                .then(() => {})
                 .catch((err) =>
                   warn(err, {
                     context: { stage: "clearOld delete", code: lobby.code },
