@@ -187,8 +187,10 @@ export class Lobster {
 
     client.on(Events.InteractionCreate, async (interaction) => {
       try {
-        const parser = new Parser(interaction);
         if (!interaction.isChatInputCommand()) return;
+        // Shim so controllers can use this.message.author uniformly.
+        interaction.author = interaction.user;
+        const parser = new Parser(interaction);
         if (interaction.commandName === "lob") {
           const controller = interaction.options.get("controller");
           const method = interaction.options.get("function");
@@ -223,6 +225,30 @@ export class Lobster {
 
         if (interaction.commandName === "ping") {
           await safeInteractionReply(interaction, "Yay :eyes:");
+        }
+
+        const lobbyCommands = new Set([
+          "confirm_lobby", "create", "delete",
+          "queue", "unqueue", "list",
+          "announce", "unannounce",
+        ]);
+        if (lobbyCommands.has(interaction.commandName)) {
+          const args = { default: [] };
+          for (const opt of interaction.options.data) {
+            args[opt.name] = opt.value;
+          }
+          parser
+            .executeCommand({ controller: "lobby", method: interaction.commandName, args })
+            .catch((rawErr) => {
+              const err = toError(rawErr);
+              warn(err, {
+                context: {
+                  source: "slash /" + interaction.commandName,
+                  user: interaction.user?.username,
+                },
+              });
+              return safeInteractionReply(interaction, userMessage(err));
+            });
         }
       } catch (err) {
         warn(err, { context: { source: "InteractionCreate handler" } });
