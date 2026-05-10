@@ -279,7 +279,13 @@ export class lobby_controller extends Controller {
 
     const queueFor = (lobbyCode) => {
       const lobby = lobby_model.active_lobbies[lobbyCode];
-      if (lobby?.state === "In Lobby") {
+      const hostActivity = this.client?.guilds?.cache
+        ?.first()
+        ?.members?.cache?.get(lobby?.host)
+        ?.presence?.activities?.find((a) => a.name === "Among Us");
+      const isInLobby =
+        lobby?.state === "In Lobby" || hostActivity?.state === "In Lobby";
+      if (isInLobby) {
         return this._reply("In lobby: " + lobbyCode + "!");
       }
       this.model.queue(
