@@ -433,6 +433,9 @@ export class lobby_model extends Model {
       );
     }
     lobby.state = args.state;
+    this.db.update("lobby_active_lobbies", { state: args.state }, { code: args.code }, (err) => {
+      if (err) warn(err, { context: { stage: "confirm_lobby state persist", code: args.code } });
+    });
     let mentions = "";
     for (const mention of lobby.queue || []) {
       mentions += "<@" + mention + "> ";

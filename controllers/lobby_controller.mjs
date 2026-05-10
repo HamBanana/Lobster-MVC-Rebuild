@@ -559,14 +559,14 @@ export class lobby_controller extends Controller {
 
     // When the host of an active lobby transitions into "In Lobby" from
     // anything else (no activity, "In Menus", "In Game", another app, etc.),
-    // automatically run confirm_lobby so everyone in the queue gets pinged.
-    // Gate on the queue actually having members so we don't spam the channel
-    // on every re-entry to lobby between rounds.
+    // always track the new state so !queue can detect it. Also call
+    // confirm_lobby to ping the queue, but only when it has members.
     if (newAmongUs?.state === "In Lobby" && oldAmongUs?.state !== "In Lobby") {
       const hostId = newPresence?.userId;
       if (hostId) {
         for (const lobby of Object.values(lobby_model.active_lobbies)) {
           if (lobby.host !== hostId) continue;
+          this.model.updateLobby(lobby.code, { state: "In Lobby" });
           if (!lobby.queue || lobby.queue.length === 0) continue;
           this.confirm_lobby({ code: lobby.code });
         }
