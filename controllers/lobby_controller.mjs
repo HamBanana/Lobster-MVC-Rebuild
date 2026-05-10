@@ -279,13 +279,21 @@ export class lobby_controller extends Controller {
 
     const queueFor = (lobbyCode) => {
       const lobby = lobby_model.active_lobbies[lobbyCode];
-      const hostActivity = this.client?.guilds?.cache
-        ?.first()
-        ?.members?.cache?.get(lobby?.host)
-        ?.presence?.activities?.find((a) => a.name === "Among Us");
-      const isInLobby =
-        lobby?.state === "In Lobby" || hostActivity?.state === "In Lobby";
-      if (isInLobby) {
+      const guild = this.client?.guilds?.cache?.first();
+      const liveActivity = guild?.members?.cache
+        ?.find((member) =>
+          member.presence?.activities?.some(
+            (a) =>
+              a.name === "Among Us" && a.party?.id?.toUpperCase() === lobbyCode
+          )
+        )
+        ?.presence?.activities?.find(
+          (a) => a.name === "Among Us" && a.party?.id?.toUpperCase() === lobbyCode
+        );
+      if (!liveActivity) {
+        return this._reply("Lobby is over, or noone in the lobby has 'Share My Activity' enabled.");
+      }
+      if (liveActivity.state === "In Lobby") {
         return this._reply("In lobby: " + lobbyCode + "!");
       }
       this.model.queue(
